@@ -406,10 +406,12 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 // „<kanał>-odpowiedz”, zwykle po 8–15 sekundach. Odpowiedź może pokazać zakładkę, model albo Podium („ręce”, opcje.pokaz)
 // i polecić do trzech odnośników. Rozmowa zostaje w pamięci urządzenia (ostatnie 40 wiadomości), a pytanie bez odpowiedzi
 // czeka dalej także po zamknięciu aplikacji, do 90 sekund od wysłania.
-// Mikrofon (Soniox, rozpoznawanie mowy na żywo) stoi tylko na telefonach i tylko wtedy, gdy komputer ma klucz Soniox
-// (pole „glos” w każdej odpowiedzi). Telefon dostaje od komputera klucz tymczasowy na godzinę. Android nagrywa w stronie
-// (getUserMedia i MediaRecorder), iPhone w Swift (strona spod auta:// nie dostaje mikrofonu), a tekst wraca przez Czat.zGlosu.
-// Gdy rozpoznawanie uzna, że pytanie się skończyło, pytanie idzie samo. Na komputerze mikrofonu nie ma, bo tam jest Dyktowanie.
+// Mikrofon (Soniox, rozpoznawanie mowy na żywo) stoi tylko wtedy, gdy komputer ma klucz Soniox (pole „glos” w każdej
+// odpowiedzi), a przeglądarka umie nagrywać: Android i strona w sieci w Safari albo Chrome. Telefon dostaje od komputera
+// klucz tymczasowy na godzinę i nagrywa w stronie (getUserMedia i MediaRecorder, tak samo jak Web SDK Soniox). Aplikacja
+// na iPhone'a (auta://) mikrofonu nie ma: app.js go nie włącza, a glosNatywny i Czat.zGlosu czekają na nagrywanie w Swift.
+// Gdy rozpoznawanie uzna, że pytanie się skończyło, pytanie idzie samo. W oknie na komputerze mikrofonu nie ma, bo tam
+// dyktuje Dyktowanie (kółko myszy wkleja tekst w pole pytania i daje Enter). Test bez prawdziwego Soniox: testy/mikrofon.mjs.
 //
 //   const czat = Czat.uruchom({ kanal, tryb: 'arkusz' | 'panel' | 'strona', skad, miejsce, zakladka(), pokaz(p, reka), zamknij(),
 //                               mikrofon: true, glosNatywny: { start(klucz), stop() }, naZmiane(otwarty) })
@@ -866,8 +868,10 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
       try { k = await klucz(); } catch (e) { glosKoniec(e.message); return; }
       if (glos.stan !== 'start') return;
       if (natywny) { natywny.start(k); return; } // iPhone: stan „nagrywa” przyjdzie przez Czat.zGlosu
+      // Ustawienia jak domyślne w Web SDK Soniox (MicrophoneSource): mono, 16 kHz, bez obróbki dźwięku w przeglądarce,
+      // kawałki co 60 ms. Do 20.10.2026 z redukcją szumu i echa oraz kawałkami co 250 ms.
       try {
-        glos.media = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+        glos.media = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000, echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
       } catch { glosKoniec(ZDANIA.mikrofon); return; }
       if (glos.stan !== 'start') { glosSprzatnij(); return; }
       const ws = new WebSocket(SONIOX, ['soniox-api-key', k]);
@@ -880,7 +884,7 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
           glos.rec = rec;
           rec.ondataavailable = (e) => { if (e.data && e.data.size && ws.readyState === 1) ws.send(e.data); };
           rec.onstop = () => { if (ws.readyState === 1) ws.send(''); };
-          rec.start(250);
+          rec.start(60);
         } catch { glosKoniec(ZDANIA.mikrofon); return; }
         glos.stan = 'nagrywa';
         pokazGlos();
@@ -1337,7 +1341,7 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
     pamiec.zapisz('kolejnosc', doCofniecia.map((i) => WIDOKI[i]));
     pokazCofnij(false);
   });
-  // Ciągnięcie: zakładka jedzie pod palcem w granicach paska, a sąsiad, którego środek minęła, dojeżdża na jej dawne miejsce
+  // Ciągnięcie: zakładka jedzie pod palcem w granicach paska, a sąsiad, którego zakryła do połowy, dojeżdża na jej dawne miejsce
   // (240 ms, jak suwak). W drzewie strony przechodzi sąsiad, a nie ciągnięta zakładka: przeniesiona traciłaby przechwycenie
   // wskaźnika. Puszczona dojeżdża na swoje miejsce. Gdy ciągnięcie przerwie system (pointercancel), kolejność wraca.
   const RUCH = 'transform 240ms cubic-bezier(.2, 0, 0, 1), box-shadow 240ms ease, background-color 240ms ease';
@@ -1353,13 +1357,13 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
     b.style.transform = 'scale(1.06)';
   }
   // Ciągnięta zakładka stoi tam, gdzie palec, ale nie wychodzi poza pasek. Wybraną niesie razem z suwakiem, który leży pod nią.
-  // Oddaje środek zakładki w układzie paska.
+  // Oddaje lewy brzeg zakładki w układzie paska.
   function nies(e) {
     const b = ciag.b, x = Math.min(Math.max(e.clientX - lewyPaska() - ciag.chwyt, 0), pasekZakladek.clientWidth - b.offsetWidth);
     b.style.transition = UNIES;
     b.style.transform = `translateX(${x - b.offsetLeft}px) scale(1.06)`;
     if (b === segmenty[widok]) { suwak.classList.add('bez-ruchu'); suwak.style.transform = `translateX(${x + 3}px)`; }
-    return x + b.offsetWidth / 2;
+    return x;
   }
   function przestawSasiada(s, przed) {
     const bylo = s.getBoundingClientRect().left;
@@ -1388,13 +1392,14 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
       else { if (!ciag.mysz && dy > 10) { clearTimeout(ciag.zegar); ciag.b = null; } return; }
     }
     e.preventDefault();
-    // Szybki ruch mija czasem kilka zakładek naraz: przestawiamy po jednej, aż ciągnięta stanie między sąsiadami.
-    // Na końcu paska środek ciągniętej równa się środkowi skrajnej, stąd „<=” i „>=”.
+    // Sąsiad ustępuje, gdy ciągnięta zakryje go do połowy, czyli gdy jej brzeg minie jego środek (jak w iOS). Wcześniej ustępował
+    // dopiero zakryty cały. Próg w obie strony jest ten sam, więc nic nie skacze tam i z powrotem. Szybki ruch mija czasem
+    // kilka zakładek naraz: przestawiamy po jednej, aż ciągnięta stanie między sąsiadami.
     const b = ciag.b;
     for (let i = 0; i < segmenty.length; i++) {
-      const srodek = nies(e), rzad = kolejnosc().map((j) => segmenty[j]), m = rzad.indexOf(b), lewy = rzad[m - 1], prawy = rzad[m + 1];
-      if (lewy && srodek <= lewy.offsetLeft + lewy.offsetWidth / 2) przestawSasiada(lewy, b.nextSibling);
-      else if (prawy && srodek >= prawy.offsetLeft + prawy.offsetWidth / 2) przestawSasiada(prawy, b);
+      const x = nies(e), rzad = kolejnosc().map((j) => segmenty[j]), m = rzad.indexOf(b), lewy = rzad[m - 1], prawy = rzad[m + 1];
+      if (lewy && x < lewy.offsetLeft + lewy.offsetWidth / 2) przestawSasiada(lewy, b.nextSibling);
+      else if (prawy && x + b.offsetWidth > prawy.offsetLeft + prawy.offsetWidth / 2) przestawSasiada(prawy, b);
       else break;
       if (b !== segmenty[widok]) przesunSuwak(true);
     }
@@ -1458,8 +1463,10 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
   // Czat z komputerem w domu (czat.js). „Ręce”: odpowiedź pokazuje zakładkę, a w Katalagu model albo Podium.
   // Mikrofon tylko tam, gdzie strona go dostaje (Safari i Chrome pod https); spod auta:// w aplikacji na iPhone'a go nie ma.
   const ZAKLADKI_CZATU = ['katalog', 'modele', 'kredyt', 'historia'];
+  // Bez mikrofonu w aplikacji na iPhone'a: Info.plist nie ma zgody na mikrofon (NSMicrophoneUsageDescription), więc nagrywać
+  // by nie mogła. Na iPhonie mikrofon ma strona w sieci w Safari.
   const czat = window.Czat && KANAL ? Czat.uruchom({
-    kanal: KANAL, tryb: 'arkusz', mikrofon: true, skad: SKAD,
+    kanal: KANAL, tryb: 'arkusz', mikrofon: SKAD !== 'iPhone', skad: SKAD,
     zakladka: () => ZAKLADKI_CZATU[widok],
     async pokaz(p) {
       const nr = ZAKLADKI_CZATU.indexOf(p.zakladka === 'nowe' ? 'katalog' : p.zakladka);
