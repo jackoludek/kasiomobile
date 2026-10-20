@@ -1496,6 +1496,13 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
   if (!KANAL) przyciskOdswiez.hidden = true;
   document.querySelectorAll('.pusto button').forEach((b) => b.addEventListener('click', () => odswiez(true)));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) odswiez(); });
+  // Póki aplikacja jest na ekranie, co minutę sprawdza, czy komputer przysłał nowe ogłoszenia (od 20.10.2026: e-mail z Otomoto
+  // robi skan od razu, a nowe auto ma być w aplikacji od razu). Bez prośby o skan, więc komputer nie pracuje przez to więcej.
+  const TEST = /[?&]test=\d/.test(location.search);
+  setInterval(async () => {
+    if (document.hidden || !KANAL || TEST || trwa || czekanie) return;
+    try { if (await KATALOG.sprawdz()) { opiszOdswiez(); await pokazStrone(widok); } } catch { /* następna próba za minutę */ }
+  }, 60000);
 
   // ---------------------------------------------------------------- start
   const naStarcie = Promise.all([schowek.czytaj('katalog'), schowek.czytaj('kalkulator'), schowek.czytaj('historia'), schowek.czytaj('modele')])
