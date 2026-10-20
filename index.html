@@ -186,7 +186,8 @@ main { flex: 1; min-height: 0; position: relative; }
   font-weight: 500;
   line-height: 1.25;
   white-space: nowrap;
-  /* Przestawianie: przytrzymanie palcem podnosi zakładkę, myszą wystarczy ją pociągnąć. Bez zaznaczania tekstu i menu iOS. */
+  /* Przestawianie: zakładkę ciągnie się palcem albo myszą (app.js). Bez touch-action: none przeglądarka wzięłaby ruch palca
+     za przewijanie i przerwała ciągnięcie. Bez zaznaczania tekstu i menu iOS. */
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
@@ -199,8 +200,8 @@ main { flex: 1; min-height: 0; position: relative; }
 .znak { flex: none; display: block; width: 28px; height: 28px; transition: transform 120ms ease; }
 @media (hover: hover) { .karty [role="tab"]:hover .znak { transform: translateY(-1px); } }
 .karty [role="tab"]:active .znak { transform: scale(.92); }
-/* Ciągnięta zakładka unosi się nad resztą, a reszta robi jej miejsce od razu. */
-.karty [role="tab"].ciagniety { z-index: 2; transform: scale(1.06); background: var(--suwak); box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
+/* Ciągnięta zakładka unosi się nad resztą i jedzie pod palcem (przesunięcie i powiększenie o 6% daje app.js), a reszta robi jej miejsce. */
+.karty [role="tab"].ciagniety { z-index: 2; cursor: grabbing; background: var(--suwak); box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
 .karty [role="tab"].ciagniety .znak { transform: none; }
 /* „Cofnij” stoi 6 sekund nad paskiem po przestawieniu zakładek (reguła cofnij-i-ponow: na telefonie nie ma Ctrl+Z). */
 .cofnij-zakladki { position: absolute; left: 0; right: 0; bottom: 100%; display: flex; justify-content: center; padding-bottom: 12px; pointer-events: none; }
@@ -1289,9 +1290,11 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
     if (zapisz) pamiec.zapisz('zakladka', WIDOKI[widok]);
     return pokazStrone(widok);
   }
-  // Kolejność zakładek (od 18.10.2026, Jacek: „żeby taby na nawigacji w mobile menu też były dragable”): przytrzymanie palcem
-  // (450 ms) podnosi zakładkę, przesunięcie w bok stawia ją na nowym miejscu, myszą wystarczy ją pociągnąć o 6 px. Stuknięcie
-  // i przewinięcie niczego nie przestawiają. Kolejność zostaje w telefonie, a przez 6 sekund stoi „Cofnij”. Z klawiatury Alt+← →.
+  // Kolejność zakładek (od 18.10.2026, Jacek: „żeby taby na nawigacji w mobile menu też były dragable”). Od 20.10.2026 zakładka
+  // jedzie pod palcem albo kursorem, a sąsiednie robią jej miejsce (Jacek: „żeby one były styl dragable”). Wystarczy pociągnąć
+  // ją w bok, palcem o 10 px, myszą o 6 px, albo przytrzymać palcem 450 ms. Do 20.10.2026 palec musiał najpierw przytrzymać,
+  // a zwykłe pociągnięcie nie robiło nic. Stuknięcie i ruch w pionie niczego nie przestawiają, a pasek się nie przewija, więc
+  // palec nie przestawi niczego przypadkiem. Kolejność zostaje w telefonie, a przez 6 sekund stoi „Cofnij”. Z klawiatury Alt+← →.
   // Zakładka, której nie ma w zapisie (doszła w nowej wersji), staje za swoją poprzedniczką, jak na Androidzie i na komputerze.
   const pasekZakladek = $('.karty');
   // Suwak pod wybraną zakładką (od 19.10.2026): przesuwa się do stukniętej, po przestawieniu staje od razu.
@@ -1334,50 +1337,86 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
     pamiec.zapisz('kolejnosc', doCofniecia.map((i) => WIDOKI[i]));
     pokazCofnij(false);
   });
-  const ciag = { b: null, x: 0, y: 0, id: 0, mysz: false, start: null, aktywne: false, bylRuch: false, zegar: 0 };
+  // Ciągnięcie: zakładka jedzie pod palcem w granicach paska, a sąsiad, którego środek minęła, dojeżdża na jej dawne miejsce
+  // (240 ms, jak suwak). W drzewie strony przechodzi sąsiad, a nie ciągnięta zakładka: przeniesiona traciłaby przechwycenie
+  // wskaźnika. Puszczona dojeżdża na swoje miejsce. Gdy ciągnięcie przerwie system (pointercancel), kolejność wraca.
+  const RUCH = 'transform 240ms cubic-bezier(.2, 0, 0, 1), box-shadow 240ms ease, background-color 240ms ease';
+  const UNIES = 'box-shadow 120ms ease, background-color 120ms ease';
+  const ciag = { b: null, x: 0, y: 0, id: 0, mysz: false, start: null, aktywne: false, bylRuch: false, zegar: 0, chwyt: 0 };
+  const lewyPaska = () => pasekZakladek.getBoundingClientRect().left;
   function podnies() {
+    const b = ciag.b;
+    clearTimeout(ciag.zegar);
     ciag.aktywne = true;
-    ciag.b.classList.add('ciagniety');
-    try { ciag.b.setPointerCapture(ciag.id); } catch { /* wskaźnik z testu albo już puszczony */ }
+    b.classList.add('ciagniety');
+    b.style.transition = 'transform 120ms ease, ' + UNIES;
+    b.style.transform = 'scale(1.06)';
+  }
+  // Ciągnięta zakładka stoi tam, gdzie palec, ale nie wychodzi poza pasek. Wybraną niesie razem z suwakiem, który leży pod nią.
+  // Oddaje środek zakładki w układzie paska.
+  function nies(e) {
+    const b = ciag.b, x = Math.min(Math.max(e.clientX - lewyPaska() - ciag.chwyt, 0), pasekZakladek.clientWidth - b.offsetWidth);
+    b.style.transition = UNIES;
+    b.style.transform = `translateX(${x - b.offsetLeft}px) scale(1.06)`;
+    if (b === segmenty[widok]) { suwak.classList.add('bez-ruchu'); suwak.style.transform = `translateX(${x + 3}px)`; }
+    return x + b.offsetWidth / 2;
+  }
+  function przestawSasiada(s, przed) {
+    const bylo = s.getBoundingClientRect().left;
+    pasekZakladek.insertBefore(s, przed);
+    s.style.transition = 'none';
+    s.style.transform = `translateX(${bylo - lewyPaska() - s.offsetLeft}px)`;
+    void s.offsetWidth;
+    s.style.transition = RUCH;
+    s.style.transform = '';
   }
   pasekZakladek.addEventListener('pointerdown', (e) => {
     const b = e.target.closest('button');
-    if (!b || !segmenty.includes(b) || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (!b || !segmenty.includes(b) || ciag.aktywne || (e.pointerType === 'mouse' && e.button !== 0)) return;
     clearTimeout(ciag.zegar);
-    Object.assign(ciag, { b, x: e.clientX, y: e.clientY, id: e.pointerId, mysz: e.pointerType === 'mouse', start: kolejnosc(), aktywne: false, bylRuch: false });
+    Object.assign(ciag, { b, x: e.clientX, y: e.clientY, id: e.pointerId, mysz: e.pointerType === 'mouse', start: kolejnosc(), aktywne: false, bylRuch: false,
+      chwyt: e.clientX - lewyPaska() - b.offsetLeft });
+    // Przechwycenie od razu: ruch i puszczenie wracają tu także spoza paska, więc żadna zakładka nie zostaje uniesiona.
+    try { b.setPointerCapture(e.pointerId); } catch { /* wskaźnik z testu */ }
     if (!ciag.mysz) ciag.zegar = setTimeout(podnies, 450);
   });
   pasekZakladek.addEventListener('pointermove', (e) => {
     if (!ciag.b || e.pointerId !== ciag.id) return;
     if (!ciag.aktywne) {
       const dx = Math.abs(e.clientX - ciag.x), dy = Math.abs(e.clientY - ciag.y);
-      if (ciag.mysz && dx >= 6) podnies();
-      else { if (!ciag.mysz && (dx > 10 || dy > 10)) { clearTimeout(ciag.zegar); ciag.b = null; } return; }
+      if (ciag.mysz ? dx >= 6 : dx >= 10 && dx >= dy) podnies();
+      else { if (!ciag.mysz && dy > 10) { clearTimeout(ciag.zegar); ciag.b = null; } return; }
     }
     e.preventDefault();
-    // Rusza się sąsiad, a nie ciągnięta zakładka: przeniesiony element traciłby przechwycenie wskaźnika (jak na komputerze).
-    const b = ciag.b, dzieci = [...pasekZakladek.children].filter((d) => d !== suwak);
-    for (const s of dzieci) {
-      if (s === b) continue;
-      const r = s.getBoundingClientRect(), srodek = r.left + r.width / 2;
-      const przed = dzieci.indexOf(s) < dzieci.indexOf(b);
-      if (przed && e.clientX < srodek) { pasekZakladek.insertBefore(s, b.nextSibling); break; }
-      if (!przed && e.clientX > srodek) { pasekZakladek.insertBefore(s, b); break; }
+    // Szybki ruch mija czasem kilka zakładek naraz: przestawiamy po jednej, aż ciągnięta stanie między sąsiadami.
+    // Na końcu paska środek ciągniętej równa się środkowi skrajnej, stąd „<=” i „>=”.
+    const b = ciag.b;
+    for (let i = 0; i < segmenty.length; i++) {
+      const srodek = nies(e), rzad = kolejnosc().map((j) => segmenty[j]), m = rzad.indexOf(b), lewy = rzad[m - 1], prawy = rzad[m + 1];
+      if (lewy && srodek <= lewy.offsetLeft + lewy.offsetWidth / 2) przestawSasiada(lewy, b.nextSibling);
+      else if (prawy && srodek >= prawy.offsetLeft + prawy.offsetWidth / 2) przestawSasiada(prawy, b);
+      else break;
+      if (b !== segmenty[widok]) przesunSuwak(true);
     }
-    przesunSuwak(false);
   });
   function koniecCiagniecia(e) {
-    if (!ciag.b || (e && e.pointerId !== ciag.id)) return;
+    if (!ciag.b || e.pointerId !== ciag.id) return;
     clearTimeout(ciag.zegar);
-    const b = ciag.b;
+    const b = ciag.b, przerwane = e.type === 'pointercancel';
     ciag.b = null;
     if (!ciag.aktywne) return;
     ciag.aktywne = false;
     ciag.bylRuch = true;
     setTimeout(() => { ciag.bylRuch = false; }, 400);
+    if (przerwane) ustawKolejnosc(ciag.start);
     b.classList.remove('ciagniety');
+    b.style.transition = RUCH;
+    b.style.transform = '';
+    przesunSuwak(true);
+    const k = kolejnosc();
+    if (przerwane || k.join() === ciag.start.join()) return;
     zapamietajKolejnosc(ciag.start);
-    powiedz(b.textContent.trim() + ': miejsce ' + (kolejnosc().indexOf(segmenty.indexOf(b)) + 1) + ' z ' + segmenty.length);
+    powiedz(b.textContent.trim() + ': miejsce ' + (k.indexOf(segmenty.indexOf(b)) + 1) + ' z ' + segmenty.length);
   }
   for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) pasekZakladek.addEventListener(t, koniecCiagniecia);
   pasekZakladek.addEventListener('contextmenu', (e) => e.preventDefault());
