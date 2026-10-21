@@ -32,10 +32,8 @@
   --akcent: #0071e3;
   /* Napis w akcencie: #0066cc ma 5,6:1 na bieli. */
   --akcent-tekst: #0066cc;
-  /* Tor zakładek i suwak pod wybraną, jak przełącznik w iOS. Napis wybranej w akcencie na białym suwaku, 5,6:1. */
-  --tor: #e8e8ed;
-  --suwak: #ffffff;
-  --wybrana: #0066cc;
+  /* Zakładka: osobna szara pigułka; wybrana stoi na pastelu swojej ikony (index.html). Kontrast napisów liczy test.js. */
+  --zakladka: #e8e8ed;
   /* Białe kółka i pigułki: włosek, jasna krawędź u góry i miękki cień w dwóch warstwach (wzorzec THIS IS THE WAY, „Głębia”). */
   --przycisk: #ffffff;
   --wlos: rgba(0, 0, 0, .12);
@@ -59,10 +57,8 @@
     --tekst2: #c0bfbc;
     --akcent: #409cff;
     --akcent-tekst: #409cff;
-    /* Suwak w szarości Apple, napis wybranej jaśniejszym błękitem, 5,6:1. Na czerni cienia nie widać, zostaje włosek. */
-    --tor: #1c1c1e;
-    --suwak: #3a3a3c;
-    --wybrana: #78bbff;
+    /* Zakładka w szarości Apple. Na czerni cienia nie widać, zostaje włosek. */
+    --zakladka: #2c2c2e;
     --przycisk: #2c2c2e;
     --wlos: rgba(255, 255, 255, .16);
     --blysk: rgba(255, 255, 255, 0);
@@ -102,8 +98,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
   gap: 8px;
   padding: calc(env(safe-area-inset-top) + 8px) calc(var(--prawo) - 4px) 8px var(--lewo);
 }
-/* Logo nr 9 dla Kasi w kafelku jak ikona na ekranie głównym (logo.svg robi zrob-logo-w-aplikacji.js). */
-.logo { flex: none; width: 40px; height: 40px; }
+/* Logo nr 9 dla Kasi w kafelku jak ikona na ekranie głównym (logo.svg robi zrob-logo-w-aplikacji.js). Od 22.10.2026 to też
+   przycisk: stuknięcie pokazuje te same wyszukiwania na Otomoto (app.js, „logo”). Wygląda dalej jak logo; pole dotyku ma 48 px,
+   a ujemny margines trzyma układ nagłówka taki, jak przy samym obrazku 40 px. */
+.logo { position: relative; flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin: -4px; padding: 0; border: 0; border-radius: 14px; background: none; }
+.logo img { display: block; width: 40px; height: 40px; transition: transform 120ms ease; }
+.logo:active img { transform: scale(.94); }
 h1 { flex: 1; min-width: 0; display: flex; align-items: center; margin: 0 0 0 2px; }
 /* Napis to krzywe w wielkości --napis; kolory ma w sobie, za motywem systemu. */
 h1 .napis { display: block; flex: none; width: calc(var(--napis) * var(--szer)); height: calc(var(--napis) * var(--wys)); max-width: 100%; }
@@ -148,10 +148,15 @@ main { flex: 1; min-height: 0; position: relative; }
 }
 .pigulka:active { transform: scale(.96); }
 
-/* Pasek zakładek na dole (od 19.10.2026), jak w iOS: szary tor, a wybrana zakładka stoi na białym suwaku z cieniem i ma napis
-   w akcencie. Suwak jedzie do stukniętej przez 240 ms. Ikona to zaokrąglony kwadrat z gradientem i białym znakiem
-   (reguła ikony-plan-b); zakładkę nazywa napis, a ikona pomaga ją znaleźć. Pasek omija wskaźnik ekranu głównego,
-   ale nie zostawia pod sobą całego pasa 34 px. */
+/* Pasek zakładek na dole (od 19.10.2026). Od 22.10.2026 cztery osobne przyciski zamiast szarego toru z białym suwakiem
+   (Jacek przez Czytadło: „Też należy rozdzielić … Rozdzielić, poproszę”; reguła przyciski-zawsze-jak-przyciski, „Rząd przycisków”).
+   Zakładka to szara pigułka z włoskiem, jasną krawędzią u góry i cieniem w dwóch warstwach, ikona nad nazwą. Wybrana: pastel
+   w barwie swojej ikony (22% barwy na bieli, w ciemnym 30% na czerni, wpisane w index.html), pierścień 2 px w kolorze tła i 2 px
+   w akcencie, pogrubiona nazwa i co 6 s przebłysk światła w barwie losowanej z puli dalekiej od pastelu (app.js, BLYSKI).
+   Przebłysk mówi, co jest wybrane, więc zostaje też przy ograniczonym ruchu. Pod kursorem jasna plama szkła idzie za myszą,
+   a nic się nie przesuwa (Jacek, 20.10.2026: „literki się trochę przesuwają”). Każda zakładka jest co najmniej tak szeroka
+   jak jej pogrubiona nazwa, więc wybór niczego nie przesuwa. Pasek omija wskaźnik ekranu głównego, ale nie zostawia pod sobą
+   całego pasa 34 px. */
 .dol {
   flex: none;
   position: relative;
@@ -160,54 +165,69 @@ main { flex: 1; min-height: 0; position: relative; }
   background: var(--tlo);
   box-shadow: inset 0 .5px 0 var(--wlos);
 }
-.karty { position: relative; display: flex; border-radius: 16px; background: var(--tor); }
-.karty .suwak {
-  position: absolute; left: 0; top: 3px; bottom: 3px; width: 0; border-radius: 13px; pointer-events: none;
-  background: var(--suwak); box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 8px var(--cien);
-  transition: transform 240ms cubic-bezier(.2, 0, 0, 1), width 240ms cubic-bezier(.2, 0, 0, 1);
-}
-.karty .suwak.bez-ruchu { transition: none; }
+.karty { position: relative; display: flex; gap: 12px; }
 .karty [role="tab"] {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: max-content;
   position: relative;
-  z-index: 1;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  min-height: 62px;
-  padding: 0 4px;
+  /* 5 px między ikoną a nazwą: przy 6 px wybrana zakładka stała przy 1,5× o 0,6 px ekranu od środka (pomiar na zrzutach). */
+  gap: 5px;
+  height: 60px;
+  padding: 0 6px;
   border: 0;
-  border-radius: 13px;
-  background: none;
+  border-radius: 18px;
+  background-color: var(--zakladka);
   color: var(--tekst);
-  /* Najdłuższa nazwa, „Ogłoszenia”, mieści się przy 13 px od 360 px szerokości, a przy 12 px od 320 px. */
   font-size: clamp(12px, 3.6vw, 13px);
   font-weight: 500;
-  line-height: 1.25;
   white-space: nowrap;
+  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
   /* Przestawianie: zakładkę ciągnie się palcem albo myszą (app.js). Bez touch-action: none przeglądarka wzięłaby ruch palca
      za przewijanie i przerwała ciągnięcie. Bez zaznaczania tekstu i menu iOS. */
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
-  transition: transform 120ms ease, color 120ms ease;
+  transition: transform 120ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
-.karty [role="tab"] > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.karty [aria-selected="true"] { color: var(--wybrana); font-weight: 600; }
-.karty [role="tab"]:focus-visible { outline-offset: -2px; }
-.znak { flex: none; display: block; width: 28px; height: 28px; transition: transform 120ms ease; }
-/* Pod kursorem napis zakładki robi się niebieski, jak na komputerze, i nic się nie przesuwa (Jacek, 20.10.2026: „myszką na menu
-   to literki się trochę przesuwają, to raczej nie jest celowe ani sensowne”). Do 20.10.2026 ikona unosiła się o 1 px.
-   Napis w akcencie na torze: 4,56:1, w ciemnym 8,39:1. */
-@media (hover: hover) { .karty [role="tab"]:hover { color: var(--wybrana); } }
-.karty [role="tab"]:active .znak { transform: scale(.92); }
+/* Nazwa i jej pogrubiona kopia w jednej komórce (szerokość grubszej), przycięte do wersalików, więc ikona z nazwą stoją na środku. */
+.karty .nazwa { display: inline-grid; }
+.karty .nazwa > span, .karty .nazwa::after { grid-area: 1 / 1; white-space: nowrap; text-box: trim-both cap alphabetic; }
+.karty .nazwa::after { content: attr(data-nazwa); font-weight: 600; visibility: hidden; }
+.karty [aria-selected="true"] {
+  font-weight: 600;
+  background-color: var(--pastel, #ffffff);
+  background-image: linear-gradient(105deg, transparent 38%, var(--blysk-j, rgba(255, 255, 255, .85)) 50%, transparent 62%);
+  background-size: 260% 100%;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 2px var(--tlo), 0 0 0 4px var(--akcent), 0 4px 12px var(--cien-mocny);
+  animation: kartaBlysk 6s ease-in-out infinite;
+}
+@keyframes kartaBlysk { 0% { background-position: 100% 0; } 20%, 100% { background-position: 0 0; } }
+@media (prefers-color-scheme: dark) {
+  .karty [aria-selected="true"] { background-color: var(--pastel-c, #3a3a3c);
+    background-image: linear-gradient(105deg, transparent 38%, var(--blysk-c, rgba(255, 255, 255, .45)) 50%, transparent 62%); }
+}
+.karty [role="tab"]:focus-visible { outline: 2px solid var(--akcent); outline-offset: 6px; }
+.znak { flex: none; display: block; width: 28px; height: 28px; }
+/* Szkło pod kursorem: jasna plama idzie za myszą, między tłem zakładki a ikoną z nazwą (app.js podaje --mx i --my). */
+.karty [role="tab"]::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 200ms ease;
+  background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .75), transparent 72%);
+}
+@media (hover: hover) { .karty [role="tab"]:hover::after { opacity: 1; } }
+@media (prefers-color-scheme: dark) {
+  .karty [role="tab"]::after { background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .16), transparent 72%); }
+}
+.karty [role="tab"]:active { transform: scale(.97); }
 /* Ciągnięta zakładka unosi się nad resztą i jedzie pod palcem (przesunięcie i powiększenie o 6% daje app.js), a reszta robi jej miejsce. */
-.karty [role="tab"].ciagniety { z-index: 2; cursor: grabbing; background: var(--suwak); box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
-.karty [role="tab"].ciagniety .znak { transform: none; }
+.karty [role="tab"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
 /* „Cofnij” stoi 6 sekund nad paskiem po przestawieniu zakładek (reguła cofnij-i-ponow: na telefonie nie ma Ctrl+Z). */
 .cofnij-zakladki { position: absolute; left: 0; right: 0; bottom: 100%; display: flex; justify-content: center; padding-bottom: 12px; pointer-events: none; }
 .cofnij-zakladki .pigulka { pointer-events: auto; box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 2px 6px var(--cien), 0 8px 24px var(--cien-mocny); }
@@ -225,9 +245,10 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 /* Szeroki ekran: iPhone w poziomie i przeglądarka na komputerze. Zakładki stoją pod nagłówkiem, ikona obok napisu. */
 @media (min-width: 760px) {
   .glowa { order: -2; }
-  .dol { order: -1; padding: 0 var(--prawo) 12px var(--lewo); box-shadow: none; }
-  .karty { max-width: 600px; margin: 0 auto; }
-  .karty [role="tab"] { flex-direction: row; gap: 8px; min-height: 48px; font-size: var(--maly); }
+  .dol { order: -1; padding: 4px var(--prawo) 12px var(--lewo); box-shadow: none; }
+  .karty { max-width: 600px; margin: 0 auto; gap: 16px; }
+  /* Nazwa 16 px w pigułce 40 px, jak w Czytadle: przy 15 px wersaliki stały przy 4× o 0,45 px za wysoko. */
+  .karty [role="tab"] { flex-direction: row; gap: 8px; height: 40px; padding: 0 14px 0 10px; border-radius: 20px; font-size: 16px; }
   .znak { width: 24px; height: 24px; }
   .cofnij-zakladki { top: 100%; bottom: auto; padding: 12px 0 0; }
 }
@@ -236,6 +257,25 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
   body { position: relative; }
   .dol { position: absolute; top: calc(env(safe-area-inset-top) + 8px); left: 50%; width: 600px; margin-left: -300px; padding: 0; background: none; }
 }
+/* Menu pod logo (od 22.10.2026): te same wyszukiwania na Otomoto, ukryte pod logo (Jacek: „easter egg”). Karta z włoskiem
+   i miękkim cieniem, w ciemnym sama obwódka. Każda pozycja to osobny przycisk z głębią, napis na środku wersalików. */
+.menu-logo {
+  position: fixed; z-index: 40; display: grid; gap: 8px; min-width: 264px; max-width: calc(100vw - 16px); padding: 8px; border-radius: 18px;
+  background: var(--tlo); box-shadow: 0 0 0 .5px var(--wlos), 0 2px 6px var(--cien), 0 12px 32px var(--cien-mocny);
+}
+.menu-logo-tytul { margin: 4px 8px 0; color: var(--tekst2); font-size: 13px; font-weight: 600; }
+.menu-logo button {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 48px; padding: 0 14px; border: 0; border-radius: 12px;
+  background: var(--przycisk); color: var(--tekst); text-align: left;
+  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.menu-logo button:active { transform: scale(.97); }
+@media (hover: hover) { .menu-logo button:hover { box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 1px var(--akcent), 0 1px 2px var(--cien), 0 2px 6px var(--cien); } }
+.menu-logo-nazwa { text-box: trim-both cap alphabetic; }
+.menu-logo-znak { flex: none; color: var(--akcent-tekst); }
+@media (prefers-color-scheme: dark) { .menu-logo { background: #1c1c1e; box-shadow: 0 0 0 1px #48484a; } }
+
 </style>
 <style>
 /* czat.css: wygląd asystenta Kasiomobile (czat.js), ten sam na iPhonie, Androidzie, komputerze i w przeglądarce (od 19.10.2026).
@@ -392,7 +432,7 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 <body>
 <svg class="wzory" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="kafel" d="M28 14L28 14.73L28 15.47L28 16.22L28 16.98L28 17.75L27.99 18.55L27.98 19.37L27.95 20.21L27.91 21.09L27.83 21.98L27.7 22.9L27.49 23.8L27.19 24.68L26.76 25.49L26.19 26.19L25.49 26.76L24.68 27.19L23.8 27.49L22.9 27.7L21.98 27.83L21.09 27.91L20.21 27.95L19.37 27.98L18.55 27.99L17.75 28L16.98 28L16.22 28L15.47 28L14.73 28L14 28L13.27 28L12.53 28L11.78 28L11.02 28L10.25 28L9.45 27.99L8.63 27.98L7.79 27.95L6.91 27.91L6.02 27.83L5.1 27.7L4.2 27.49L3.32 27.19L2.51 26.76L1.81 26.19L1.24 25.49L0.81 24.68L0.51 23.8L0.3 22.9L0.17 21.98L0.09 21.09L0.05 20.21L0.02 19.37L0.01 18.55L0 17.75L0 16.98L0 16.22L0 15.47L0 14.73L0 14L0 13.27L0 12.53L0 11.78L0 11.02L0 10.25L0.01 9.45L0.02 8.63L0.05 7.79L0.09 6.91L0.17 6.02L0.3 5.1L0.51 4.2L0.81 3.32L1.24 2.51L1.81 1.81L2.51 1.24L3.32 0.81L4.2 0.51L5.1 0.3L6.02 0.17L6.91 0.09L7.79 0.05L8.63 0.02L9.45 0.01L10.25 0L11.02 0L11.78 0L12.53 0L13.27 0L14 0L14.73 0L15.47 0L16.22 0L16.98 0L17.75 0L18.55 0.01L19.37 0.02L20.21 0.05L21.09 0.09L21.98 0.17L22.9 0.3L23.8 0.51L24.68 0.81L25.49 1.24L26.19 1.81L26.76 2.51L27.19 3.32L27.49 4.2L27.7 5.1L27.83 6.02L27.91 6.91L27.95 7.79L27.98 8.63L27.99 9.45L28 10.25L28 11.02L28 11.78L28 12.53L28 13.27Z"/><linearGradient id="g-ogl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#30d158"/><stop offset="1" stop-color="#248a3d"/></linearGradient><linearGradient id="g-kat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient><linearGradient id="g-kre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f0a"/><stop offset="1" stop-color="#e07000"/></linearGradient><linearGradient id="g-his" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bf5af2"/><stop offset="1" stop-color="#8944ab"/></linearGradient></defs></svg>
 <header class="glowa">
-  <img class="logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjwhLS0gWnJvYmlvbmUgcHJ6ZXogenJvYi1sb2dvLXctYXBsaWthY2ppLmpzOiBsb2dvIG5yIDkg4oCeWiBrbG9ja8Ozd+KAnSB3IGthZmVsa3UsIHRlbiBzYW0gY28gdyBuYWfFgsOzd2t1IG5hIEFuZHJvaWR6aWUuIC0tPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFRUYwRjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHBhdGggZD0iTTEwMjQuMCw1MTIuMCAxMDIzLjgsNjUyLjIgMTAyMy40LDY5Ny4wIDEwMjIuNiw3MjkuNCAxMDIxLjUsNzU1LjggMTAyMC4wLDc3OC4zIDEwMTguMyw3OTguMSAxMDE2LjIsODE1LjkgMTAxMy44LDgzMi4xIDEwMTEuMSw4NDYuOSAxMDA4LjAsODYwLjcgMTAwNC42LDg3My40IDEwMDAuOSw4ODUuMyA5OTYuOCw4OTYuNSA5OTIuNCw5MDYuOSA5ODcuNiw5MTYuNyA5ODIuNCw5MjYuMCA5NzYuOCw5MzQuNiA5NzAuOSw5NDIuOCA5NjQuNSw5NTAuNSA5NTcuNyw5NTcuNyA5NTAuNSw5NjQuNSA5NDIuOCw5NzAuOSA5MzQuNiw5NzYuOCA5MjYuMCw5ODIuNCA5MTYuNyw5ODcuNiA5MDYuOSw5OTIuNCA4OTYuNSw5OTYuOCA4ODUuMywxMDAwLjkgODczLjQsMTAwNC42IDg2MC43LDEwMDguMCA4NDYuOSwxMDExLjEgODMyLjEsMTAxMy44IDgxNS45LDEwMTYuMiA3OTguMSwxMDE4LjMgNzc4LjMsMTAyMC4wIDc1NS44LDEwMjEuNSA3MjkuNCwxMDIyLjYgNjk3LjAsMTAyMy40IDY1Mi4yLDEwMjMuOCA1MTIuMCwxMDI0LjAgMzcxLjgsMTAyMy44IDMyNy4wLDEwMjMuNCAyOTQuNiwxMDIyLjYgMjY4LjIsMTAyMS41IDI0NS43LDEwMjAuMCAyMjUuOSwxMDE4LjMgMjA4LjEsMTAxNi4yIDE5MS45LDEwMTMuOCAxNzcuMSwxMDExLjEgMTYzLjMsMTAwOC4wIDE1MC42LDEwMDQuNiAxMzguNywxMDAwLjkgMTI3LjUsOTk2LjggMTE3LjEsOTkyLjQgMTA3LjMsOTg3LjYgOTguMCw5ODIuNCA4OS40LDk3Ni44IDgxLjIsOTcwLjkgNzMuNSw5NjQuNSA2Ni4zLDk1Ny43IDU5LjUsOTUwLjUgNTMuMSw5NDIuOCA0Ny4yLDkzNC42IDQxLjYsOTI2LjAgMzYuNCw5MTYuNyAzMS42LDkwNi45IDI3LjIsODk2LjUgMjMuMSw4ODUuMyAxOS40LDg3My40IDE2LjAsODYwLjcgMTIuOSw4NDYuOSAxMC4yLDgzMi4xIDcuOCw4MTUuOSA1LjcsNzk4LjEgNC4wLDc3OC4zIDIuNSw3NTUuOCAxLjQsNzI5LjQgMC42LDY5Ny4wIDAuMiw2NTIuMiAwLjAsNTEyLjAgMC4yLDM3MS44IDAuNiwzMjcuMCAxLjQsMjk0LjYgMi41LDI2OC4yIDQuMCwyNDUuNyA1LjcsMjI1LjkgNy44LDIwOC4xIDEwLjIsMTkxLjkgMTIuOSwxNzcuMSAxNi4wLDE2My4zIDE5LjQsMTUwLjYgMjMuMSwxMzguNyAyNy4yLDEyNy41IDMxLjYsMTE3LjEgMzYuNCwxMDcuMyA0MS42LDk4LjAgNDcuMiw4OS40IDUzLjEsODEuMiA1OS41LDczLjUgNjYuMyw2Ni4zIDczLjUsNTkuNSA4MS4yLDUzLjEgODkuNCw0Ny4yIDk4LjAsNDEuNiAxMDcuMywzNi40IDExNy4xLDMxLjYgMTI3LjUsMjcuMiAxMzguNywyMy4xIDE1MC42LDE5LjQgMTYzLjMsMTYuMCAxNzcuMSwxMi45IDE5MS45LDEwLjIgMjA4LjEsNy44IDIyNS45LDUuNyAyNDUuNyw0LjAgMjY4LjIsMi41IDI5NC42LDEuNCAzMjcuMCwwLjYgMzcxLjgsMC4yIDUxMi4wLDAuMCA2NTIuMiwwLjIgNjk3LjAsMC42IDcyOS40LDEuNCA3NTUuOCwyLjUgNzc4LjMsNC4wIDc5OC4xLDUuNyA4MTUuOSw3LjggODMyLjEsMTAuMiA4NDYuOSwxMi45IDg2MC43LDE2LjAgODczLjQsMTkuNCA4ODUuMywyMy4xIDg5Ni41LDI3LjIgOTA2LjksMzEuNiA5MTYuNywzNi40IDkyNi4wLDQxLjYgOTM0LjYsNDcuMiA5NDIuOCw1My4xIDk1MC41LDU5LjUgOTU3LjcsNjYuMyA5NjQuNSw3My41IDk3MC45LDgxLjIgOTc2LjgsODkuNCA5ODIuNCw5OC4wIDk4Ny42LDEwNy4zIDk5Mi40LDExNy4xIDk5Ni44LDEyNy41IDEwMDAuOSwxMzguNyAxMDA0LjYsMTUwLjYgMTAwOC4wLDE2My4zIDEwMTEuMSwxNzcuMSAxMDEzLjgsMTkxLjkgMTAxNi4yLDIwOC4xIDEwMTguMywyMjUuOSAxMDIwLjAsMjQ1LjcgMTAyMS41LDI2OC4yIDEwMjIuNiwyOTQuNiAxMDIzLjQsMzI3LjAgMTAyMy44LDM3MS44WiIgZmlsbD0idXJsKCN0KSIvPgo8cGF0aCBkPSJNMTAxOC4wLDUxMi4wIDEwMTcuOCw2NTAuNiAxMDE3LjQsNjk0LjggMTAxNi42LDcyNi45IDEwMTUuNSw3NTIuOSAxMDE0LjEsNzc1LjIgMTAxMi40LDc5NC44IDEwMTAuMyw4MTIuMyAxMDA3LjksODI4LjMgMTAwNS4yLDg0My4wIDEwMDIuMiw4NTYuNiA5OTguOSw4NjkuMiA5OTUuMiw4ODEuMCA5OTEuMSw4OTIuMCA5ODYuNyw5MDIuMyA5ODIuMCw5MTIuMCA5NzYuOSw5MjEuMSA5NzEuNCw5MjkuNyA5NjUuNSw5MzcuOCA5NTkuMiw5NDUuNCA5NTIuNSw5NTIuNSA5NDUuNCw5NTkuMiA5MzcuOCw5NjUuNSA5MjkuNyw5NzEuNCA5MjEuMSw5NzYuOSA5MTIuMCw5ODIuMCA5MDIuMyw5ODYuNyA4OTIuMCw5OTEuMSA4ODEuMCw5OTUuMiA4NjkuMiw5OTguOSA4NTYuNiwxMDAyLjIgODQzLjAsMTAwNS4yIDgyOC4zLDEwMDcuOSA4MTIuMywxMDEwLjMgNzk0LjgsMTAxMi40IDc3NS4yLDEwMTQuMSA3NTIuOSwxMDE1LjUgNzI2LjksMTAxNi42IDY5NC44LDEwMTcuNCA2NTAuNiwxMDE3LjggNTEyLjAsMTAxOC4wIDM3My40LDEwMTcuOCAzMjkuMiwxMDE3LjQgMjk3LjEsMTAxNi42IDI3MS4xLDEwMTUuNSAyNDguOCwxMDE0LjEgMjI5LjIsMTAxMi40IDIxMS43LDEwMTAuMyAxOTUuNywxMDA3LjkgMTgxLjAsMTAwNS4yIDE2Ny40LDEwMDIuMiAxNTQuOCw5OTguOSAxNDMuMCw5OTUuMiAxMzIuMCw5OTEuMSAxMjEuNyw5ODYuNyAxMTIuMCw5ODIuMCAxMDIuOSw5NzYuOSA5NC4zLDk3MS40IDg2LjIsOTY1LjUgNzguNiw5NTkuMiA3MS41LDk1Mi41IDY0LjgsOTQ1LjQgNTguNSw5MzcuOCA1Mi42LDkyOS43IDQ3LjEsOTIxLjEgNDIuMCw5MTIuMCAzNy4zLDkwMi4zIDMyLjksODkyLjAgMjguOCw4ODEuMCAyNS4xLDg2OS4yIDIxLjgsODU2LjYgMTguOCw4NDMuMCAxNi4xLDgyOC4zIDEzLjcsODEyLjMgMTEuNiw3OTQuOCA5LjksNzc1LjIgOC41LDc1Mi45IDcuNCw3MjYuOSA2LjYsNjk0LjggNi4yLDY1MC42IDYuMCw1MTIuMCA2LjIsMzczLjQgNi42LDMyOS4yIDcuNCwyOTcuMSA4LjUsMjcxLjEgOS45LDI0OC44IDExLjYsMjI5LjIgMTMuNywyMTEuNyAxNi4xLDE5NS43IDE4LjgsMTgxLjAgMjEuOCwxNjcuNCAyNS4xLDE1NC44IDI4LjgsMTQzLjAgMzIuOSwxMzIuMCAzNy4zLDEyMS43IDQyLjAsMTEyLjAgNDcuMSwxMDIuOSA1Mi42LDk0LjMgNTguNSw4Ni4yIDY0LjgsNzguNiA3MS41LDcxLjUgNzguNiw2NC44IDg2LjIsNTguNSA5NC4zLDUyLjYgMTAyLjksNDcuMSAxMTIuMCw0Mi4wIDEyMS43LDM3LjMgMTMyLjAsMzIuOSAxNDMuMCwyOC44IDE1NC44LDI1LjEgMTY3LjQsMjEuOCAxODEuMCwxOC44IDE5NS43LDE2LjEgMjExLjcsMTMuNyAyMjkuMiwxMS42IDI0OC44LDkuOSAyNzEuMSw4LjUgMjk3LjEsNy40IDMyOS4yLDYuNiAzNzMuNCw2LjIgNTEyLjAsNi4wIDY1MC42LDYuMiA2OTQuOCw2LjYgNzI2LjksNy40IDc1Mi45LDguNSA3NzUuMiw5LjkgNzk0LjgsMTEuNiA4MTIuMywxMy43IDgyOC4zLDE2LjEgODQzLjAsMTguOCA4NTYuNiwyMS44IDg2OS4yLDI1LjEgODgxLjAsMjguOCA4OTIuMCwzMi45IDkwMi4zLDM3LjMgOTEyLjAsNDIuMCA5MjEuMSw0Ny4xIDkyOS43LDUyLjYgOTM3LjgsNTguNSA5NDUuNCw2NC44IDk1Mi41LDcxLjUgOTU5LjIsNzguNiA5NjUuNSw4Ni4yIDk3MS40LDk0LjMgOTc2LjksMTAyLjkgOTgyLjAsMTEyLjAgOTg2LjcsMTIxLjcgOTkxLjEsMTMyLjAgOTk1LjIsMTQzLjAgOTk4LjksMTU0LjggMTAwMi4yLDE2Ny40IDEwMDUuMiwxODEuMCAxMDA3LjksMTk1LjcgMTAxMC4zLDIxMS43IDEwMTIuNCwyMjkuMiAxMDE0LjEsMjQ4LjggMTAxNS41LDI3MS4xIDEwMTYuNiwyOTcuMSAxMDE3LjQsMzI5LjIgMTAxNy44LDM3My40WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iLjEyIiBzdHJva2Utd2lkdGg9IjEyIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsLTM3KSI+CjxwYXRoIGQ9Ik0zNzIsNDc2TDQyOCwzNzJRNDM2LDM1NiA0NTQsMzU2TDU3MCwzNTZRNTg4LDM1NiA1OTYsMzcyTDY1Miw0NzZaIiBmaWxsPSIjMkVBNDRGIi8+CjxwYXRoIGQ9Ik0yODAsNDk0SDc0NEE0NCw0NCAwIDAgMSA3ODgsNTM4VjYwMEE0NCw0NCAwIDAgMSA3NDQsNjQ0SDI4MEE0NCw0NCAwIDAgMSAyMzYsNjAwVjUzOEE0NCw0NCAwIDAgMSAyODAsNDk0WiIgZmlsbD0iIzI0NDE4QSIvPgo8Y2lyY2xlIGN4PSIzNzIiIGN5PSI2NzIiIHI9IjYyIiBmaWxsPSIjNzA0Mjg1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTgiLz4KPGNpcmNsZSBjeD0iNjUyIiBjeT0iNjcyIiByPSI2MiIgZmlsbD0iIzcwNDI4NSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjE4Ii8+CjwvZz4KPC9zdmc+Cg==" width="40" height="40" alt="">
+  <button type="button" id="logo" class="logo" aria-label="Kasiomobile: te same wyszukiwania na Otomoto" aria-haspopup="menu" aria-expanded="false"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjwhLS0gWnJvYmlvbmUgcHJ6ZXogenJvYi1sb2dvLXctYXBsaWthY2ppLmpzOiBsb2dvIG5yIDkg4oCeWiBrbG9ja8Ozd+KAnSB3IGthZmVsa3UsIHRlbiBzYW0gY28gdyBuYWfFgsOzd2t1IG5hIEFuZHJvaWR6aWUuIC0tPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFRUYwRjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHBhdGggZD0iTTEwMjQuMCw1MTIuMCAxMDIzLjgsNjUyLjIgMTAyMy40LDY5Ny4wIDEwMjIuNiw3MjkuNCAxMDIxLjUsNzU1LjggMTAyMC4wLDc3OC4zIDEwMTguMyw3OTguMSAxMDE2LjIsODE1LjkgMTAxMy44LDgzMi4xIDEwMTEuMSw4NDYuOSAxMDA4LjAsODYwLjcgMTAwNC42LDg3My40IDEwMDAuOSw4ODUuMyA5OTYuOCw4OTYuNSA5OTIuNCw5MDYuOSA5ODcuNiw5MTYuNyA5ODIuNCw5MjYuMCA5NzYuOCw5MzQuNiA5NzAuOSw5NDIuOCA5NjQuNSw5NTAuNSA5NTcuNyw5NTcuNyA5NTAuNSw5NjQuNSA5NDIuOCw5NzAuOSA5MzQuNiw5NzYuOCA5MjYuMCw5ODIuNCA5MTYuNyw5ODcuNiA5MDYuOSw5OTIuNCA4OTYuNSw5OTYuOCA4ODUuMywxMDAwLjkgODczLjQsMTAwNC42IDg2MC43LDEwMDguMCA4NDYuOSwxMDExLjEgODMyLjEsMTAxMy44IDgxNS45LDEwMTYuMiA3OTguMSwxMDE4LjMgNzc4LjMsMTAyMC4wIDc1NS44LDEwMjEuNSA3MjkuNCwxMDIyLjYgNjk3LjAsMTAyMy40IDY1Mi4yLDEwMjMuOCA1MTIuMCwxMDI0LjAgMzcxLjgsMTAyMy44IDMyNy4wLDEwMjMuNCAyOTQuNiwxMDIyLjYgMjY4LjIsMTAyMS41IDI0NS43LDEwMjAuMCAyMjUuOSwxMDE4LjMgMjA4LjEsMTAxNi4yIDE5MS45LDEwMTMuOCAxNzcuMSwxMDExLjEgMTYzLjMsMTAwOC4wIDE1MC42LDEwMDQuNiAxMzguNywxMDAwLjkgMTI3LjUsOTk2LjggMTE3LjEsOTkyLjQgMTA3LjMsOTg3LjYgOTguMCw5ODIuNCA4OS40LDk3Ni44IDgxLjIsOTcwLjkgNzMuNSw5NjQuNSA2Ni4zLDk1Ny43IDU5LjUsOTUwLjUgNTMuMSw5NDIuOCA0Ny4yLDkzNC42IDQxLjYsOTI2LjAgMzYuNCw5MTYuNyAzMS42LDkwNi45IDI3LjIsODk2LjUgMjMuMSw4ODUuMyAxOS40LDg3My40IDE2LjAsODYwLjcgMTIuOSw4NDYuOSAxMC4yLDgzMi4xIDcuOCw4MTUuOSA1LjcsNzk4LjEgNC4wLDc3OC4zIDIuNSw3NTUuOCAxLjQsNzI5LjQgMC42LDY5Ny4wIDAuMiw2NTIuMiAwLjAsNTEyLjAgMC4yLDM3MS44IDAuNiwzMjcuMCAxLjQsMjk0LjYgMi41LDI2OC4yIDQuMCwyNDUuNyA1LjcsMjI1LjkgNy44LDIwOC4xIDEwLjIsMTkxLjkgMTIuOSwxNzcuMSAxNi4wLDE2My4zIDE5LjQsMTUwLjYgMjMuMSwxMzguNyAyNy4yLDEyNy41IDMxLjYsMTE3LjEgMzYuNCwxMDcuMyA0MS42LDk4LjAgNDcuMiw4OS40IDUzLjEsODEuMiA1OS41LDczLjUgNjYuMyw2Ni4zIDczLjUsNTkuNSA4MS4yLDUzLjEgODkuNCw0Ny4yIDk4LjAsNDEuNiAxMDcuMywzNi40IDExNy4xLDMxLjYgMTI3LjUsMjcuMiAxMzguNywyMy4xIDE1MC42LDE5LjQgMTYzLjMsMTYuMCAxNzcuMSwxMi45IDE5MS45LDEwLjIgMjA4LjEsNy44IDIyNS45LDUuNyAyNDUuNyw0LjAgMjY4LjIsMi41IDI5NC42LDEuNCAzMjcuMCwwLjYgMzcxLjgsMC4yIDUxMi4wLDAuMCA2NTIuMiwwLjIgNjk3LjAsMC42IDcyOS40LDEuNCA3NTUuOCwyLjUgNzc4LjMsNC4wIDc5OC4xLDUuNyA4MTUuOSw3LjggODMyLjEsMTAuMiA4NDYuOSwxMi45IDg2MC43LDE2LjAgODczLjQsMTkuNCA4ODUuMywyMy4xIDg5Ni41LDI3LjIgOTA2LjksMzEuNiA5MTYuNywzNi40IDkyNi4wLDQxLjYgOTM0LjYsNDcuMiA5NDIuOCw1My4xIDk1MC41LDU5LjUgOTU3LjcsNjYuMyA5NjQuNSw3My41IDk3MC45LDgxLjIgOTc2LjgsODkuNCA5ODIuNCw5OC4wIDk4Ny42LDEwNy4zIDk5Mi40LDExNy4xIDk5Ni44LDEyNy41IDEwMDAuOSwxMzguNyAxMDA0LjYsMTUwLjYgMTAwOC4wLDE2My4zIDEwMTEuMSwxNzcuMSAxMDEzLjgsMTkxLjkgMTAxNi4yLDIwOC4xIDEwMTguMywyMjUuOSAxMDIwLjAsMjQ1LjcgMTAyMS41LDI2OC4yIDEwMjIuNiwyOTQuNiAxMDIzLjQsMzI3LjAgMTAyMy44LDM3MS44WiIgZmlsbD0idXJsKCN0KSIvPgo8cGF0aCBkPSJNMTAxOC4wLDUxMi4wIDEwMTcuOCw2NTAuNiAxMDE3LjQsNjk0LjggMTAxNi42LDcyNi45IDEwMTUuNSw3NTIuOSAxMDE0LjEsNzc1LjIgMTAxMi40LDc5NC44IDEwMTAuMyw4MTIuMyAxMDA3LjksODI4LjMgMTAwNS4yLDg0My4wIDEwMDIuMiw4NTYuNiA5OTguOSw4NjkuMiA5OTUuMiw4ODEuMCA5OTEuMSw4OTIuMCA5ODYuNyw5MDIuMyA5ODIuMCw5MTIuMCA5NzYuOSw5MjEuMSA5NzEuNCw5MjkuNyA5NjUuNSw5MzcuOCA5NTkuMiw5NDUuNCA5NTIuNSw5NTIuNSA5NDUuNCw5NTkuMiA5MzcuOCw5NjUuNSA5MjkuNyw5NzEuNCA5MjEuMSw5NzYuOSA5MTIuMCw5ODIuMCA5MDIuMyw5ODYuNyA4OTIuMCw5OTEuMSA4ODEuMCw5OTUuMiA4NjkuMiw5OTguOSA4NTYuNiwxMDAyLjIgODQzLjAsMTAwNS4yIDgyOC4zLDEwMDcuOSA4MTIuMywxMDEwLjMgNzk0LjgsMTAxMi40IDc3NS4yLDEwMTQuMSA3NTIuOSwxMDE1LjUgNzI2LjksMTAxNi42IDY5NC44LDEwMTcuNCA2NTAuNiwxMDE3LjggNTEyLjAsMTAxOC4wIDM3My40LDEwMTcuOCAzMjkuMiwxMDE3LjQgMjk3LjEsMTAxNi42IDI3MS4xLDEwMTUuNSAyNDguOCwxMDE0LjEgMjI5LjIsMTAxMi40IDIxMS43LDEwMTAuMyAxOTUuNywxMDA3LjkgMTgxLjAsMTAwNS4yIDE2Ny40LDEwMDIuMiAxNTQuOCw5OTguOSAxNDMuMCw5OTUuMiAxMzIuMCw5OTEuMSAxMjEuNyw5ODYuNyAxMTIuMCw5ODIuMCAxMDIuOSw5NzYuOSA5NC4zLDk3MS40IDg2LjIsOTY1LjUgNzguNiw5NTkuMiA3MS41LDk1Mi41IDY0LjgsOTQ1LjQgNTguNSw5MzcuOCA1Mi42LDkyOS43IDQ3LjEsOTIxLjEgNDIuMCw5MTIuMCAzNy4zLDkwMi4zIDMyLjksODkyLjAgMjguOCw4ODEuMCAyNS4xLDg2OS4yIDIxLjgsODU2LjYgMTguOCw4NDMuMCAxNi4xLDgyOC4zIDEzLjcsODEyLjMgMTEuNiw3OTQuOCA5LjksNzc1LjIgOC41LDc1Mi45IDcuNCw3MjYuOSA2LjYsNjk0LjggNi4yLDY1MC42IDYuMCw1MTIuMCA2LjIsMzczLjQgNi42LDMyOS4yIDcuNCwyOTcuMSA4LjUsMjcxLjEgOS45LDI0OC44IDExLjYsMjI5LjIgMTMuNywyMTEuNyAxNi4xLDE5NS43IDE4LjgsMTgxLjAgMjEuOCwxNjcuNCAyNS4xLDE1NC44IDI4LjgsMTQzLjAgMzIuOSwxMzIuMCAzNy4zLDEyMS43IDQyLjAsMTEyLjAgNDcuMSwxMDIuOSA1Mi42LDk0LjMgNTguNSw4Ni4yIDY0LjgsNzguNiA3MS41LDcxLjUgNzguNiw2NC44IDg2LjIsNTguNSA5NC4zLDUyLjYgMTAyLjksNDcuMSAxMTIuMCw0Mi4wIDEyMS43LDM3LjMgMTMyLjAsMzIuOSAxNDMuMCwyOC44IDE1NC44LDI1LjEgMTY3LjQsMjEuOCAxODEuMCwxOC44IDE5NS43LDE2LjEgMjExLjcsMTMuNyAyMjkuMiwxMS42IDI0OC44LDkuOSAyNzEuMSw4LjUgMjk3LjEsNy40IDMyOS4yLDYuNiAzNzMuNCw2LjIgNTEyLjAsNi4wIDY1MC42LDYuMiA2OTQuOCw2LjYgNzI2LjksNy40IDc1Mi45LDguNSA3NzUuMiw5LjkgNzk0LjgsMTEuNiA4MTIuMywxMy43IDgyOC4zLDE2LjEgODQzLjAsMTguOCA4NTYuNiwyMS44IDg2OS4yLDI1LjEgODgxLjAsMjguOCA4OTIuMCwzMi45IDkwMi4zLDM3LjMgOTEyLjAsNDIuMCA5MjEuMSw0Ny4xIDkyOS43LDUyLjYgOTM3LjgsNTguNSA5NDUuNCw2NC44IDk1Mi41LDcxLjUgOTU5LjIsNzguNiA5NjUuNSw4Ni4yIDk3MS40LDk0LjMgOTc2LjksMTAyLjkgOTgyLjAsMTEyLjAgOTg2LjcsMTIxLjcgOTkxLjEsMTMyLjAgOTk1LjIsMTQzLjAgOTk4LjksMTU0LjggMTAwMi4yLDE2Ny40IDEwMDUuMiwxODEuMCAxMDA3LjksMTk1LjcgMTAxMC4zLDIxMS43IDEwMTIuNCwyMjkuMiAxMDE0LjEsMjQ4LjggMTAxNS41LDI3MS4xIDEwMTYuNiwyOTcuMSAxMDE3LjQsMzI5LjIgMTAxNy44LDM3My40WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iLjEyIiBzdHJva2Utd2lkdGg9IjEyIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsLTM3KSI+CjxwYXRoIGQ9Ik0zNzIsNDc2TDQyOCwzNzJRNDM2LDM1NiA0NTQsMzU2TDU3MCwzNTZRNTg4LDM1NiA1OTYsMzcyTDY1Miw0NzZaIiBmaWxsPSIjMkVBNDRGIi8+CjxwYXRoIGQ9Ik0yODAsNDk0SDc0NEE0NCw0NCAwIDAgMSA3ODgsNTM4VjYwMEE0NCw0NCAwIDAgMSA3NDQsNjQ0SDI4MEE0NCw0NCAwIDAgMSAyMzYsNjAwVjUzOEE0NCw0NCAwIDAgMSAyODAsNDk0WiIgZmlsbD0iIzI0NDE4QSIvPgo8Y2lyY2xlIGN4PSIzNzIiIGN5PSI2NzIiIHI9IjYyIiBmaWxsPSIjNzA0Mjg1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTgiLz4KPGNpcmNsZSBjeD0iNjUyIiBjeT0iNjcyIiByPSI2MiIgZmlsbD0iIzcwNDI4NSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjE4Ii8+CjwvZz4KPC9zdmc+Cg==" width="40" height="40" alt=""></button>
   <!--napis--><h1><svg class="napis" viewBox="0 0 11602 1572" role="img" aria-label="Kasiomobile" style="--szer:5.6650;--wys:0.7676"><style>.napis-l{fill:#24418A}.napis-z{fill:#1C7C36}.napis-f{fill:#704285}@media (prefers-color-scheme: dark){.napis-l{fill:#FFFFFF}.napis-z{fill:#30D158}.napis-f{fill:#C495E8}}</style><path class="napis-l" d="M280 1531L16 1531L16 41L280 41L280 760Q338 692 397 625Q455 558 513 490L513 490L909 41L1235 41L662 686L1245 1531L937 1531L484 864L280 1095L280 1531ZM1675 1548L1675 1548Q1517 1548 1413 1469Q1310 1389 1310 1231L1310 1231Q1310 1111 1368 1046Q1427 980 1521 950Q1616 920 1725 909L1725 909Q1872 892 1930 879Q1988 866 1988 812L1988 812L1988 804Q1988 736 1936 693Q1885 650 1795 650L1795 650Q1703 650 1645 693Q1588 736 1583 803L1583 803L1340 803Q1349 646 1471 550Q1593 454 1800 454L1800 454Q2006 454 2122 550Q2238 646 2238 811L2238 811L2238 1531L1990 1531L1990 1382L1986 1382Q1948 1452 1876 1500Q1804 1548 1675 1548ZM1737 1361L1737 1361Q1861 1361 1925 1297Q1989 1232 1989 1140L1989 1140L1989 1026Q1966 1041 1900 1054Q1834 1066 1756 1078L1756 1078Q1675 1090 1615 1124Q1556 1157 1556 1229L1556 1229Q1556 1291 1605 1326Q1654 1361 1737 1361ZM2854 1556L2854 1556Q2661 1556 2532 1466Q2402 1375 2390 1205L2390 1205L2639 1205Q2647 1282 2701 1325Q2755 1367 2850 1367L2850 1367Q2941 1367 2994 1331Q3046 1295 3046 1239L3046 1239Q3046 1191 3007 1162Q2968 1133 2902 1119L2902 1119L2722 1082Q2414 1018 2414 777L2414 777Q2414 631 2530 542Q2646 452 2839 452L2839 452Q3031 452 3152 547Q3272 641 3276 804L3276 804L3039 804Q3037 733 2984 687Q2931 641 2845 641L2845 641Q2762 641 2714 678Q2666 715 2666 769L2666 769Q2666 816 2703 846Q2740 875 2806 890L2806 890L2996 929Q3153 962 3228 1033Q3302 1104 3302 1220L3302 1220Q3302 1323 3245 1399Q3187 1474 3086 1515Q2985 1556 2854 1556ZM3706 1531L3454 1531L3454 475L3706 475L3706 1531ZM3580 318L3580 318Q3515 318 3472 277Q3429 235 3429 174L3429 174Q3429 113 3472 72Q3515 31 3580 31L3580 31Q3644 31 3687 72Q3730 113 3730 174L3730 174Q3730 235 3687 277Q3644 318 3580 318ZM5308 1531L5056 1531L5056 475L5300 475L5300 658Q5348 556 5433 505Q5518 454 5618 454L5618 454Q5725 454 5807 509Q5889 563 5922 654L5922 654Q5964 563 6053 509Q6142 454 6258 454L6258 454Q6408 454 6510 551Q6612 648 6612 834L6612 834L6612 1531L6359 1531L6359 870Q6359 765 6301 717Q6244 668 6163 668L6163 668Q6067 668 6011 728Q5956 788 5956 883L5956 883L5956 1531L5711 1531L5711 858Q5711 772 5657 720Q5603 668 5519 668L5519 668Q5434 668 5371 728Q5308 787 5308 901L5308 901L5308 1531ZM8531 1552L8531 1552Q8427 1552 8343 1507Q8260 1462 8211 1370L8211 1370L8209 1370L8209 1531L7961 1531L7961 41L8213 41L8213 625L8215 625Q8266 538 8348 496Q8430 454 8532 454L8532 454Q8668 454 8770 524Q8873 593 8930 717Q8988 840 8988 1002L8988 1002Q8988 1167 8931 1291Q8875 1414 8772 1483Q8669 1552 8531 1552ZM8472 1341L8472 1341Q8589 1341 8661 1254Q8733 1166 8733 1002L8733 1002Q8733 839 8661 751Q8589 663 8472 663L8472 663Q8348 663 8273 756Q8199 848 8199 1002L8199 1002Q8199 1156 8273 1249Q8348 1341 8472 1341ZM9394 1531L9142 1531L9142 475L9394 475L9394 1531ZM9268 318L9268 318Q9203 318 9160 277Q9117 235 9117 174L9117 174Q9117 113 9160 72Q9203 31 9268 31L9268 31Q9332 31 9375 72Q9418 113 9418 174L9418 174Q9418 235 9375 277Q9332 318 9268 318ZM9598 41L9850 41L9850 1531L9598 1531L9598 41ZM10519 1555L10519 1555Q10361 1555 10245 1484Q10129 1413 10067 1289Q10004 1164 10004 1004L10004 1004Q10004 843 10069 719Q10133 594 10247 523Q10361 451 10509 451L10509 451Q10661 451 10775 521Q10889 591 10952 715Q11015 838 11015 1000L11015 1000L11015 1069L10251 1069Q10256 1198 10327 1277Q10398 1356 10525 1356L10525 1356Q10620 1356 10682 1315Q10744 1273 10766 1205L10766 1205L11002 1205Q10982 1308 10915 1387Q10847 1466 10745 1511Q10643 1555 10519 1555ZM10253 895L10253 895L10773 895Q10761 782 10692 717Q10622 651 10513 651L10513 651Q10403 651 10335 717Q10266 782 10253 895ZM11388 437L11388 437Q11347 437 11311 421Q11275 406 11248 379Q11221 351 11206 316Q11190 280 11190 239L11190 239Q11190 198 11206 162Q11221 126 11248 99Q11275 72 11311 56Q11347 41 11388 41L11388 41Q11429 41 11465 56Q11501 72 11528 99Q11555 126 11571 162Q11586 198 11586 239L11586 239Q11586 280 11571 316Q11555 351 11528 379Q11501 406 11465 421Q11429 437 11388 437ZM11388 389L11388 389Q11430 389 11464 369Q11498 348 11518 314Q11538 280 11538 239L11538 239Q11538 197 11518 163Q11498 129 11464 109Q11430 89 11388 89L11388 89Q11347 89 11313 109Q11279 129 11258 163Q11238 197 11238 239L11238 239Q11238 280 11258 314Q11279 348 11313 369Q11347 389 11388 389ZM11475 330L11430 330L11398 268L11359 268L11359 330L11318 330L11318 147L11411 147Q11422 147 11436 154Q11449 160 11458 173Q11468 186 11468 205L11468 205Q11468 224 11459 238Q11450 251 11438 259L11438 259L11475 330ZM11359 177L11359 238L11396 238Q11404 238 11414 230Q11423 222 11423 205L11423 205Q11423 189 11414 183Q11404 177 11397 177L11397 177L11359 177Z"/><path class="napis-z" fill-rule="evenodd" d="M4902.1,1003C4902.1,1290.7,4668.8,1524,4381.1,1524C4093.3,1524,3860.1,1290.7,3860.1,1003C3860.1,715.3,4093.3,482,4381.1,482C4668.8,482,4902.1,715.3,4902.1,1003ZM4695.4,1003C4695.4,829.4,4554.7,688.6,4381.1,688.6C4207.4,688.6,4066.7,829.4,4066.7,1003C4066.7,1176.6,4207.4,1317.4,4381.1,1317.4C4554.7,1317.4,4695.4,1176.6,4695.4,1003ZM4463.7,1003C4463.7,1048.6,4426.7,1085.7,4381.1,1085.7C4335.4,1085.7,4298.4,1048.6,4298.4,1003C4298.4,957.4,4335.4,920.3,4381.1,920.3C4426.7,920.3,4463.7,957.4,4463.7,1003Z"/><path class="napis-f" fill-rule="evenodd" d="M7807.1,1003C7807.1,1290.7,7573.8,1524,7286.1,1524C6998.4,1524,6765.1,1290.7,6765.1,1003C6765.1,715.3,6998.4,482,7286.1,482C7573.8,482,7807.1,715.3,7807.1,1003ZM7600.5,1003C7600.5,829.4,7459.7,688.6,7286.1,688.6C7112.5,688.6,6971.7,829.4,6971.7,1003C6971.7,1176.6,7112.5,1317.4,7286.1,1317.4C7459.7,1317.4,7600.5,1176.6,7600.5,1003ZM7368.7,1003C7368.7,1048.6,7331.7,1085.7,7286.1,1085.7C7240.4,1085.7,7203.4,1048.6,7203.4,1003C7203.4,957.4,7240.4,920.3,7286.1,920.3C7331.7,920.3,7368.7,957.4,7368.7,1003Z"/></svg></h1><!--/napis-->
   <button type="button" id="czat-otworz" class="czat-ikonka czat-otworz" aria-label="Zapytaj asystenta" aria-haspopup="dialog"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.5 4h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7l-4.5 3.4v-3.4h-1.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="10.25" r="1.25"/><circle cx="12" cy="10.25" r="1.25"/><circle cx="15.5" cy="10.25" r="1.25"/></svg></button>
   <button type="button" id="odswiez" class="czat-ikonka czat-otworz odswiez" aria-busy="false" aria-label="Odśwież: komputer sprawdzi Otomoto teraz"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.7 6.3A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.3L13 11h7V4z"/></svg></button>
@@ -417,10 +457,10 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 </main>
 <div class="dol">
   <div class="karty" role="tablist" aria-label="Zakładki">
-    <button type="button" role="tab" id="seg-katalog" aria-controls="katalog" aria-selected="true"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-ogl)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.44)" d="M8.2 4.5h7.6c.9 0 1.6.5 1.9 1.3L19.2 10H19.6A1.9 1.9 0 0 1 21.5 11.9V16.4a.9.9 0 0 1-.9.9H20v1.6a1.1 1.1 0 0 1-1.1 1.1h-1.3a1.1 1.1 0 0 1-1.1-1.1V17.3H7.5v1.6a1.1 1.1 0 0 1-1.1 1.1H5.1A1.1 1.1 0 0 1 4 18.9V17.3h-.6a.9.9 0 0 1-.9-.9V11.9A1.9 1.9 0 0 1 4.4 10h.4L6.3 5.8c.3-.8 1-1.3 1.9-1.3zM8.4 6.4 7.2 9.6h9.6l-1.2-3.2zM5.3 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0zM16.1 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z"/></svg><span>Ogłoszenia</span></button>
-    <button type="button" role="tab" id="seg-modele" aria-controls="modele" aria-selected="false" tabindex="-1"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kat)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M5.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM5.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z"/></svg><span>Katalag</span></button>
-    <button type="button" role="tab" id="seg-kredyt" aria-controls="kredyt" aria-selected="false" tabindex="-1"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kre)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4.5 6.5h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0zM5.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0zM17.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0z"/></svg><span>Kredyt</span></button>
-    <button type="button" role="tab" id="seg-historia" aria-controls="historia" aria-selected="false" tabindex="-1"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-his)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0zM11 6.5h2v5.1l3.4 2-1 1.7-4.4-2.6z"/></svg><span>Historia</span></button>
+    <button type="button" role="tab" id="seg-katalog" aria-controls="katalog" aria-selected="true" style="--pastel:#d1f5da;--pastel-c:#0e3f1a" data-odcien="135"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-ogl)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.44)" d="M8.2 4.5h7.6c.9 0 1.6.5 1.9 1.3L19.2 10H19.6A1.9 1.9 0 0 1 21.5 11.9V16.4a.9.9 0 0 1-.9.9H20v1.6a1.1 1.1 0 0 1-1.1 1.1h-1.3a1.1 1.1 0 0 1-1.1-1.1V17.3H7.5v1.6a1.1 1.1 0 0 1-1.1 1.1H5.1A1.1 1.1 0 0 1 4 18.9V17.3h-.6a.9.9 0 0 1-.9-.9V11.9A1.9 1.9 0 0 1 4.4 10h.4L6.3 5.8c.3-.8 1-1.3 1.9-1.3zM8.4 6.4 7.2 9.6h9.6l-1.2-3.2zM5.3 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0zM16.1 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z"/></svg><span class="nazwa" data-nazwa="Ogłoszenia"><span>Ogłoszenia</span></span></button>
+    <button type="button" role="tab" id="seg-modele" aria-controls="modele" aria-selected="false" tabindex="-1" style="--pastel:#c9e4ff;--pastel-c:#03284d" data-odcien="210"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kat)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M5.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM5.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z"/></svg><span class="nazwa" data-nazwa="Katalag"><span>Katalag</span></span></button>
+    <button type="button" role="tab" id="seg-kredyt" aria-controls="kredyt" aria-selected="false" tabindex="-1" style="--pastel:#ffeac9;--pastel-c:#4d3003" data-odcien="36"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kre)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4.5 6.5h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0zM5.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0zM17.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0z"/></svg><span class="nazwa" data-nazwa="Kredyt"><span>Kredyt</span></span></button>
+    <button type="button" role="tab" id="seg-historia" aria-controls="historia" aria-selected="false" tabindex="-1" style="--pastel:#f1dbfc;--pastel-c:#391b49" data-odcien="280"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-his)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0zM11 6.5h2v5.1l3.4 2-1 1.7-4.4-2.6z"/></svg><span class="nazwa" data-nazwa="Historia"><span>Historia</span></span></button>
   </div>
   <div class="cofnij-zakladki" hidden><button type="button" id="cofnij-zakladki" class="pigulka" aria-label="Cofnij przestawienie zakładek">Cofnij</button></div>
 </div>
@@ -1316,7 +1356,6 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
       s.tabIndex = i === widok ? 0 : -1;
     });
     PANELE.forEach((p, i) => { p.hidden = i !== widok; });
-    przesunSuwak(true);
     pokazOkno();
     // Zakładka zapisana nazwą (od 18.10.2026), bo numery przesuwają się, gdy zakładka dochodzi albo znika.
     if (zapisz) pamiec.zapisz('zakladka', WIDOKI[widok]);
@@ -1329,19 +1368,31 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
   // palec nie przestawi niczego przypadkiem. Kolejność zostaje w telefonie, a przez 6 sekund stoi „Cofnij”. Z klawiatury Alt+← →.
   // Zakładka, której nie ma w zapisie (doszła w nowej wersji), staje za swoją poprzedniczką, jak na Androidzie i na komputerze.
   const pasekZakladek = $('.karty');
-  // Suwak pod wybraną zakładką (od 19.10.2026): przesuwa się do stukniętej, po przestawieniu staje od razu.
-  const suwak = el('span', { class: 'suwak', 'aria-hidden': 'true' });
-  pasekZakladek.prepend(suwak);
-  function przesunSuwak(ruch) {
-    const b = segmenty[widok];
-    if (!b || !b.offsetWidth) return;
-    suwak.classList.toggle('bez-ruchu', !ruch);
-    suwak.style.width = (b.offsetWidth - 6) + 'px';
-    suwak.style.transform = `translateX(${b.offsetLeft + 3}px)`;
+  // Przebłysk wybranej zakładki (od 22.10.2026, jak w Czytadle): barwa losowana przy każdym otwarciu, co najmniej 70° od odcienia
+  // pastelu zakładki i co najmniej 1,4:1 do niego, żeby nie było żółtego na żółtym ani na białym.
+  const BLYSKI = [['#ffcc00', 48], ['#5ac8fa', 199], ['#ff78be', 329], ['#3cdcb4', 164], ['#af82ff', 262], ['#ff965a', 22]];
+  const roznicaOdcieni = (a, b) => Math.abs(((((a - b) % 360) + 540) % 360) - 180);
+  const jasnoscBarwy = (h) => { const v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+  const kontrastBarw = (a, b) => { const x = jasnoscBarwy(a), y = jasnoscBarwy(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  for (const b of segmenty) {
+    const o = Number(b.dataset.odcien) || 0, tlo = (b.style.getPropertyValue('--pastel') || '#ffffff').trim();
+    const wolne = BLYSKI.filter(([k, x]) => roznicaOdcieni(x, o) >= 70 && kontrastBarw(k, tlo) >= 1.4);
+    const [k] = wolne[Math.floor(Math.random() * wolne.length)] || ['#ffffff'];
+    b.style.setProperty('--blysk-j', k + 'd9');
+    b.style.setProperty('--blysk-c', k + '73');
+    b.dataset.blysk = k;
   }
-  addEventListener('resize', () => przesunSuwak(false));
+  // Szkło pod kursorem: plama światła idzie za myszą (styl ::after zakładki czyta --mx i --my).
+  pasekZakladek.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const b = e.target.closest && e.target.closest('[role="tab"]');
+    if (!b) return;
+    const r = b.getBoundingClientRect();
+    b.style.setProperty('--mx', Math.round(e.clientX - r.left) + 'px');
+    b.style.setProperty('--my', Math.round(e.clientY - r.top) + 'px');
+  }, { passive: true });
   const kolejnosc = () => segmenty.map((b, i) => [b, i]).sort(([a], [b]) => (a.compareDocumentPosition(b) & 4 ? -1 : 1)).map(([, i]) => i);
-  const ustawKolejnosc = (k) => { for (const i of k) pasekZakladek.append(segmenty[i]); przesunSuwak(false); };
+  const ustawKolejnosc = (k) => { for (const i of k) pasekZakladek.append(segmenty[i]); };
   const zapisanaKolejnosc = pamiec.czytaj('kolejnosc', null);
   if (Array.isArray(zapisanaKolejnosc)) {
     const k = zapisanaKolejnosc.map((n) => WIDOKI.indexOf(n)).filter((i, j, a) => i >= 0 && a.indexOf(i) === j);
@@ -1370,7 +1421,7 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
     pokazCofnij(false);
   });
   // Ciągnięcie: zakładka jedzie pod palcem w granicach paska, a sąsiad, którego zakryła do połowy, dojeżdża na jej dawne miejsce
-  // (240 ms, jak suwak). W drzewie strony przechodzi sąsiad, a nie ciągnięta zakładka: przeniesiona traciłaby przechwycenie
+  // (240 ms). W drzewie strony przechodzi sąsiad, a nie ciągnięta zakładka: przeniesiona traciłaby przechwycenie
   // wskaźnika. Puszczona dojeżdża na swoje miejsce. Gdy ciągnięcie przerwie system (pointercancel), kolejność wraca.
   const RUCH = 'transform 240ms cubic-bezier(.2, 0, 0, 1), box-shadow 240ms ease, background-color 240ms ease';
   const UNIES = 'box-shadow 120ms ease, background-color 120ms ease';
@@ -1384,13 +1435,11 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
     b.style.transition = 'transform 120ms ease, ' + UNIES;
     b.style.transform = 'scale(1.06)';
   }
-  // Ciągnięta zakładka stoi tam, gdzie palec, ale nie wychodzi poza pasek. Wybraną niesie razem z suwakiem, który leży pod nią.
-  // Oddaje lewy brzeg zakładki w układzie paska.
+  // Ciągnięta zakładka stoi tam, gdzie palec, ale nie wychodzi poza pasek. Oddaje lewy brzeg zakładki w układzie paska.
   function nies(e) {
     const b = ciag.b, x = Math.min(Math.max(e.clientX - lewyPaska() - ciag.chwyt, 0), pasekZakladek.clientWidth - b.offsetWidth);
     b.style.transition = UNIES;
     b.style.transform = `translateX(${x - b.offsetLeft}px) scale(1.06)`;
-    if (b === segmenty[widok]) { suwak.classList.add('bez-ruchu'); suwak.style.transform = `translateX(${x + 3}px)`; }
     return x;
   }
   function przestawSasiada(s, przed) {
@@ -1429,7 +1478,6 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
       if (lewy && x < lewy.offsetLeft + lewy.offsetWidth / 2) przestawSasiada(lewy, b.nextSibling);
       else if (prawy && x + b.offsetWidth > prawy.offsetLeft + prawy.offsetWidth / 2) przestawSasiada(prawy, b);
       else break;
-      if (b !== segmenty[widok]) przesunSuwak(true);
     }
   });
   function koniecCiagniecia(e) {
@@ -1445,7 +1493,6 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
     b.classList.remove('ciagniety');
     b.style.transition = RUCH;
     b.style.transform = '';
-    przesunSuwak(true);
     const k = kolejnosc();
     if (przerwane || k.join() === ciag.start.join()) return;
     zapamietajKolejnosc(ciag.start);
@@ -1487,6 +1534,74 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
     });
   });
 
+  // ---------------------------------------------------------------- logo: te same wyszukiwania na Otomoto (od 22.10.2026)
+  // Jacek: „darujmy sobie Otomoto … hide this functionality under kasiomobile logo /easter egg/”. Stuknięcie w logo pyta katalog
+  // w Ogłoszeniach (Skaner Produktów od 0.4.27, wiadomość { skaner: 'wyszukiwania' }) o te same wyszukiwania co skan, z zakresami
+  // z filtrów, i pokazuje je w małym menu pod logo. Adres otwiera ta strona, w stuknięciu w pozycję menu, więc idzie do przeglądarki
+  // jak każdy odnośnik z ogłoszeń. Logo dalej wygląda jak logo. Escape, stuknięcie obok, Tab i gest wstecz zamykają menu.
+  const logo = $('#logo');
+  let menuLogo = null;
+  const ZNAK_ZEWN = '<svg class="menu-logo-znak" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-8 8M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4"/></svg>';
+  function zamknijMenuLogo(fokus) {
+    if (!menuLogo) return;
+    menuLogo.remove();
+    menuLogo = null;
+    logo.setAttribute('aria-expanded', 'false');
+    if (fokus) logo.focus();
+  }
+  // Katalog odpowiada, gdy już się zbudował (gotowe). Do tego czasu pytamy co 250 ms, najwyżej 3 sekundy.
+  function pytajOWyszukiwania(okno) {
+    return new Promise((ok) => {
+      const id = Math.random().toString(36).slice(2);
+      let proby = 0, zegar = 0;
+      const koniec = (lista) => { clearInterval(zegar); removeEventListener('message', sluchaj); ok(lista); };
+      const sluchaj = (e) => {
+        const d = e.data;
+        if (e.source !== okno || !d || d.skaner !== 'wyszukiwania' || d.id !== id || !d.gotowe) return;
+        koniec((Array.isArray(d.lista) ? d.lista : []).filter((w) => w && typeof w.nazwa === 'string' && String(w.adres).startsWith('https://')));
+      };
+      addEventListener('message', sluchaj);
+      const pytaj = () => {
+        if (++proby > 12) { koniec([]); return; }
+        try { okno.postMessage({ skaner: 'wyszukiwania', id }, '*'); } catch { /* ramka się przeładowuje */ }
+      };
+      pytaj();
+      zegar = setInterval(pytaj, 250);
+    });
+  }
+  async function otworzMenuLogo() {
+    if (menuLogo) { zamknijMenuLogo(true); return; }
+    // Katalog żyje w ramce Ogłoszeń; gdy jeszcze go nie było na ekranie, najpierw Ogłoszenia.
+    if (!['blob', 'srcdoc'].includes(STRONY[0].ramka.sposob) && !(await pokazWidok(0, true))) return;
+    const okno = STRONY[0].el.contentWindow;
+    const lista = okno ? await pytajOWyszukiwania(okno) : [];
+    if (!lista.length || menuLogo) return;
+    menuLogo = el('div', { class: 'menu-logo', role: 'menu', 'aria-label': 'Na Otomoto' }, el('p', { class: 'menu-logo-tytul', 'aria-hidden': 'true', text: 'Na Otomoto' }));
+    for (const w of lista) {
+      const b = el('button', { type: 'button', role: 'menuitem' }, el('span', { class: 'menu-logo-nazwa', text: w.nazwa }));
+      b.insertAdjacentHTML('beforeend', ZNAK_ZEWN);
+      b.addEventListener('click', () => { zamknijMenuLogo(false); window.open(w.adres, '_blank', 'noopener'); });
+      menuLogo.append(b);
+    }
+    document.body.append(menuLogo);
+    const r = logo.getBoundingClientRect(), m = menuLogo.getBoundingClientRect();
+    menuLogo.style.left = Math.round(Math.max(8, Math.min(r.left + 4, innerWidth - m.width - 8))) + 'px';
+    menuLogo.style.top = Math.round(r.bottom + 6) + 'px';
+    logo.setAttribute('aria-expanded', 'true');
+    menuLogo.querySelector('button').focus({ preventScroll: true });
+  }
+  logo.addEventListener('click', () => { otworzMenuLogo(); });
+  document.addEventListener('keydown', (e) => {
+    if (!menuLogo) return;
+    const l = [...menuLogo.querySelectorAll('button')], i = l.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); zamknijMenuLogo(true); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); l[(i + 1) % l.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); l[(i - 1 + l.length) % l.length].focus(); }
+    else if (e.key === 'Tab') zamknijMenuLogo(false);
+  }, true);
+  document.addEventListener('pointerdown', (e) => { if (menuLogo && !menuLogo.contains(e.target) && !logo.contains(e.target)) zamknijMenuLogo(false); }, true);
+  addEventListener('blur', () => zamknijMenuLogo(false));
+
   // ---------------------------------------------------------------- asystent (od 19.10.2026)
   // Czat z komputerem w domu (czat.js). „Ręce”: odpowiedź pokazuje zakładkę, a w Katalagu model albo Podium.
   // Mikrofon tylko tam, gdzie strona go dostaje (Safari i Chrome pod https); spod auta:// w aplikacji na iPhone'a go nie ma.
@@ -1508,6 +1623,7 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
   // Gest „wstecz” (przeciągnięcie od lewej krawędzi, Aplikacja.swift): najpierw zamyka czat, potem okno w stronie
   // bieżącej zakładki (szczegóły auta, filtry, galerię zdjęć), jak przycisk Wstecz na Androidzie.
   function wstecz() {
+    if (menuLogo) { zamknijMenuLogo(true); return true; }
     if (czat && czat.otwarty()) { czat.zamknij(); return true; }
     try {
       const d = STRONY[widok].el.contentDocument.querySelector('dialog[open]');
@@ -1583,8 +1699,6 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
     .then(([k, c, h, md]) => ({ katalog: Boolean(k), kalkulator: Boolean(c), historia: Boolean(h), modele: Boolean(md) }));
   // Ostatnia zakładka nazwą. Dawne „Nowe” (do 19.10.2026) i brak zapisu dają Ogłoszenia.
   pokazWidok(Math.max(0, WIDOKI.indexOf(pamiec.czytaj('zakladka', null))), false);
-  requestAnimationFrame(() => przesunSuwak(false));
-  if (document.fonts) document.fonts.ready.then(() => przesunSuwak(false));
   opiszOdswiez();
   const pierwsze = KANAL ? naStarcie.then(() => odswiez()) : Promise.resolve({ blad: 'brak kanału' });
 
