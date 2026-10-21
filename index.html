@@ -25,6 +25,8 @@
 :root {
   color-scheme: light dark;
   --tlo: #f5f5f7;
+  /* Tło ramki z zakładką ma kolor samych stron (biel, w ciemnym czerń), więc przy prawej krawędzi nie stoi szary pasek. */
+  --strona: #ffffff;
   --tekst: #1d1d1f;
   --tekst2: #6e6e73;
   --akcent: #0071e3;
@@ -52,6 +54,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --tlo: #000000;
+    --strona: #000000;
     --tekst: #ffffff;
     --tekst2: #c0bfbc;
     --akcent: #409cff;
@@ -112,7 +115,7 @@ h1 .napis { display: block; flex: none; width: calc(var(--napis) * var(--szer));
 /* Zakładki: strona z komputera na całą resztę ekranu. */
 main { flex: 1; min-height: 0; position: relative; }
 .widok { position: absolute; inset: 0; }
-.widok iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--tlo); }
+.widok iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--strona); }
 .pusto {
   position: absolute;
   inset: 0;
@@ -141,9 +144,8 @@ main { flex: 1; min-height: 0; position: relative; }
   font-size: var(--maly);
   font-weight: 600;
   box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
-  transition: transform 120ms ease;
+  transition: transform 120ms ease, box-shadow 120ms ease;
 }
-@media (hover: hover) { .pigulka:hover { transform: translateY(-1px); } }
 .pigulka:active { transform: scale(.96); }
 
 /* Pasek zakładek na dole (od 19.10.2026), jak w iOS: szary tor, a wybrana zakładka stoi na białym suwaku z cieniem i ma napis
@@ -192,13 +194,16 @@ main { flex: 1; min-height: 0; position: relative; }
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
-  transition: transform 120ms ease;
+  transition: transform 120ms ease, color 120ms ease;
 }
 .karty [role="tab"] > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .karty [aria-selected="true"] { color: var(--wybrana); font-weight: 600; }
 .karty [role="tab"]:focus-visible { outline-offset: -2px; }
 .znak { flex: none; display: block; width: 28px; height: 28px; transition: transform 120ms ease; }
-@media (hover: hover) { .karty [role="tab"]:hover .znak { transform: translateY(-1px); } }
+/* Pod kursorem napis zakładki robi się niebieski, jak na komputerze, i nic się nie przesuwa (Jacek, 20.10.2026: „myszką na menu
+   to literki się trochę przesuwają, to raczej nie jest celowe ani sensowne”). Do 20.10.2026 ikona unosiła się o 1 px.
+   Napis w akcencie na torze: 4,56:1, w ciemnym 8,39:1. */
+@media (hover: hover) { .karty [role="tab"]:hover { color: var(--wybrana); } }
 .karty [role="tab"]:active .znak { transform: scale(.92); }
 /* Ciągnięta zakładka unosi się nad resztą i jedzie pod palcem (przesunięcie i powiększenie o 6% daje app.js), a reszta robi jej miejsce. */
 .karty [role="tab"].ciagniety { z-index: 2; cursor: grabbing; background: var(--suwak); box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
@@ -206,6 +211,11 @@ main { flex: 1; min-height: 0; position: relative; }
 /* „Cofnij” stoi 6 sekund nad paskiem po przestawieniu zakładek (reguła cofnij-i-ponow: na telefonie nie ma Ctrl+Z). */
 .cofnij-zakladki { position: absolute; left: 0; right: 0; bottom: 100%; display: flex; justify-content: center; padding-bottom: 12px; pointer-events: none; }
 .cofnij-zakladki .pigulka { pointer-events: auto; box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 2px 6px var(--cien), 0 8px 24px var(--cien-mocny); }
+/* Pigułka pod kursorem dostaje obwódkę w akcencie, jak przyciski w Ogłoszeniach. Napis stoi w miejscu (do 20.10.2026 unosiła się o 1 px). */
+@media (hover: hover) {
+  .pigulka:hover { box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 1px var(--akcent), 0 1px 2px var(--cien), 0 2px 6px var(--cien); }
+  .cofnij-zakladki .pigulka:hover { box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 1px var(--akcent), 0 2px 6px var(--cien), 0 8px 24px var(--cien-mocny); }
+}
 
 /* Otwarte okno w stronie (szczegóły auta, filtry, galeria) dostaje cały ekran: bez nagłówka i bez zakładek. */
 body.okno .glowa { padding: env(safe-area-inset-top) 0 0; }
@@ -280,9 +290,11 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
   -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 .czat-ikonka::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--cz-szary);
   box-shadow: inset 0 .5px 0 var(--cz-blysk), 0 0 0 .5px var(--cz-wlosek), 0 1px 2px var(--cz-cien), 0 2px 6px var(--cz-cien);
-  transition: transform 120ms ease, background-color 120ms ease; }
+  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease; }
 .czat-ikonka > svg { position: relative; transition: transform 120ms ease; }
-@media (hover: hover) { .czat-ikonka:not(:disabled):hover::before, .czat-ikonka:not(:disabled):hover > svg { transform: translateY(-1px); } }
+/* Pod kursorem kółko dostaje mocniejszy cień, a w ciemnym motywie, gdzie cienia nie widać, wyraźniejszy włosek. Nic się nie przesuwa
+   (Jacek, 20.10.2026: „literki się trochę przesuwają … nie jest celowe ani sensowne”). Do 20.10.2026 kółko i znak unosiły się o 1 px. */
+@media (hover: hover) { .czat-ikonka:not(:disabled):not(:focus-visible):hover::before { box-shadow: inset 0 .5px 0 var(--cz-blysk), 0 0 0 1px var(--cz-wlosek), 0 2px 4px var(--cz-cien), 0 4px 12px var(--cz-cien); } }
 .czat-ikonka:not(:disabled):active::before { transform: scale(.94); }
 .czat-ikonka:focus-visible { outline: none; }
 .czat-ikonka:focus-visible::before { box-shadow: 0 0 0 2px var(--cz-tlo), 0 0 0 4px var(--cz-akcent); }
@@ -327,14 +339,18 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 /* Pigułki pod odpowiedzią („Pokaż …”, odnośniki) i podpowiedzi: widać 40 px, cel 48 px dzięki przezroczystej obwódce. */
 .czat-akcja, .czat-podpowiedz { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 48px; margin: -4px 0; padding: 6px 14px;
   border: 4px solid transparent; border-radius: 24px; font: inherit; font-size: 15px; line-height: 1.3; text-align: left; text-decoration: none;
-  cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 120ms ease, background-color 120ms ease; }
+  cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease; }
 .czat-akcja { background: color-mix(in srgb, var(--cz-akcent) 12%, var(--cz-tlo)) padding-box; color: var(--cz-akcent-tekst); font-weight: 600;
   box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--cz-akcent) 35%, transparent), inset 0 1px 0 var(--cz-blysk); }
 .czat-akcja > span { min-width: 0; }
 .czat-akcja > svg { flex: none; }
 .czat-podpowiedz { background: var(--cz-pod) padding-box; color: var(--cz-tekst); font-weight: 500; text-align: center;
   box-shadow: inset 0 0 0 .5px var(--cz-ramka), inset 0 1px 0 var(--cz-blysk); }
-@media (hover: hover) { .czat-akcja:hover, .czat-podpowiedz:hover { transform: translateY(-1px); } }
+/* Pod kursorem wyraźniejsza obwódka, napis stoi w miejscu. */
+@media (hover: hover) {
+  .czat-akcja:not(:disabled):hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cz-akcent) 70%, transparent), inset 0 1px 0 var(--cz-blysk); }
+  .czat-podpowiedz:hover { box-shadow: inset 0 0 0 1px var(--cz-tekst2), inset 0 1px 0 var(--cz-blysk); }
+}
 .czat-akcja:active, .czat-podpowiedz:active { transform: scale(.97); }
 .czat-akcja:focus-visible, .czat-podpowiedz:focus-visible { outline: 2px solid var(--cz-akcent); outline-offset: -2px; }
 .czat-akcja:disabled { opacity: .5; cursor: default; }
