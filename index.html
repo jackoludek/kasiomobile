@@ -304,12 +304,13 @@ dialog.poradnik::backdrop { background: var(--strona); }
    jak zakładki na dole, ale bez ikon. Wybrana stoi na pastelu barwy ikony swojej aplikacji (Poradnik #409cff, Atlas #bf5af2),
    z pierścieniem 2 px w kolorze tła i 2 px w akcencie. Smuga światła przechodzi raz, przy wyborze, bo pod spodem jest tekst do
    czytania. Pigułka ma 40 px, a pole dotyku 48 px daje niewidoczny pas ::before (obwódka przezroczysta rysowała włosek i pierścień
-   wokół 48 px, z przerwą). Kolejność przestawia się jak zakładki (app.js). */
+   wokół 48 px, z przerwą). Kolejność przestawia się jak zakładki (app.js). Nazwa ma 16 px, jak w zakładkach na szerokim ekranie:
+   przy 15 px wersaliki stały o 0,45 px za wysoko przy 1 i 4 (pomiar 23.10.2026). */
 .wiedza { position: relative; display: flex; gap: 16px; min-width: 0; }
 .wiedza [role="tab"] {
   position: relative; isolation: isolate; display: inline-grid; place-items: center; height: 40px; margin: 4px 0; padding: 0 20px;
   border: 0; border-radius: 20px; background-color: var(--zakladka); color: var(--tekst);
-  font-size: var(--maly); font-weight: 500; white-space: nowrap;
+  font-size: 16px; font-weight: 500; white-space: nowrap;
   box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
   touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   transition: transform 120ms ease, box-shadow 160ms ease, background-color 160ms ease;
