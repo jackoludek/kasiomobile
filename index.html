@@ -293,10 +293,56 @@ dialog.poradnik { position: fixed; inset: 0; width: 100%; height: 100%; max-widt
   background: var(--strona); color: var(--tekst); overflow: hidden; }
 dialog.poradnik[open] { display: flex; flex-direction: column; }
 dialog.poradnik::backdrop { background: var(--strona); }
-.poradnik-pasek { flex: none; display: flex; justify-content: flex-end; padding: calc(env(safe-area-inset-top) + 8px) calc(var(--prawo) - 4px) 0 var(--lewo); }
-.poradnik-pasek .zamknij-poradnik { --cz-otworz: var(--cz-szary); color: var(--tekst); }
+.poradnik-pasek { position: relative; z-index: 2; flex: none; display: flex; align-items: center; gap: 16px; padding: calc(env(safe-area-inset-top) + 8px) calc(var(--prawo) - 4px) 8px var(--lewo); }
+/* „Cofnij” po przestawieniu pigułek Poradnik i Atlas staje 12 px pod paskiem okna (app.js, pokazCofnij), jak pod zakładkami od 760 px. */
+.poradnik-pasek .cofnij-zakladki { top: 100%; bottom: auto; padding: 12px 0 0; }
+.poradnik-pasek .zamknij-poradnik { flex: none; margin-left: auto; --cz-otworz: var(--cz-szary); color: var(--tekst); }
 .poradnik-tresc { flex: 1; min-height: 0; position: relative; }
+.poradnik-tresc .wiedza-strona { position: absolute; inset: 0; }
 .poradnik-tresc iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--strona); }
+/* Pigułki Poradnik i Atlas (od 23.10.2026, rozmowa Atlas Samochodów: „dyskretnie, w miejscu, które już jest”): osobne, co 16 px,
+   jak zakładki na dole, ale bez ikon. Wybrana stoi na pastelu barwy ikony swojej aplikacji (Poradnik #409cff, Atlas #bf5af2),
+   z pierścieniem 2 px w kolorze tła i 2 px w akcencie. Smuga światła przechodzi raz, przy wyborze, bo pod spodem jest tekst do
+   czytania. Pigułka ma 40 px, a pole dotyku 48 px daje niewidoczny pas ::before (obwódka przezroczysta rysowała włosek i pierścień
+   wokół 48 px, z przerwą). Kolejność przestawia się jak zakładki (app.js). */
+.wiedza { position: relative; display: flex; gap: 16px; min-width: 0; }
+.wiedza [role="tab"] {
+  position: relative; isolation: isolate; display: inline-grid; place-items: center; height: 40px; margin: 4px 0; padding: 0 20px;
+  border: 0; border-radius: 20px; background-color: var(--zakladka); color: var(--tekst);
+  font-size: var(--maly); font-weight: 500; white-space: nowrap;
+  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
+  touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  transition: transform 120ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.wiedza .nazwa { display: inline-grid; }
+.wiedza .nazwa > span, .wiedza .nazwa::after { grid-area: 1 / 1; white-space: nowrap; text-box: trim-both cap alphabetic; }
+.wiedza .nazwa::after { content: attr(data-nazwa); font-weight: 600; visibility: hidden; }
+.wiedza [aria-selected="true"] {
+  font-weight: 600; background-color: var(--pastel, #ffffff);
+  background-image: linear-gradient(105deg, transparent 38%, var(--blysk-j, rgba(255, 255, 255, .85)) 50%, transparent 62%);
+  background-size: 260% 100%; background-repeat: no-repeat; background-position: 0 0;
+  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 2px var(--tlo), 0 0 0 4px var(--akcent), 0 4px 12px var(--cien-mocny);
+}
+.wiedza [aria-selected="true"].blysk { animation: wiedzaBlysk 1.2s ease-in-out 1; }
+@keyframes wiedzaBlysk { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (prefers-color-scheme: dark) {
+  .wiedza [aria-selected="true"] { background-color: var(--pastel-c, #3a3a3c);
+    background-image: linear-gradient(105deg, transparent 38%, var(--blysk-c, rgba(255, 255, 255, .45)) 50%, transparent 62%); }
+}
+.wiedza [role="tab"]:focus-visible { outline: 2px solid var(--akcent); outline-offset: 2px; }
+.wiedza [role="tab"]::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 200ms ease;
+  background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .75), transparent 72%);
+}
+@media (hover: hover) { .wiedza [role="tab"]:hover::after { opacity: 1; } }
+@media (prefers-color-scheme: dark) {
+  .wiedza [role="tab"]::after { background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .16), transparent 72%); }
+}
+.wiedza [role="tab"]::before { content: ""; position: absolute; inset: -4px 0; }
+.wiedza [role="tab"]:active { transform: scale(.97); }
+.wiedza [role="tab"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
+/* Na szerokim ekranie pigułki stoją na środku paska, jak zakładki w nagłówku od 1100 px. */
+@media (min-width: 760px) { .poradnik-pasek .wiedza { position: absolute; left: 50%; transform: translateX(-50%); } }
 
 </style>
 <style>
@@ -454,7 +500,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
 <body>
 <svg class="wzory" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="kafel" d="M28 14L28 14.73L28 15.47L28 16.22L28 16.98L28 17.75L27.99 18.55L27.98 19.37L27.95 20.21L27.91 21.09L27.83 21.98L27.7 22.9L27.49 23.8L27.19 24.68L26.76 25.49L26.19 26.19L25.49 26.76L24.68 27.19L23.8 27.49L22.9 27.7L21.98 27.83L21.09 27.91L20.21 27.95L19.37 27.98L18.55 27.99L17.75 28L16.98 28L16.22 28L15.47 28L14.73 28L14 28L13.27 28L12.53 28L11.78 28L11.02 28L10.25 28L9.45 27.99L8.63 27.98L7.79 27.95L6.91 27.91L6.02 27.83L5.1 27.7L4.2 27.49L3.32 27.19L2.51 26.76L1.81 26.19L1.24 25.49L0.81 24.68L0.51 23.8L0.3 22.9L0.17 21.98L0.09 21.09L0.05 20.21L0.02 19.37L0.01 18.55L0 17.75L0 16.98L0 16.22L0 15.47L0 14.73L0 14L0 13.27L0 12.53L0 11.78L0 11.02L0 10.25L0.01 9.45L0.02 8.63L0.05 7.79L0.09 6.91L0.17 6.02L0.3 5.1L0.51 4.2L0.81 3.32L1.24 2.51L1.81 1.81L2.51 1.24L3.32 0.81L4.2 0.51L5.1 0.3L6.02 0.17L6.91 0.09L7.79 0.05L8.63 0.02L9.45 0.01L10.25 0L11.02 0L11.78 0L12.53 0L13.27 0L14 0L14.73 0L15.47 0L16.22 0L16.98 0L17.75 0L18.55 0.01L19.37 0.02L20.21 0.05L21.09 0.09L21.98 0.17L22.9 0.3L23.8 0.51L24.68 0.81L25.49 1.24L26.19 1.81L26.76 2.51L27.19 3.32L27.49 4.2L27.7 5.1L27.83 6.02L27.91 6.91L27.95 7.79L27.98 8.63L27.99 9.45L28 10.25L28 11.02L28 11.78L28 12.53L28 13.27Z"/><linearGradient id="g-ogl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#30d158"/><stop offset="1" stop-color="#248a3d"/></linearGradient><linearGradient id="g-kat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient><linearGradient id="g-kre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f0a"/><stop offset="1" stop-color="#e07000"/></linearGradient><linearGradient id="g-his" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bf5af2"/><stop offset="1" stop-color="#8944ab"/></linearGradient></defs></svg>
 <header class="glowa">
-  <button type="button" id="logo" class="logo" aria-label="Otwórz poradnik: przebieg, licznik i usterki" aria-controls="poradnik" aria-expanded="false"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjwhLS0gWnJvYmlvbmUgcHJ6ZXogenJvYi1sb2dvLXctYXBsaWthY2ppLmpzOiBsb2dvIG5yIDkg4oCeWiBrbG9ja8Ozd+KAnSB3IGthZmVsa3UsIHRlbiBzYW0gY28gdyBuYWfFgsOzd2t1IG5hIEFuZHJvaWR6aWUuIC0tPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFRUYwRjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHBhdGggZD0iTTEwMjQuMCw1MTIuMCAxMDIzLjgsNjUyLjIgMTAyMy40LDY5Ny4wIDEwMjIuNiw3MjkuNCAxMDIxLjUsNzU1LjggMTAyMC4wLDc3OC4zIDEwMTguMyw3OTguMSAxMDE2LjIsODE1LjkgMTAxMy44LDgzMi4xIDEwMTEuMSw4NDYuOSAxMDA4LjAsODYwLjcgMTAwNC42LDg3My40IDEwMDAuOSw4ODUuMyA5OTYuOCw4OTYuNSA5OTIuNCw5MDYuOSA5ODcuNiw5MTYuNyA5ODIuNCw5MjYuMCA5NzYuOCw5MzQuNiA5NzAuOSw5NDIuOCA5NjQuNSw5NTAuNSA5NTcuNyw5NTcuNyA5NTAuNSw5NjQuNSA5NDIuOCw5NzAuOSA5MzQuNiw5NzYuOCA5MjYuMCw5ODIuNCA5MTYuNyw5ODcuNiA5MDYuOSw5OTIuNCA4OTYuNSw5OTYuOCA4ODUuMywxMDAwLjkgODczLjQsMTAwNC42IDg2MC43LDEwMDguMCA4NDYuOSwxMDExLjEgODMyLjEsMTAxMy44IDgxNS45LDEwMTYuMiA3OTguMSwxMDE4LjMgNzc4LjMsMTAyMC4wIDc1NS44LDEwMjEuNSA3MjkuNCwxMDIyLjYgNjk3LjAsMTAyMy40IDY1Mi4yLDEwMjMuOCA1MTIuMCwxMDI0LjAgMzcxLjgsMTAyMy44IDMyNy4wLDEwMjMuNCAyOTQuNiwxMDIyLjYgMjY4LjIsMTAyMS41IDI0NS43LDEwMjAuMCAyMjUuOSwxMDE4LjMgMjA4LjEsMTAxNi4yIDE5MS45LDEwMTMuOCAxNzcuMSwxMDExLjEgMTYzLjMsMTAwOC4wIDE1MC42LDEwMDQuNiAxMzguNywxMDAwLjkgMTI3LjUsOTk2LjggMTE3LjEsOTkyLjQgMTA3LjMsOTg3LjYgOTguMCw5ODIuNCA4OS40LDk3Ni44IDgxLjIsOTcwLjkgNzMuNSw5NjQuNSA2Ni4zLDk1Ny43IDU5LjUsOTUwLjUgNTMuMSw5NDIuOCA0Ny4yLDkzNC42IDQxLjYsOTI2LjAgMzYuNCw5MTYuNyAzMS42LDkwNi45IDI3LjIsODk2LjUgMjMuMSw4ODUuMyAxOS40LDg3My40IDE2LjAsODYwLjcgMTIuOSw4NDYuOSAxMC4yLDgzMi4xIDcuOCw4MTUuOSA1LjcsNzk4LjEgNC4wLDc3OC4zIDIuNSw3NTUuOCAxLjQsNzI5LjQgMC42LDY5Ny4wIDAuMiw2NTIuMiAwLjAsNTEyLjAgMC4yLDM3MS44IDAuNiwzMjcuMCAxLjQsMjk0LjYgMi41LDI2OC4yIDQuMCwyNDUuNyA1LjcsMjI1LjkgNy44LDIwOC4xIDEwLjIsMTkxLjkgMTIuOSwxNzcuMSAxNi4wLDE2My4zIDE5LjQsMTUwLjYgMjMuMSwxMzguNyAyNy4yLDEyNy41IDMxLjYsMTE3LjEgMzYuNCwxMDcuMyA0MS42LDk4LjAgNDcuMiw4OS40IDUzLjEsODEuMiA1OS41LDczLjUgNjYuMyw2Ni4zIDczLjUsNTkuNSA4MS4yLDUzLjEgODkuNCw0Ny4yIDk4LjAsNDEuNiAxMDcuMywzNi40IDExNy4xLDMxLjYgMTI3LjUsMjcuMiAxMzguNywyMy4xIDE1MC42LDE5LjQgMTYzLjMsMTYuMCAxNzcuMSwxMi45IDE5MS45LDEwLjIgMjA4LjEsNy44IDIyNS45LDUuNyAyNDUuNyw0LjAgMjY4LjIsMi41IDI5NC42LDEuNCAzMjcuMCwwLjYgMzcxLjgsMC4yIDUxMi4wLDAuMCA2NTIuMiwwLjIgNjk3LjAsMC42IDcyOS40LDEuNCA3NTUuOCwyLjUgNzc4LjMsNC4wIDc5OC4xLDUuNyA4MTUuOSw3LjggODMyLjEsMTAuMiA4NDYuOSwxMi45IDg2MC43LDE2LjAgODczLjQsMTkuNCA4ODUuMywyMy4xIDg5Ni41LDI3LjIgOTA2LjksMzEuNiA5MTYuNywzNi40IDkyNi4wLDQxLjYgOTM0LjYsNDcuMiA5NDIuOCw1My4xIDk1MC41LDU5LjUgOTU3LjcsNjYuMyA5NjQuNSw3My41IDk3MC45LDgxLjIgOTc2LjgsODkuNCA5ODIuNCw5OC4wIDk4Ny42LDEwNy4zIDk5Mi40LDExNy4xIDk5Ni44LDEyNy41IDEwMDAuOSwxMzguNyAxMDA0LjYsMTUwLjYgMTAwOC4wLDE2My4zIDEwMTEuMSwxNzcuMSAxMDEzLjgsMTkxLjkgMTAxNi4yLDIwOC4xIDEwMTguMywyMjUuOSAxMDIwLjAsMjQ1LjcgMTAyMS41LDI2OC4yIDEwMjIuNiwyOTQuNiAxMDIzLjQsMzI3LjAgMTAyMy44LDM3MS44WiIgZmlsbD0idXJsKCN0KSIvPgo8cGF0aCBkPSJNMTAxOC4wLDUxMi4wIDEwMTcuOCw2NTAuNiAxMDE3LjQsNjk0LjggMTAxNi42LDcyNi45IDEwMTUuNSw3NTIuOSAxMDE0LjEsNzc1LjIgMTAxMi40LDc5NC44IDEwMTAuMyw4MTIuMyAxMDA3LjksODI4LjMgMTAwNS4yLDg0My4wIDEwMDIuMiw4NTYuNiA5OTguOSw4NjkuMiA5OTUuMiw4ODEuMCA5OTEuMSw4OTIuMCA5ODYuNyw5MDIuMyA5ODIuMCw5MTIuMCA5NzYuOSw5MjEuMSA5NzEuNCw5MjkuNyA5NjUuNSw5MzcuOCA5NTkuMiw5NDUuNCA5NTIuNSw5NTIuNSA5NDUuNCw5NTkuMiA5MzcuOCw5NjUuNSA5MjkuNyw5NzEuNCA5MjEuMSw5NzYuOSA5MTIuMCw5ODIuMCA5MDIuMyw5ODYuNyA4OTIuMCw5OTEuMSA4ODEuMCw5OTUuMiA4NjkuMiw5OTguOSA4NTYuNiwxMDAyLjIgODQzLjAsMTAwNS4yIDgyOC4zLDEwMDcuOSA4MTIuMywxMDEwLjMgNzk0LjgsMTAxMi40IDc3NS4yLDEwMTQuMSA3NTIuOSwxMDE1LjUgNzI2LjksMTAxNi42IDY5NC44LDEwMTcuNCA2NTAuNiwxMDE3LjggNTEyLjAsMTAxOC4wIDM3My40LDEwMTcuOCAzMjkuMiwxMDE3LjQgMjk3LjEsMTAxNi42IDI3MS4xLDEwMTUuNSAyNDguOCwxMDE0LjEgMjI5LjIsMTAxMi40IDIxMS43LDEwMTAuMyAxOTUuNywxMDA3LjkgMTgxLjAsMTAwNS4yIDE2Ny40LDEwMDIuMiAxNTQuOCw5OTguOSAxNDMuMCw5OTUuMiAxMzIuMCw5OTEuMSAxMjEuNyw5ODYuNyAxMTIuMCw5ODIuMCAxMDIuOSw5NzYuOSA5NC4zLDk3MS40IDg2LjIsOTY1LjUgNzguNiw5NTkuMiA3MS41LDk1Mi41IDY0LjgsOTQ1LjQgNTguNSw5MzcuOCA1Mi42LDkyOS43IDQ3LjEsOTIxLjEgNDIuMCw5MTIuMCAzNy4zLDkwMi4zIDMyLjksODkyLjAgMjguOCw4ODEuMCAyNS4xLDg2OS4yIDIxLjgsODU2LjYgMTguOCw4NDMuMCAxNi4xLDgyOC4zIDEzLjcsODEyLjMgMTEuNiw3OTQuOCA5LjksNzc1LjIgOC41LDc1Mi45IDcuNCw3MjYuOSA2LjYsNjk0LjggNi4yLDY1MC42IDYuMCw1MTIuMCA2LjIsMzczLjQgNi42LDMyOS4yIDcuNCwyOTcuMSA4LjUsMjcxLjEgOS45LDI0OC44IDExLjYsMjI5LjIgMTMuNywyMTEuNyAxNi4xLDE5NS43IDE4LjgsMTgxLjAgMjEuOCwxNjcuNCAyNS4xLDE1NC44IDI4LjgsMTQzLjAgMzIuOSwxMzIuMCAzNy4zLDEyMS43IDQyLjAsMTEyLjAgNDcuMSwxMDIuOSA1Mi42LDk0LjMgNTguNSw4Ni4yIDY0LjgsNzguNiA3MS41LDcxLjUgNzguNiw2NC44IDg2LjIsNTguNSA5NC4zLDUyLjYgMTAyLjksNDcuMSAxMTIuMCw0Mi4wIDEyMS43LDM3LjMgMTMyLjAsMzIuOSAxNDMuMCwyOC44IDE1NC44LDI1LjEgMTY3LjQsMjEuOCAxODEuMCwxOC44IDE5NS43LDE2LjEgMjExLjcsMTMuNyAyMjkuMiwxMS42IDI0OC44LDkuOSAyNzEuMSw4LjUgMjk3LjEsNy40IDMyOS4yLDYuNiAzNzMuNCw2LjIgNTEyLjAsNi4wIDY1MC42LDYuMiA2OTQuOCw2LjYgNzI2LjksNy40IDc1Mi45LDguNSA3NzUuMiw5LjkgNzk0LjgsMTEuNiA4MTIuMywxMy43IDgyOC4zLDE2LjEgODQzLjAsMTguOCA4NTYuNiwyMS44IDg2OS4yLDI1LjEgODgxLjAsMjguOCA4OTIuMCwzMi45IDkwMi4zLDM3LjMgOTEyLjAsNDIuMCA5MjEuMSw0Ny4xIDkyOS43LDUyLjYgOTM3LjgsNTguNSA5NDUuNCw2NC44IDk1Mi41LDcxLjUgOTU5LjIsNzguNiA5NjUuNSw4Ni4yIDk3MS40LDk0LjMgOTc2LjksMTAyLjkgOTgyLjAsMTEyLjAgOTg2LjcsMTIxLjcgOTkxLjEsMTMyLjAgOTk1LjIsMTQzLjAgOTk4LjksMTU0LjggMTAwMi4yLDE2Ny40IDEwMDUuMiwxODEuMCAxMDA3LjksMTk1LjcgMTAxMC4zLDIxMS43IDEwMTIuNCwyMjkuMiAxMDE0LjEsMjQ4LjggMTAxNS41LDI3MS4xIDEwMTYuNiwyOTcuMSAxMDE3LjQsMzI5LjIgMTAxNy44LDM3My40WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iLjEyIiBzdHJva2Utd2lkdGg9IjEyIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsLTM3KSI+CjxwYXRoIGQ9Ik0zNzIsNDc2TDQyOCwzNzJRNDM2LDM1NiA0NTQsMzU2TDU3MCwzNTZRNTg4LDM1NiA1OTYsMzcyTDY1Miw0NzZaIiBmaWxsPSIjMkVBNDRGIi8+CjxwYXRoIGQ9Ik0yODAsNDk0SDc0NEE0NCw0NCAwIDAgMSA3ODgsNTM4VjYwMEE0NCw0NCAwIDAgMSA3NDQsNjQ0SDI4MEE0NCw0NCAwIDAgMSAyMzYsNjAwVjUzOEE0NCw0NCAwIDAgMSAyODAsNDk0WiIgZmlsbD0iIzI0NDE4QSIvPgo8Y2lyY2xlIGN4PSIzNzIiIGN5PSI2NzIiIHI9IjYyIiBmaWxsPSIjNzA0Mjg1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTgiLz4KPGNpcmNsZSBjeD0iNjUyIiBjeT0iNjcyIiByPSI2MiIgZmlsbD0iIzcwNDI4NSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjE4Ii8+CjwvZz4KPC9zdmc+Cg==" width="40" height="40" alt=""></button>
+  <button type="button" id="logo" class="logo" aria-label="Otwórz poradnik i Atlas" aria-controls="poradnik" aria-expanded="false"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjwhLS0gWnJvYmlvbmUgcHJ6ZXogenJvYi1sb2dvLXctYXBsaWthY2ppLmpzOiBsb2dvIG5yIDkg4oCeWiBrbG9ja8Ozd+KAnSB3IGthZmVsa3UsIHRlbiBzYW0gY28gdyBuYWfFgsOzd2t1IG5hIEFuZHJvaWR6aWUuIC0tPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFRUYwRjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHBhdGggZD0iTTEwMjQuMCw1MTIuMCAxMDIzLjgsNjUyLjIgMTAyMy40LDY5Ny4wIDEwMjIuNiw3MjkuNCAxMDIxLjUsNzU1LjggMTAyMC4wLDc3OC4zIDEwMTguMyw3OTguMSAxMDE2LjIsODE1LjkgMTAxMy44LDgzMi4xIDEwMTEuMSw4NDYuOSAxMDA4LjAsODYwLjcgMTAwNC42LDg3My40IDEwMDAuOSw4ODUuMyA5OTYuOCw4OTYuNSA5OTIuNCw5MDYuOSA5ODcuNiw5MTYuNyA5ODIuNCw5MjYuMCA5NzYuOCw5MzQuNiA5NzAuOSw5NDIuOCA5NjQuNSw5NTAuNSA5NTcuNyw5NTcuNyA5NTAuNSw5NjQuNSA5NDIuOCw5NzAuOSA5MzQuNiw5NzYuOCA5MjYuMCw5ODIuNCA5MTYuNyw5ODcuNiA5MDYuOSw5OTIuNCA4OTYuNSw5OTYuOCA4ODUuMywxMDAwLjkgODczLjQsMTAwNC42IDg2MC43LDEwMDguMCA4NDYuOSwxMDExLjEgODMyLjEsMTAxMy44IDgxNS45LDEwMTYuMiA3OTguMSwxMDE4LjMgNzc4LjMsMTAyMC4wIDc1NS44LDEwMjEuNSA3MjkuNCwxMDIyLjYgNjk3LjAsMTAyMy40IDY1Mi4yLDEwMjMuOCA1MTIuMCwxMDI0LjAgMzcxLjgsMTAyMy44IDMyNy4wLDEwMjMuNCAyOTQuNiwxMDIyLjYgMjY4LjIsMTAyMS41IDI0NS43LDEwMjAuMCAyMjUuOSwxMDE4LjMgMjA4LjEsMTAxNi4yIDE5MS45LDEwMTMuOCAxNzcuMSwxMDExLjEgMTYzLjMsMTAwOC4wIDE1MC42LDEwMDQuNiAxMzguNywxMDAwLjkgMTI3LjUsOTk2LjggMTE3LjEsOTkyLjQgMTA3LjMsOTg3LjYgOTguMCw5ODIuNCA4OS40LDk3Ni44IDgxLjIsOTcwLjkgNzMuNSw5NjQuNSA2Ni4zLDk1Ny43IDU5LjUsOTUwLjUgNTMuMSw5NDIuOCA0Ny4yLDkzNC42IDQxLjYsOTI2LjAgMzYuNCw5MTYuNyAzMS42LDkwNi45IDI3LjIsODk2LjUgMjMuMSw4ODUuMyAxOS40LDg3My40IDE2LjAsODYwLjcgMTIuOSw4NDYuOSAxMC4yLDgzMi4xIDcuOCw4MTUuOSA1LjcsNzk4LjEgNC4wLDc3OC4zIDIuNSw3NTUuOCAxLjQsNzI5LjQgMC42LDY5Ny4wIDAuMiw2NTIuMiAwLjAsNTEyLjAgMC4yLDM3MS44IDAuNiwzMjcuMCAxLjQsMjk0LjYgMi41LDI2OC4yIDQuMCwyNDUuNyA1LjcsMjI1LjkgNy44LDIwOC4xIDEwLjIsMTkxLjkgMTIuOSwxNzcuMSAxNi4wLDE2My4zIDE5LjQsMTUwLjYgMjMuMSwxMzguNyAyNy4yLDEyNy41IDMxLjYsMTE3LjEgMzYuNCwxMDcuMyA0MS42LDk4LjAgNDcuMiw4OS40IDUzLjEsODEuMiA1OS41LDczLjUgNjYuMyw2Ni4zIDczLjUsNTkuNSA4MS4yLDUzLjEgODkuNCw0Ny4yIDk4LjAsNDEuNiAxMDcuMywzNi40IDExNy4xLDMxLjYgMTI3LjUsMjcuMiAxMzguNywyMy4xIDE1MC42LDE5LjQgMTYzLjMsMTYuMCAxNzcuMSwxMi45IDE5MS45LDEwLjIgMjA4LjEsNy44IDIyNS45LDUuNyAyNDUuNyw0LjAgMjY4LjIsMi41IDI5NC42LDEuNCAzMjcuMCwwLjYgMzcxLjgsMC4yIDUxMi4wLDAuMCA2NTIuMiwwLjIgNjk3LjAsMC42IDcyOS40LDEuNCA3NTUuOCwyLjUgNzc4LjMsNC4wIDc5OC4xLDUuNyA4MTUuOSw3LjggODMyLjEsMTAuMiA4NDYuOSwxMi45IDg2MC43LDE2LjAgODczLjQsMTkuNCA4ODUuMywyMy4xIDg5Ni41LDI3LjIgOTA2LjksMzEuNiA5MTYuNywzNi40IDkyNi4wLDQxLjYgOTM0LjYsNDcuMiA5NDIuOCw1My4xIDk1MC41LDU5LjUgOTU3LjcsNjYuMyA5NjQuNSw3My41IDk3MC45LDgxLjIgOTc2LjgsODkuNCA5ODIuNCw5OC4wIDk4Ny42LDEwNy4zIDk5Mi40LDExNy4xIDk5Ni44LDEyNy41IDEwMDAuOSwxMzguNyAxMDA0LjYsMTUwLjYgMTAwOC4wLDE2My4zIDEwMTEuMSwxNzcuMSAxMDEzLjgsMTkxLjkgMTAxNi4yLDIwOC4xIDEwMTguMywyMjUuOSAxMDIwLjAsMjQ1LjcgMTAyMS41LDI2OC4yIDEwMjIuNiwyOTQuNiAxMDIzLjQsMzI3LjAgMTAyMy44LDM3MS44WiIgZmlsbD0idXJsKCN0KSIvPgo8cGF0aCBkPSJNMTAxOC4wLDUxMi4wIDEwMTcuOCw2NTAuNiAxMDE3LjQsNjk0LjggMTAxNi42LDcyNi45IDEwMTUuNSw3NTIuOSAxMDE0LjEsNzc1LjIgMTAxMi40LDc5NC44IDEwMTAuMyw4MTIuMyAxMDA3LjksODI4LjMgMTAwNS4yLDg0My4wIDEwMDIuMiw4NTYuNiA5OTguOSw4NjkuMiA5OTUuMiw4ODEuMCA5OTEuMSw4OTIuMCA5ODYuNyw5MDIuMyA5ODIuMCw5MTIuMCA5NzYuOSw5MjEuMSA5NzEuNCw5MjkuNyA5NjUuNSw5MzcuOCA5NTkuMiw5NDUuNCA5NTIuNSw5NTIuNSA5NDUuNCw5NTkuMiA5MzcuOCw5NjUuNSA5MjkuNyw5NzEuNCA5MjEuMSw5NzYuOSA5MTIuMCw5ODIuMCA5MDIuMyw5ODYuNyA4OTIuMCw5OTEuMSA4ODEuMCw5OTUuMiA4NjkuMiw5OTguOSA4NTYuNiwxMDAyLjIgODQzLjAsMTAwNS4yIDgyOC4zLDEwMDcuOSA4MTIuMywxMDEwLjMgNzk0LjgsMTAxMi40IDc3NS4yLDEwMTQuMSA3NTIuOSwxMDE1LjUgNzI2LjksMTAxNi42IDY5NC44LDEwMTcuNCA2NTAuNiwxMDE3LjggNTEyLjAsMTAxOC4wIDM3My40LDEwMTcuOCAzMjkuMiwxMDE3LjQgMjk3LjEsMTAxNi42IDI3MS4xLDEwMTUuNSAyNDguOCwxMDE0LjEgMjI5LjIsMTAxMi40IDIxMS43LDEwMTAuMyAxOTUuNywxMDA3LjkgMTgxLjAsMTAwNS4yIDE2Ny40LDEwMDIuMiAxNTQuOCw5OTguOSAxNDMuMCw5OTUuMiAxMzIuMCw5OTEuMSAxMjEuNyw5ODYuNyAxMTIuMCw5ODIuMCAxMDIuOSw5NzYuOSA5NC4zLDk3MS40IDg2LjIsOTY1LjUgNzguNiw5NTkuMiA3MS41LDk1Mi41IDY0LjgsOTQ1LjQgNTguNSw5MzcuOCA1Mi42LDkyOS43IDQ3LjEsOTIxLjEgNDIuMCw5MTIuMCAzNy4zLDkwMi4zIDMyLjksODkyLjAgMjguOCw4ODEuMCAyNS4xLDg2OS4yIDIxLjgsODU2LjYgMTguOCw4NDMuMCAxNi4xLDgyOC4zIDEzLjcsODEyLjMgMTEuNiw3OTQuOCA5LjksNzc1LjIgOC41LDc1Mi45IDcuNCw3MjYuOSA2LjYsNjk0LjggNi4yLDY1MC42IDYuMCw1MTIuMCA2LjIsMzczLjQgNi42LDMyOS4yIDcuNCwyOTcuMSA4LjUsMjcxLjEgOS45LDI0OC44IDExLjYsMjI5LjIgMTMuNywyMTEuNyAxNi4xLDE5NS43IDE4LjgsMTgxLjAgMjEuOCwxNjcuNCAyNS4xLDE1NC44IDI4LjgsMTQzLjAgMzIuOSwxMzIuMCAzNy4zLDEyMS43IDQyLjAsMTEyLjAgNDcuMSwxMDIuOSA1Mi42LDk0LjMgNTguNSw4Ni4yIDY0LjgsNzguNiA3MS41LDcxLjUgNzguNiw2NC44IDg2LjIsNTguNSA5NC4zLDUyLjYgMTAyLjksNDcuMSAxMTIuMCw0Mi4wIDEyMS43LDM3LjMgMTMyLjAsMzIuOSAxNDMuMCwyOC44IDE1NC44LDI1LjEgMTY3LjQsMjEuOCAxODEuMCwxOC44IDE5NS43LDE2LjEgMjExLjcsMTMuNyAyMjkuMiwxMS42IDI0OC44LDkuOSAyNzEuMSw4LjUgMjk3LjEsNy40IDMyOS4yLDYuNiAzNzMuNCw2LjIgNTEyLjAsNi4wIDY1MC42LDYuMiA2OTQuOCw2LjYgNzI2LjksNy40IDc1Mi45LDguNSA3NzUuMiw5LjkgNzk0LjgsMTEuNiA4MTIuMywxMy43IDgyOC4zLDE2LjEgODQzLjAsMTguOCA4NTYuNiwyMS44IDg2OS4yLDI1LjEgODgxLjAsMjguOCA4OTIuMCwzMi45IDkwMi4zLDM3LjMgOTEyLjAsNDIuMCA5MjEuMSw0Ny4xIDkyOS43LDUyLjYgOTM3LjgsNTguNSA5NDUuNCw2NC44IDk1Mi41LDcxLjUgOTU5LjIsNzguNiA5NjUuNSw4Ni4yIDk3MS40LDk0LjMgOTc2LjksMTAyLjkgOTgyLjAsMTEyLjAgOTg2LjcsMTIxLjcgOTkxLjEsMTMyLjAgOTk1LjIsMTQzLjAgOTk4LjksMTU0LjggMTAwMi4yLDE2Ny40IDEwMDUuMiwxODEuMCAxMDA3LjksMTk1LjcgMTAxMC4zLDIxMS43IDEwMTIuNCwyMjkuMiAxMDE0LjEsMjQ4LjggMTAxNS41LDI3MS4xIDEwMTYuNiwyOTcuMSAxMDE3LjQsMzI5LjIgMTAxNy44LDM3My40WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iLjEyIiBzdHJva2Utd2lkdGg9IjEyIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsLTM3KSI+CjxwYXRoIGQ9Ik0zNzIsNDc2TDQyOCwzNzJRNDM2LDM1NiA0NTQsMzU2TDU3MCwzNTZRNTg4LDM1NiA1OTYsMzcyTDY1Miw0NzZaIiBmaWxsPSIjMkVBNDRGIi8+CjxwYXRoIGQ9Ik0yODAsNDk0SDc0NEE0NCw0NCAwIDAgMSA3ODgsNTM4VjYwMEE0NCw0NCAwIDAgMSA3NDQsNjQ0SDI4MEE0NCw0NCAwIDAgMSAyMzYsNjAwVjUzOEE0NCw0NCAwIDAgMSAyODAsNDk0WiIgZmlsbD0iIzI0NDE4QSIvPgo8Y2lyY2xlIGN4PSIzNzIiIGN5PSI2NzIiIHI9IjYyIiBmaWxsPSIjNzA0Mjg1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTgiLz4KPGNpcmNsZSBjeD0iNjUyIiBjeT0iNjcyIiByPSI2MiIgZmlsbD0iIzcwNDI4NSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjE4Ii8+CjwvZz4KPC9zdmc+Cg==" width="40" height="40" alt=""></button>
   <!--napis--><h1><button type="button" id="napis" class="napis-przycisk" aria-label="Kasiomobile: te same wyszukiwania na Otomoto" aria-haspopup="menu" aria-expanded="false"><svg class="napis" viewBox="0 0 11602 1572" role="img" aria-label="Kasiomobile" style="--szer:5.6650;--wys:0.7676"><style>.napis-l{fill:#24418A}.napis-z{fill:#1C7C36}.napis-f{fill:#704285}@media (prefers-color-scheme: dark){.napis-l{fill:#FFFFFF}.napis-z{fill:#30D158}.napis-f{fill:#C495E8}}</style><path class="napis-l" d="M280 1531L16 1531L16 41L280 41L280 760Q338 692 397 625Q455 558 513 490L513 490L909 41L1235 41L662 686L1245 1531L937 1531L484 864L280 1095L280 1531ZM1675 1548L1675 1548Q1517 1548 1413 1469Q1310 1389 1310 1231L1310 1231Q1310 1111 1368 1046Q1427 980 1521 950Q1616 920 1725 909L1725 909Q1872 892 1930 879Q1988 866 1988 812L1988 812L1988 804Q1988 736 1936 693Q1885 650 1795 650L1795 650Q1703 650 1645 693Q1588 736 1583 803L1583 803L1340 803Q1349 646 1471 550Q1593 454 1800 454L1800 454Q2006 454 2122 550Q2238 646 2238 811L2238 811L2238 1531L1990 1531L1990 1382L1986 1382Q1948 1452 1876 1500Q1804 1548 1675 1548ZM1737 1361L1737 1361Q1861 1361 1925 1297Q1989 1232 1989 1140L1989 1140L1989 1026Q1966 1041 1900 1054Q1834 1066 1756 1078L1756 1078Q1675 1090 1615 1124Q1556 1157 1556 1229L1556 1229Q1556 1291 1605 1326Q1654 1361 1737 1361ZM2854 1556L2854 1556Q2661 1556 2532 1466Q2402 1375 2390 1205L2390 1205L2639 1205Q2647 1282 2701 1325Q2755 1367 2850 1367L2850 1367Q2941 1367 2994 1331Q3046 1295 3046 1239L3046 1239Q3046 1191 3007 1162Q2968 1133 2902 1119L2902 1119L2722 1082Q2414 1018 2414 777L2414 777Q2414 631 2530 542Q2646 452 2839 452L2839 452Q3031 452 3152 547Q3272 641 3276 804L3276 804L3039 804Q3037 733 2984 687Q2931 641 2845 641L2845 641Q2762 641 2714 678Q2666 715 2666 769L2666 769Q2666 816 2703 846Q2740 875 2806 890L2806 890L2996 929Q3153 962 3228 1033Q3302 1104 3302 1220L3302 1220Q3302 1323 3245 1399Q3187 1474 3086 1515Q2985 1556 2854 1556ZM3706 1531L3454 1531L3454 475L3706 475L3706 1531ZM3580 318L3580 318Q3515 318 3472 277Q3429 235 3429 174L3429 174Q3429 113 3472 72Q3515 31 3580 31L3580 31Q3644 31 3687 72Q3730 113 3730 174L3730 174Q3730 235 3687 277Q3644 318 3580 318ZM5308 1531L5056 1531L5056 475L5300 475L5300 658Q5348 556 5433 505Q5518 454 5618 454L5618 454Q5725 454 5807 509Q5889 563 5922 654L5922 654Q5964 563 6053 509Q6142 454 6258 454L6258 454Q6408 454 6510 551Q6612 648 6612 834L6612 834L6612 1531L6359 1531L6359 870Q6359 765 6301 717Q6244 668 6163 668L6163 668Q6067 668 6011 728Q5956 788 5956 883L5956 883L5956 1531L5711 1531L5711 858Q5711 772 5657 720Q5603 668 5519 668L5519 668Q5434 668 5371 728Q5308 787 5308 901L5308 901L5308 1531ZM8531 1552L8531 1552Q8427 1552 8343 1507Q8260 1462 8211 1370L8211 1370L8209 1370L8209 1531L7961 1531L7961 41L8213 41L8213 625L8215 625Q8266 538 8348 496Q8430 454 8532 454L8532 454Q8668 454 8770 524Q8873 593 8930 717Q8988 840 8988 1002L8988 1002Q8988 1167 8931 1291Q8875 1414 8772 1483Q8669 1552 8531 1552ZM8472 1341L8472 1341Q8589 1341 8661 1254Q8733 1166 8733 1002L8733 1002Q8733 839 8661 751Q8589 663 8472 663L8472 663Q8348 663 8273 756Q8199 848 8199 1002L8199 1002Q8199 1156 8273 1249Q8348 1341 8472 1341ZM9394 1531L9142 1531L9142 475L9394 475L9394 1531ZM9268 318L9268 318Q9203 318 9160 277Q9117 235 9117 174L9117 174Q9117 113 9160 72Q9203 31 9268 31L9268 31Q9332 31 9375 72Q9418 113 9418 174L9418 174Q9418 235 9375 277Q9332 318 9268 318ZM9598 41L9850 41L9850 1531L9598 1531L9598 41ZM10519 1555L10519 1555Q10361 1555 10245 1484Q10129 1413 10067 1289Q10004 1164 10004 1004L10004 1004Q10004 843 10069 719Q10133 594 10247 523Q10361 451 10509 451L10509 451Q10661 451 10775 521Q10889 591 10952 715Q11015 838 11015 1000L11015 1000L11015 1069L10251 1069Q10256 1198 10327 1277Q10398 1356 10525 1356L10525 1356Q10620 1356 10682 1315Q10744 1273 10766 1205L10766 1205L11002 1205Q10982 1308 10915 1387Q10847 1466 10745 1511Q10643 1555 10519 1555ZM10253 895L10253 895L10773 895Q10761 782 10692 717Q10622 651 10513 651L10513 651Q10403 651 10335 717Q10266 782 10253 895ZM11388 437L11388 437Q11347 437 11311 421Q11275 406 11248 379Q11221 351 11206 316Q11190 280 11190 239L11190 239Q11190 198 11206 162Q11221 126 11248 99Q11275 72 11311 56Q11347 41 11388 41L11388 41Q11429 41 11465 56Q11501 72 11528 99Q11555 126 11571 162Q11586 198 11586 239L11586 239Q11586 280 11571 316Q11555 351 11528 379Q11501 406 11465 421Q11429 437 11388 437ZM11388 389L11388 389Q11430 389 11464 369Q11498 348 11518 314Q11538 280 11538 239L11538 239Q11538 197 11518 163Q11498 129 11464 109Q11430 89 11388 89L11388 89Q11347 89 11313 109Q11279 129 11258 163Q11238 197 11238 239L11238 239Q11238 280 11258 314Q11279 348 11313 369Q11347 389 11388 389ZM11475 330L11430 330L11398 268L11359 268L11359 330L11318 330L11318 147L11411 147Q11422 147 11436 154Q11449 160 11458 173Q11468 186 11468 205L11468 205Q11468 224 11459 238Q11450 251 11438 259L11438 259L11475 330ZM11359 177L11359 238L11396 238Q11404 238 11414 230Q11423 222 11423 205L11423 205Q11423 189 11414 183Q11404 177 11397 177L11397 177L11359 177Z"/><path class="napis-z" fill-rule="evenodd" d="M4902.1,1003C4902.1,1290.7,4668.8,1524,4381.1,1524C4093.3,1524,3860.1,1290.7,3860.1,1003C3860.1,715.3,4093.3,482,4381.1,482C4668.8,482,4902.1,715.3,4902.1,1003ZM4695.4,1003C4695.4,829.4,4554.7,688.6,4381.1,688.6C4207.4,688.6,4066.7,829.4,4066.7,1003C4066.7,1176.6,4207.4,1317.4,4381.1,1317.4C4554.7,1317.4,4695.4,1176.6,4695.4,1003ZM4463.7,1003C4463.7,1048.6,4426.7,1085.7,4381.1,1085.7C4335.4,1085.7,4298.4,1048.6,4298.4,1003C4298.4,957.4,4335.4,920.3,4381.1,920.3C4426.7,920.3,4463.7,957.4,4463.7,1003Z"/><path class="napis-f" fill-rule="evenodd" d="M7807.1,1003C7807.1,1290.7,7573.8,1524,7286.1,1524C6998.4,1524,6765.1,1290.7,6765.1,1003C6765.1,715.3,6998.4,482,7286.1,482C7573.8,482,7807.1,715.3,7807.1,1003ZM7600.5,1003C7600.5,829.4,7459.7,688.6,7286.1,688.6C7112.5,688.6,6971.7,829.4,6971.7,1003C6971.7,1176.6,7112.5,1317.4,7286.1,1317.4C7459.7,1317.4,7600.5,1176.6,7600.5,1003ZM7368.7,1003C7368.7,1048.6,7331.7,1085.7,7286.1,1085.7C7240.4,1085.7,7203.4,1048.6,7203.4,1003C7203.4,957.4,7240.4,920.3,7286.1,920.3C7331.7,920.3,7368.7,957.4,7368.7,1003Z"/></svg></button></h1><!--/napis-->
   <button type="button" id="czat-otworz" class="czat-ikonka czat-otworz" aria-label="Zapytaj asystenta" aria-haspopup="dialog"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.5 4h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7l-4.5 3.4v-3.4h-1.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="10.25" r="1.25"/><circle cx="12" cy="10.25" r="1.25"/><circle cx="15.5" cy="10.25" r="1.25"/></svg></button>
   <button type="button" id="odswiez" class="czat-ikonka czat-otworz odswiez" aria-busy="false" aria-label="Odśwież: komputer sprawdzi Otomoto teraz"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.7 6.3A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.3L13 11h7V4z"/></svg></button>
@@ -477,11 +523,17 @@ dialog.poradnik::backdrop { background: var(--strona); }
     <div id="pusty-historia" class="pusto" hidden><p class="pusto-tekst"></p><button type="button" class="pigulka">Sprawdź teraz</button></div>
   </section>
 </main>
-<dialog id="poradnik" class="poradnik" aria-label="Poradnik">
-  <div class="poradnik-pasek"><button type="button" id="zamknij-poradnik" class="czat-ikonka czat-otworz zamknij-poradnik" aria-label="Zamknij poradnik"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
+<dialog id="poradnik" class="poradnik" aria-label="Poradnik i Atlas">
+  <div class="poradnik-pasek"><div class="wiedza" role="tablist" aria-label="Poradnik i Atlas"><button type="button" role="tab" id="w-poradnik" data-w="poradnik" aria-controls="r-poradnik" aria-selected="true" style="--pastel:#d5e9ff;--pastel-c:#132f4d" data-odcien="211"><span class="nazwa" data-nazwa="Poradnik"><span>Poradnik</span></span></button><button type="button" role="tab" id="w-atlas" data-w="atlas" aria-controls="r-atlas" aria-selected="false" tabindex="-1" style="--pastel:#f1dbfc;--pastel-c:#391b49" data-odcien="280"><span class="nazwa" data-nazwa="Atlas"><span>Atlas</span></span></button></div><button type="button" id="zamknij-poradnik" class="czat-ikonka czat-otworz zamknij-poradnik" aria-label="Zamknij"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
   <div class="poradnik-tresc">
-    <iframe id="ramka-poradnika" title="Poradnik: przebieg, licznik i usterki" hidden></iframe>
-    <div id="pusty-poradnik" class="pusto" hidden><p class="pusto-tekst"></p><button type="button" class="pigulka">Sprawdź teraz</button></div>
+    <div id="r-poradnik" role="tabpanel" aria-labelledby="w-poradnik" class="wiedza-strona">
+      <iframe id="ramka-poradnika" title="Poradnik: przebieg, licznik i usterki" hidden></iframe>
+      <div id="pusty-poradnik" class="pusto" hidden><p class="pusto-tekst"></p><button type="button" class="pigulka">Sprawdź teraz</button></div>
+    </div>
+    <div id="r-atlas" role="tabpanel" aria-labelledby="w-atlas" class="wiedza-strona" hidden>
+      <iframe id="ramka-atlasu" title="Atlas Samochodów: marki i modele jak telefony"></iframe>
+      <div id="pusty-atlas" class="pusto" hidden><p class="pusto-tekst"></p><button type="button" class="pigulka">Spróbuj jeszcze raz</button></div>
+    </div>
   </div>
 </dialog>
 <div class="dol">
@@ -1093,7 +1145,8 @@ dialog.poradnik::backdrop { background: var(--strona); }
 //                  otwarciu prośba idzie sama, gdy katalog ma ponad 10 minut. Stan mówi samo kółko: kręci się, póki komputer
 //                  sprawdza. Z kiedy są dane, mówi dymek i czytnik ekranu (Jacek: „odśwież powinno być tylko delikatny, taki
 //                  kółeczko. Nikomu to nie jest potrzebne do informacji”).
-//   Logo         – cały poradnik o używanych autach na cały ekran (od 22.10.2026), kanał „<kanał>-poradnik”.
+//   Logo         – cały poradnik o używanych autach na cały ekran (od 22.10.2026), kanał „<kanał>-poradnik”, a od 23.10.2026
+//                  w tym samym oknie druga pigułka: Atlas Samochodów ze strony w sieci (jackoludek.github.io/atlas-samochodow).
 //   Napis        – te same wyszukiwania na Otomoto co skan (od 22.10.2026; rano tego dnia stały pod logo).
 //   Przestawianie – zakładki i dwa kółka w nagłówku (asystent i Odśwież) palcem, myszą i Alt+← →, z „Cofnij”, Ctrl+Z i Ctrl+Y.
 // ntfy.sh trzyma wiadomości 12 godzin, a pliki 3 godziny, więc wszystko zostaje w telefonie (localStorage i IndexedDB) i działa
@@ -1438,13 +1491,17 @@ dialog.poradnik::backdrop { background: var(--strona); }
   ogloszenie.setAttribute('aria-live', 'polite');
   document.body.append(ogloszenie);
   function powiedz(t) { ogloszenie.textContent = ''; requestAnimationFrame(() => { ogloszenie.textContent = t; }); }
-  const cofnijPole = $('.cofnij-zakladki'), przyciskCofnij = $('#cofnij-zakladki');
+  const cofnijPole = $('.cofnij-zakladki'), przyciskCofnij = $('#cofnij-zakladki'), domCofnij = cofnijPole.parentNode;
   const PRZESTAWIENIA = { wstecz: [], naprzod: [] };
   let zegarCofnij = 0;
   function pokazCofnij(rzad) {
     clearTimeout(zegarCofnij);
     cofnijPole.hidden = !rzad;
     if (!rzad) return;
+    // Okno poradnika i Atlasu jest modalne (górna warstwa), więc po przestawieniu jego pigułek „Cofnij” staje pod jego paskiem,
+    // a przy zakładkach i kółkach wraca na swoje miejsce przy zakładkach (od 23.10.2026: wcześniej stał pod oknem, niewidoczny).
+    const gdzie = document.querySelector('dialog.poradnik[open] .poradnik-pasek') || domCofnij;
+    if (cofnijPole.parentNode !== gdzie) gdzie.append(cofnijPole);
     przyciskCofnij.setAttribute('aria-label', rzad.cofnij);
     zegarCofnij = setTimeout(() => pokazCofnij(null), 6000);
   }
@@ -1683,29 +1740,101 @@ dialog.poradnik::backdrop { background: var(--strona); }
   document.addEventListener('pointerdown', (e) => { if (menuOtomoto && !menuOtomoto.contains(e.target) && !napis.contains(e.target)) zamknijMenuOtomoto(false); }, true);
   addEventListener('blur', () => zamknijMenuOtomoto(false));
 
-  // ---------------------------------------------------------------- logo: cały poradnik (od 22.10.2026)
+  // ---------------------------------------------------------------- logo: poradnik i Atlas (od 22.10 i 23.10.2026)
   // Jacek, 22.10.2026: „Ten poradnik, tam trzeba by gdzieś schować. Póki co, wsadźmy go pod same tiny logo”. Stuknięcie w logo
   // pokazuje na cały ekran poradnik o używanych autach, ten sam co strona w Czytadle (wyniki\poradnik.html z poradnik.js w misji,
-  // kanał „<kanał>-poradnik”). Zamykają go X u góry, gest wstecz i Wstecz na Androidzie, a na klawiaturze Escape, także w samym
-  // poradniku: strona mówi to wiadomością „zamknij-poradnik”. Logo dalej wygląda jak logo.
+  // kanał „<kanał>-poradnik”). Od 23.10.2026 (Jacek: „podłączone pod … Kasio Mobile … dyskretny i delikatny sposób”, „żeby się nie
+  // zrobiło za dużo tych wszystkich tabów i opcji”) u góry tego okna stoją dwie pigułki: Poradnik (pierwszy i domyślny) i Atlas
+  // Samochodów, strona z sieci w ramce (?w=kasiomobile). Ostatnio wybrana i kolejność zostają w telefonie; kolejność przestawia się
+  // jak zakładki. Zamykają X u góry, gest wstecz i Wstecz na Androidzie (w Atlasie najpierw cofa w Atlasie), a na klawiaturze Escape,
+  // także w samej stronie: strona mówi to wiadomością „zamknij-poradnik”. Logo dalej wygląda jak logo.
+  const ATLAS = 'https://jackoludek.github.io/atlas-samochodow/?w=kasiomobile';
   const poradnik = $('#poradnik'), ramkaPoradnika = ramka($('#ramka-poradnika'), $('#pusty-poradnik'), null);
+  const ramkaAtlasu = $('#ramka-atlasu'), pustyAtlas = $('#pusty-atlas'), wiedza = $('.wiedza');
+  // Atlas mówi „atlas-gotowy”, gdy wstał w ramce. Bez internetu albo bez tej wiadomości w 15 s stoi zdanie i „Spróbuj jeszcze raz”,
+  // a Wstecz zamyka wtedy całe okno, bo nie ma komu cofać.
+  let atlasGotowy = false, zegarAtlasu = 0;
+  function bezAtlasu(tekst) {
+    clearTimeout(zegarAtlasu);
+    ramkaAtlasu.removeAttribute('src');
+    ramkaAtlasu.hidden = true;
+    pustyAtlas.hidden = false;
+    pustyAtlas.querySelector('.pusto-tekst').textContent = tekst;
+  }
+  function wczytajAtlas() {
+    if (atlasGotowy || ramkaAtlasu.getAttribute('src')) return;
+    if (!navigator.onLine) { bezAtlasu('Atlas jest w sieci, a telefon nie ma teraz internetu.'); return; }
+    pustyAtlas.hidden = true;
+    ramkaAtlasu.hidden = false;
+    ramkaAtlasu.src = ATLAS;
+    clearTimeout(zegarAtlasu);
+    zegarAtlasu = setTimeout(() => { if (!atlasGotowy) bezAtlasu('Atlas się nie wczytał. Sprawdź internet i spróbuj jeszcze raz.'); }, 15000);
+  }
+  pustyAtlas.querySelector('button').addEventListener('click', wczytajAtlas);
+  const WIEDZA = ['poradnik', 'atlas'], pigulkiWiedzy = WIEDZA.map((w) => $('#w-' + w));
   const pustyPoradnik = pusty('poradnik', 'poradnika', 'Poradnik jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.');
-  const pokazPoradnik = () => (poradnik.open ? ramkaPoradnika.pokaz(PORADNIK, pustyPoradnik) : Promise.resolve(false));
+  let wybranaWiedza = WIEDZA.includes(pamiec.czytaj('wiedza', null)) ? pamiec.czytaj('wiedza', null) : 'poradnik';
+  const pokazPoradnik = () => (poradnik.open && wybranaWiedza === 'poradnik' ? ramkaPoradnika.pokaz(PORADNIK, pustyPoradnik) : Promise.resolve(false));
   const zamknijPoradnik = () => { if (poradnik.open) poradnik.close(); };
+  for (const b of pigulkiWiedzy) {
+    const o = Number(b.dataset.odcien) || 0, tlo = (b.style.getPropertyValue('--pastel') || '#ffffff').trim();
+    const wolne = BLYSKI.filter(([k, x]) => roznicaOdcieni(x, o) >= 70 && kontrastBarw(k, tlo) >= 1.4);
+    const [k] = wolne[Math.floor(Math.random() * wolne.length)] || ['#ffffff'];
+    b.style.setProperty('--blysk-j', k + 'd9');
+    b.style.setProperty('--blysk-c', k + '73');
+  }
+  wiedza.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const b = e.target.closest && e.target.closest('[role="tab"]');
+    if (!b) return;
+    const r = b.getBoundingClientRect();
+    b.style.setProperty('--mx', Math.round(e.clientX - r.left) + 'px');
+    b.style.setProperty('--my', Math.round(e.clientY - r.top) + 'px');
+  }, { passive: true });
+  function pokazWiedze(w, fokus) {
+    wybranaWiedza = w;
+    pamiec.zapisz('wiedza', w);
+    for (const [i, x] of WIEDZA.entries()) {
+      const b = pigulkiWiedzy[i], tak = x === w;
+      b.setAttribute('aria-selected', String(tak));
+      b.tabIndex = tak ? 0 : -1;
+      $('#r-' + x).hidden = !tak;
+    }
+    const b = pigulkiWiedzy[WIEDZA.indexOf(w)];
+    b.classList.remove('blysk'); void b.offsetWidth; b.classList.add('blysk');
+    if (w === 'atlas') wczytajAtlas();
+    if (fokus) b.focus();
+    return pokazPoradnik();
+  }
   function otworzPoradnik() {
     if (poradnik.open) return;
     zamknijMenuOtomoto(false);
     poradnik.showModal();
     logo.setAttribute('aria-expanded', 'true');
-    $('#zamknij-poradnik').focus();
-    pokazPoradnik();
+    pokazWiedze(wybranaWiedza, true);
   }
-  poradnik.addEventListener('close', () => { logo.setAttribute('aria-expanded', 'false'); logo.focus({ preventScroll: true }); });
+  poradnik.addEventListener('close', () => {
+    if (poradnik.contains(cofnijPole)) pokazCofnij(null);
+    logo.setAttribute('aria-expanded', 'false');
+    logo.focus({ preventScroll: true });
+  });
   logo.addEventListener('click', otworzPoradnik);
   $('#zamknij-poradnik').addEventListener('click', zamknijPoradnik);
   addEventListener('message', (e) => {
     const d = e.data;
-    if (d && d.kasiomobile === 'zamknij-poradnik' && e.source === $('#ramka-poradnika').contentWindow) zamknijPoradnik();
+    if (d && d.kasiomobile === 'atlas-gotowy' && e.source === ramkaAtlasu.contentWindow) { atlasGotowy = true; clearTimeout(zegarAtlasu); }
+    if (d && d.kasiomobile === 'zamknij-poradnik' && (e.source === $('#ramka-poradnika').contentWindow || e.source === ramkaAtlasu.contentWindow)) zamknijPoradnik();
+  });
+  const WIEDZA_RZAD = rzadPrzestawiany({ rodzic: wiedza, elementy: pigulkiWiedzy, klucz: 'wiedza-kolejnosc', id: (b) => b.dataset.w,
+    nazwa: (b) => b.textContent.trim(), cofnij: 'Cofnij przestawienie pigułek Poradnik i Atlas', przytrzymanie: true });
+  pigulkiWiedzy.forEach((b) => {
+    b.addEventListener('click', () => pokazWiedze(b.dataset.w));
+    b.addEventListener('keydown', (e) => {
+      if (e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+      e.preventDefault();
+      const k = WIEDZA_RZAD.kolejnosc(), m = k.indexOf(b.dataset.w);
+      pokazWiedze(k[(m + (e.key === 'ArrowRight' ? 1 : -1) + k.length) % k.length], true);
+    });
   });
   // ---------------------------------------------------------------- asystent (od 19.10.2026)
   // Czat z komputerem w domu (czat.js). „Ręce”: odpowiedź pokazuje zakładkę, a w Katalagu model albo Podium.
@@ -1734,6 +1863,8 @@ dialog.poradnik::backdrop { background: var(--strona); }
   function wstecz() {
     if (menuOtomoto) { zamknijMenuOtomoto(true); return true; }
     if (czat && czat.otwarty()) { czat.zamknij(); return true; }
+    // W Atlasie Wstecz najpierw cofa w samym Atlasie (szczegóły, arkusz filtrów, ściąga), a dopiero potem zamyka okno.
+    if (poradnik.open && wybranaWiedza === 'atlas' && atlasGotowy) { ramkaAtlasu.contentWindow.postMessage({ atlas: 'wstecz' }, '*'); return true; }
     if (poradnik.open) { zamknijPoradnik(); return true; }
     try {
       const d = STRONY[widok].el.contentDocument.querySelector('dialog[open]');
@@ -1821,6 +1952,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
       katalogCzas: KATALOG.czas(), kalkulatorCzas: KALKULATOR.czas(), historiaCzas: HISTORIA.czas(), modeleCzas: MODELE.czas(), poradnikCzas: PORADNIK.czas(),
       schowek: schowek.rodzaj, ramkaKatalogu: STRONY[0].ramka.sposob, ramkaModeli: STRONY[1].ramka.sposob,
       ramkaKredytu: STRONY[2].ramka.sposob, ramkaHistorii: STRONY[3].ramka.sposob, ramkaPoradnika: ramkaPoradnika.sposob, widok, nazwa: NAZWY[widok],
+      wiedza: wybranaWiedza, atlas: atlasGotowy ? 'gotowy' : ramkaAtlasu.getAttribute('src') ? 'wczytuje się' : 'nie ma',
     }),
   };
   if (/[?&]test=\d/.test(location.search)) document.head.append(el('script', { src: 'test.js' }));
