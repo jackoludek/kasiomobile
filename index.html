@@ -178,13 +178,14 @@ main { flex: 1; min-height: 0; position: relative; }
    w akcencie, pogrubiona nazwa i co 6 s przebłysk światła w barwie losowanej z puli dalekiej od pastelu (app.js, BLYSKI).
    Przebłysk mówi, co jest wybrane, więc zostaje też przy ograniczonym ruchu. Pod kursorem jasna plama szkła idzie za myszą,
    a nic się nie przesuwa (Jacek, 20.10.2026: „literki się trochę przesuwają”). Każda zakładka jest co najmniej tak szeroka
-   jak jej pogrubiona nazwa, więc wybór niczego nie przesuwa. Pasek omija wskaźnik ekranu głównego, ale nie zostawia pod sobą
-   całego pasa 34 px. */
+   jak jej pogrubiona nazwa, więc wybór niczego nie przesuwa. Od dolnej krawędzi ekranu pasek stoi tak
+   daleko, jak logo od górnej (Jacek, 24.10.2026: „przynajmniej tak od krawędzi ekranu, tak bufor jest u góry”): połowa górnego
+   wcięcia i 12 px. Na iPhonie to więcej niż wskaźnik ekranu głównego, a bez wcięć (przeglądarka) zostaje 12 px. */
 .dol {
   flex: none;
   position: relative;
   z-index: 2;
-  padding: 8px var(--km-x1) max(8px, calc(env(safe-area-inset-bottom) - 10px)) var(--km-x0);
+  padding: 8px var(--km-x1) max(calc(var(--km-gora) / 2 + 12px), calc(env(safe-area-inset-bottom) - 10px)) var(--km-x0);
   background: var(--tlo);
   box-shadow: inset 0 .5px 0 var(--wlos);
 }
@@ -487,9 +488,10 @@ dialog.poradnik::backdrop { background: var(--strona); }
 .czat-pusto > p { max-width: 22em; margin: 0; }
 .czat-podpowiedzi { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 
-/* Pole pytania na dole: tekst, mikrofon (gdy jest) i wysyłanie. */
+/* Pole pytania na dole: tekst, mikrofon (gdy jest) i wysyłanie. Od dolnej krawędzi stoi jak pasek zakładek, czyli tak daleko
+   jak logo od górnej (od 24.10.2026); przy klawiaturze i w panelu na komputerze 8 px. */
 .czat-stan { flex: none; margin: 0; padding: 4px 16px; color: var(--cz-tekst2); font-size: 13px; text-align: center; }
-.czat-pole { flex: none; display: flex; align-items: flex-end; gap: 4px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom)) 16px;
+.czat-pole { flex: none; display: flex; align-items: flex-end; gap: 4px; padding: 8px 8px max(calc(var(--km-gora, 0px) / 2 + 12px), calc(8px + env(safe-area-inset-bottom))) 16px;
   background: var(--cz-tlo); box-shadow: inset 0 .5px 0 var(--cz-ramka); }
 .czat.klawiatura .czat-pole, .czat-panel .czat-pole { padding-bottom: 8px; }
 .czat-tekst { flex: 1; min-width: 0; min-height: 48px; max-height: 132px; margin: 0; padding: 12px 16px; border: .5px solid var(--cz-ramka); border-radius: 24px;
