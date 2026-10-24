@@ -50,13 +50,13 @@
   --prawo: calc(env(safe-area-inset-right) + var(--bok));
   /* Siatka aplikacji (od 24.10.2026, Jacek: „not aligned to kolumnes below them”, „EVERY FUCKIN WHERE”): ta sama co w Ogłoszeniach,
      czyli w katalogu Skanera: margines clamp(…, 3vw, 28px), treść najwyżej 1624 px na środku, od 1100 px kolumna filtrów 312 px
-     i 26 px przerwy (--km-kolumna). Strony w zakładkach dostają ją przy wczytaniu (app.js, „siatka”), więc logo, zakładki i kółka
+     i 24 px przerwy (--km-kolumna; Skaner ma 26 px, a odstępy idą ze skali 4 i 8 px). Strony w zakładkach dostają ją przy wczytaniu (app.js, „siatka”), więc logo, zakładki i kółka
      stoją nad krawędziami treści na każdej zakładce i przy każdej szerokości. --km-pasek to pasek przewijania w ramkach (mierzy go
      app.js; na telefonie i Macu 0, bo pływa nad treścią). --km-x0 i --km-x1 to odległość treści od lewej i prawej krawędzi okna. */
   --km-bok: clamp(16px, 3vw, 28px);
   --km-pasek: 0px;
   --km-tresc: 1624px;
-  --km-kolumna: 338px;
+  --km-kolumna: 336px;
   --km-lewo: calc(env(safe-area-inset-left) + var(--km-bok));
   --km-prawo: calc(env(safe-area-inset-right) + var(--km-bok));
   --km-margines: max(0px, calc((100vw - var(--km-pasek) - var(--km-tresc) - var(--km-lewo) - var(--km-prawo)) / 2));
@@ -120,8 +120,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .stan-danych .sd-dzien::first-letter { text-transform: uppercase; }
   .stan-danych .sd-dzien::after { content: ","; }
 }
-/* Ściąga tylko przy zakładce, której strona ją ma (app.js, ustawSciage). Miejsce zostaje, więc asystent się nie przesuwa. */
-.sciaga-otworz.brak { visibility: hidden; }
 /* Miarki siatki dla app.js: szerokość cienkiego paska przewijania i marginesy w pikselach, razem z wcięciami ekranu. */
 .siatka-pasek { position: absolute; visibility: hidden; width: 100px; height: 40px; overflow: scroll; scrollbar-width: thin; }
 .siatka-sonda { position: absolute; visibility: hidden; height: 0; padding: 0 var(--km-prawo) 0 var(--km-lewo); }
@@ -443,6 +441,10 @@ dialog.poradnik::backdrop { background: var(--strona); }
 .czat-wyslij::before { background: var(--cz-przycisk); }
 .czat-wyslij:disabled { color: var(--cz-tekst2); cursor: default; }
 .czat-wyslij:disabled::before { background: var(--cz-szary); box-shadow: 0 0 0 .5px var(--cz-wlosek); }
+/* Kółko w nagłówku, które teraz nic nie zrobi (ściąga przy zakładce bez ściągi, od 24.10.2026), jest przygaszone, a nie schowane
+   (wytyczne Jacka: „Disabled is dimmed, not hidden”): szare i płaskie jak wyłączone wysyłanie, do tego o połowę słabsze. */
+.czat-otworz:disabled { color: var(--cz-tekst2); opacity: .5; cursor: default; }
+.czat-otworz:disabled::before { background: var(--cz-szary); box-shadow: 0 0 0 .5px var(--cz-wlosek); }
 .czat-mik.nagrywa { color: #ffffff; }
 .czat-mik.nagrywa::before { background: var(--cz-czerwony); }
 /* Puls wokół nagrywającego mikrofonu to sygnał stanu, więc zostaje także przy ograniczonym ruchu. */
@@ -1330,7 +1332,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
       if (czas && czas === wczytany) return true;
       const html = czas ? await p.tresc() : null;
       if (!html) {
-        const [tekst] = tekstPusty();
+        const tekst = tekstPusty();
         r.hidden = true;
         pusty.hidden = false;
         pusty.querySelector('.pusto-tekst').textContent = tekst;
@@ -1374,21 +1376,22 @@ dialog.poradnik::backdrop { background: var(--strona); }
 
   // Siatka (od 24.10.2026): strona w zakładce dostaje marginesy i szerokość nagłówka (styl.css, „Siatka aplikacji”), bez tytułu
   // (nazwę mówi zakładka; Jacek: „respect real estate … no samochód rodzinny”) bez własnego „i”, które stoi teraz w nagłówku, i bez paska „iScanner · Eksport z …”.
-  // Ogłoszenia: siatka katalogu Skanera (312 px filtrów, 26 px przerwy) zostaje, a filtry przyklejają się na wysokości marginesu.
+  // Ogłoszenia: siatka katalogu Skanera (312 px filtrów) zostaje, a przerwę zwężamy z 26 do 24 px, bo odstępy idą ze skali 4 i 8 px
+  // (wytyczne Jacka: 24 px między grupami). Filtry przyklejają się na wysokości marginesu.
   // Katalag i Historia: od 1100 px data, Skrót i Pełny oraz zdanie wstępu stoją w kolumnie pod logo, a reszta w kolumnie pod
   // zakładkami, jak filtry i auta w Ogłoszeniach. Wcięcia ekranu (iPhone w poziomie) wpisuje do ramek ustawSiatke niżej.
   // <siatka> Ten kawałek, aż do </siatka>, wkleja też Komputer\zbuduj-auta.js do okna na komputerze: siatkę zmieniasz tylko tutaj.
   const BOK = 'clamp(16px,3vw,28px)', L = `var(--km-lewo,${BOK})`, P = `var(--km-prawo,${BOK})`;
   const KONTENER = `box-sizing:border-box!important;width:100%!important;max-width:calc(1624px + ${L} + ${P})!important;margin-left:auto!important;margin-right:auto!important;padding-left:${L}!important;padding-right:${P}!important`;
   const GAZETA = `main{${KONTENER};position:relative}main>header.hero h1{display:none!important}main p,main section>ul>li,main .card li{max-width:72ch}`
-    + `@media (width>1100px){main{padding-left:calc(${L} + 338px)!important}main>header.hero{position:absolute;left:${L};top:0;width:312px;margin:0}`
+    + `@media (width>1100px){main{padding-left:calc(${L} + 336px)!important}main>header.hero{position:absolute;left:${L};top:0;width:312px;margin:0}`
     + 'main>header.hero{padding-top:0!important}main>header.hero>:first-child{margin-top:0!important}main>header.hero .pigulki-widoku{flex-wrap:wrap}}';
   const SIATKA = {
-    katalog: `#pasek,.strona>.naglowek{display:none!important}.strona{${KONTENER}}`
+    katalog: `#pasek,.strona>.naglowek{display:none!important}.strona{${KONTENER}}.katalog{column-gap:24px!important}`
       + '.panel-filtrow{top:clamp(16px,2.5vw,32px)!important;max-height:calc(100vh - 2 * clamp(16px,2.5vw,32px))!important}',
     modele: GAZETA,
     kalkulator: `.strona{${KONTENER}}button#info{display:none!important}`
-      + '@media (width>1100px){.uklad{grid-template-columns:312px minmax(0,1fr)!important;column-gap:26px!important}}',
+      + '@media (width>1100px){.uklad{grid-template-columns:312px minmax(0,1fr)!important;column-gap:24px!important}}',
     historia: GAZETA,
   };
   const cssSiatki = (nazwa) => `html{scrollbar-width:thin;scrollbar-gutter:stable}${SIATKA[nazwa]}`;
@@ -1435,10 +1438,12 @@ dialog.poradnik::backdrop { background: var(--strona); }
   setInterval(opiszStan, 60000);
   // Stan sieci dla pustych ekranów: w trakcie pobierania nie piszemy, że plik „nie dotarł”.
   let pobieram = false, bezSieci = false;
-  const pusty = (biernik, dopelniacz, nieDotarl) => () => (!KANAL ? ['Otwórz Kasiomobile z linku od Jacka. Bez niego aplikacja nie wie, skąd brać dane.', false]
-    : pobieram ? [`Pobieram ${biernik} z komputera…`, false]
-      : bezSieci ? [`Brak połączenia, a ${dopelniacz} jeszcze nie ma w telefonie.`, true]
-        : [nieDotarl, true]);
+  // Zdanie mówi, co się dzieje i co dalej (wytyczne Jacka: błąd to jedno zdanie przy rzeczy, które mówi, co zrobić). Przycisku nie ma:
+  // dane przychodzą same, także po powrocie internetu (zdarzenie online niżej).
+  const pusty = (biernik, nieDotarl) => () => (!KANAL ? 'Otwórz Kasiomobile z linku od Jacka. Bez niego aplikacja nie wie, skąd brać dane.'
+    : pobieram ? `Pobieram ${biernik} z komputera…`
+      : bezSieci ? `Brak internetu. Pobiorę ${biernik}, gdy internet wróci.`
+        : nieDotarl);
 
   // ---------------------------------------------------------------- zakładki
   // Cztery zakładki (od 19.10.2026). W pamięci telefonu stoją pod nazwami z WIDOKI, więc dawny zapis działa dalej:
@@ -1451,13 +1456,13 @@ dialog.poradnik::backdrop { background: var(--strona); }
   const strona = (r, puste, p, poprawka, zdania) => ({ el: $(r), plik: p, pusty: pusty(...zdania), ramka: ramka($(r), $(puste), poprawka) });
   const STRONY = [
     strona('#ramka-katalogu', '#pusty-katalog', KATALOG, wSiatce('katalog'),
-      ['ogłoszenia', 'ogłoszeń', 'Ogłoszenia jeszcze nie dotarły. Komputer wysyła je co godzinę, gdy jest włączony.']),
+      ['ogłoszenia', 'Ogłoszenia jeszcze nie dotarły. Komputer wysyła je co godzinę, gdy jest włączony.']),
     strona('#ramka-modeli', '#pusty-modele', MODELE, wSiatce('modele'),
-      ['katalag', 'katalagu', 'Katalag aut jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
+      ['katalag', 'Katalag aut jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
     strona('#ramka-kredytu', '#pusty-kredyt', KALKULATOR, wSiatce('kalkulator'),
-      ['kalkulator', 'kalkulatora', 'Kalkulator jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
+      ['kalkulator', 'Kalkulator jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
     strona('#ramka-historii', '#pusty-historia', HISTORIA, wSiatce('historia'),
-      ['historię', 'historii', 'Historia jeszcze nie dotarła. Komputer wysyła ją co godzinę, gdy jest włączony.']),
+      ['historię', 'Historia jeszcze nie dotarła. Komputer wysyła ją co godzinę, gdy jest włączony.']),
   ];
   let widok = 0;
   // Siatka w ramkach: cienki pasek przewijania (jak w katalogu Skanera) mierzymy tu raz, a marginesy w pikselach, razem z wcięciami
@@ -1825,8 +1830,9 @@ dialog.poradnik::backdrop { background: var(--strona); }
   const ATLAS = 'https://jackoludek.github.io/atlas-samochodow/?w=kasiomobile';
   const poradnik = $('#poradnik'), ramkaPoradnika = ramka($('#ramka-poradnika'), $('#pusty-poradnik'), null);
   const ramkaAtlasu = $('#ramka-atlasu'), pustyAtlas = $('#pusty-atlas'), wiedza = $('.wiedza');
-  // Atlas mówi „atlas-gotowy”, gdy wstał w ramce. Bez internetu albo bez tej wiadomości w 15 s stoi zdanie i „Spróbuj jeszcze raz”,
-  // a Wstecz zamyka wtedy całe okno, bo nie ma komu cofać.
+  // Atlas mówi „atlas-gotowy”, gdy wstał w ramce. Bez internetu albo bez tej wiadomości w 15 s stoi zdanie (przycisku nie ma od
+  // 24.10.2026): po powrocie internetu Atlas wczytuje się sam (zdarzenie online niżej), a inaczej przy następnym otwarciu.
+  // Wstecz zamyka wtedy całe okno, bo nie ma komu cofać.
   let atlasGotowy = false, zegarAtlasu = 0;
   function bezAtlasu(tekst) {
     clearTimeout(zegarAtlasu);
@@ -1837,7 +1843,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
   }
   function wczytajAtlas() {
     if (atlasGotowy || ramkaAtlasu.getAttribute('src')) return;
-    if (!navigator.onLine) { bezAtlasu('Atlas jest w sieci, a telefon nie ma teraz internetu.'); return; }
+    if (!navigator.onLine) { bezAtlasu('Brak internetu. Atlas wczyta się sam, gdy internet wróci.'); return; }
     pustyAtlas.hidden = true;
     ramkaAtlasu.hidden = false;
     ramkaAtlasu.src = ATLAS;
@@ -1846,7 +1852,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
   }
 
   const WIEDZA = ['poradnik', 'atlas'], pigulkiWiedzy = WIEDZA.map((w) => $('#w-' + w));
-  const pustyPoradnik = pusty('poradnik', 'poradnika', 'Poradnik jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.');
+  const pustyPoradnik = pusty('poradnik', 'Poradnik jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.');
   let wybranaWiedza = WIEDZA.includes(pamiec.czytaj('wiedza', null)) ? pamiec.czytaj('wiedza', null) : 'poradnik';
   const pokazPoradnik = () => (poradnik.open && wybranaWiedza === 'poradnik' ? ramkaPoradnika.pokaz(PORADNIK, pustyPoradnik) : Promise.resolve(false));
   const zamknijPoradnik = () => { if (poradnik.open) poradnik.close(); };
@@ -1929,15 +1935,12 @@ dialog.poradnik::backdrop { background: var(--strona); }
   const przyciskCzatu = $('#czat-otworz');
   if (czat) { Czat.dymek(przyciskCzatu); przyciskCzatu.addEventListener('click', () => czat.otworz()); } else przyciskCzatu.hidden = true;
   // Ściąga („i”, od 24.10.2026, Jacek: „info next to chat button really”): otwiera ściągę strony w bieżącej zakładce. Jej własne „i”
-  // stoi w schowanym tytule strony (SIATKA wyżej), więc wystarczy je kliknąć. Przy zakładce bez ściągi (Katalag, Historia) „i” znika,
-  // ale jego miejsce zostaje, więc asystent i stan danych się nie przesuwają.
+  // stoi w schowanym tytule strony (SIATKA wyżej), więc wystarczy je kliknąć. Przy zakładce bez ściągi (Katalag, Historia) „i” jest
+  // przygaszone (wytyczne Jacka: wyłączone jest przygaszone, a nie schowane; wygląd w czat.css), więc nagłówek wszędzie wygląda tak samo.
   const przyciskSciagi = $('#sciaga-otworz');
   const sciagaStrony = () => { try { const d = STRONY[widok].el.contentDocument; return (d && d.querySelector('.info-przycisk, button#info')) || null; } catch { return null; } };
   function ustawSciage() {
-    const jest = Boolean(sciagaStrony());
-    przyciskSciagi.classList.toggle('brak', !jest);
-    przyciskSciagi.disabled = !jest;
-    if (jest) przyciskSciagi.removeAttribute('aria-hidden'); else przyciskSciagi.setAttribute('aria-hidden', 'true');
+    przyciskSciagi.disabled = !sciagaStrony();
   }
   if (window.Czat) Czat.dymek(przyciskSciagi);
   przyciskSciagi.addEventListener('click', () => { const b = sciagaStrony(); if (b) b.click(); });
