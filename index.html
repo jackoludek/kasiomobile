@@ -40,9 +40,9 @@
   --blysk: rgba(255, 255, 255, .7);
   --cien: rgba(0, 0, 0, .12);
   --cien-mocny: rgba(0, 0, 0, .18);
-  /* Napis obok logo (40 px), stanu danych (44 px), ściągi i asystenta (po 48 px), odstępów i marginesów siatki:
-     szerokość ekranu minus 210 px i dwa marginesy, a napis ma 5,67 swojej wielkości szerokości. */
-  --napis: clamp(14px, calc((100vw - 2 * var(--km-bok) - 210px) / 5.67), 26px);
+  /* Napis obok logo (40 px) i asystenta (48 px), odstępów i marginesów siatki: szerokość ekranu minus 110 px i dwa marginesy,
+     a napis ma 5,67 swojej wielkości szerokości. */
+  --napis: clamp(14px, calc((100vw - 2 * var(--km-bok) - 110px) / 5.67), 26px);
   --zwykly: 17px;
   --maly: 15px;
   --bok: 16px;
@@ -62,6 +62,9 @@
   --km-margines: max(0px, calc((100vw - var(--km-pasek) - var(--km-tresc) - var(--km-lewo) - var(--km-prawo)) / 2));
   --km-x0: calc(var(--km-margines) + var(--km-lewo));
   --km-x1: calc(var(--km-margines) + var(--km-prawo) + var(--km-pasek));
+  /* Wcięcie u góry ekranu (wycięcie aparatu albo czujników): na iPhonie i w przeglądarce z env(), a na Androidzie, gdzie strona
+     sięga pod pas przy aparacie, wpisuje je MainActivity.java (podajGore). Nagłówek stoi na środku tego pasa razem ze swoim rzędem. */
+  --km-gora: env(safe-area-inset-top, 0px);
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -103,22 +106,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Kształt kafelka ikon i gradienty: raz, dla wszystkich zakładek. Nie display: none, bo wtedy przeglądarki gubią gradienty. */
 .wzory { position: absolute; width: 0; height: 0; overflow: hidden; }
 
-/* Nagłówek w jednym rzędzie, w siatce aplikacji: logo stoi nad lewą krawędzią treści, ostatnie kółko nad prawą. Z prawej 4 px mniej:
-   kółko 40 px stoi w polu 48 px. Ściąga i asystent to te same kółka (czat.css, .czat-ikonka i .czat-otworz). */
+/* Nagłówek w jednym rzędzie, w siatce aplikacji: logo stoi nad lewą krawędzią treści, kółko asystenta nad prawą. Z prawej 4 px
+   mniej: kółko 40 px stoi w polu 48 px (czat.css, .czat-ikonka i .czat-otworz). Godziny skanu i ściągi nie ma (Jacek, 24.10.2026,
+   wieczorem: „nie potrzebujemy wiedzieć, kiedy został update'owany”, „tak prosto, że nie będzie potrzeba ściągi”). Rząd stoi na
+   środku szarego pola razem z pasem przy wycięciu ekranu (Jacek: „On jest niżej trochę. Ja bym wolał, żeby na środku”): połowa
+   wcięcia nad nim, połowa pod nim, więc nagłówek ma tę samą wysokość co wcześniej. */
 .glowa {
   flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: calc(env(safe-area-inset-top) + 8px) calc(var(--km-x1) - 4px) 8px var(--km-x0);
-}
-/* Stan danych (od 24.10.2026, Jacek: „no refresh button anywhere … just tiny grayed out infos somewhere: data & time of update”):
-   kiedy komputer ostatnio sprawdził Otomoto, drugim planem obok kółek. Na telefonie godzina nad dniem, szerzej w jednej linii. */
-.stan-danych { flex: none; display: flex; flex-direction: column; align-items: flex-end; min-width: 44px; margin: 0 4px 0 0; color: var(--tekst2); font-size: 13px; line-height: 1.2; font-variant-numeric: tabular-nums; white-space: nowrap; }
-@media (min-width: 760px) {
-  .stan-danych { flex-direction: row-reverse; gap: .3em; }
-  .stan-danych .sd-dzien::first-letter { text-transform: uppercase; }
-  .stan-danych .sd-dzien::after { content: ","; }
+  padding: calc(var(--km-gora) / 2 + 8px) calc(var(--km-x1) - 4px) calc(var(--km-gora) / 2 + 8px) var(--km-x0);
 }
 /* Miarki siatki dla app.js: szerokość cienkiego paska przewijania i marginesy w pikselach, razem z wcięciami ekranu. */
 .siatka-pasek { position: absolute; visibility: hidden; width: 100px; height: 40px; overflow: scroll; scrollbar-width: thin; }
@@ -137,13 +135,6 @@ h1 .napis { display: block; flex: none; width: calc(var(--napis) * var(--szer));
 h1 .napis-przycisk { display: flex; align-items: center; min-width: 0; max-width: 100%; height: 48px; margin: -14px 0; padding: 0; border: 0; border-radius: 12px; background: none; }
 h1 .napis-przycisk .napis { transition: transform 120ms ease; }
 h1 .napis-przycisk:active .napis { transform: scale(.97); }
-/* Kółka w nagłówku (ściąga i asystent) przestawia się palcem, myszą i Alt+← →, jak zakładki (app.js, „przestawianie”, od
-   22.10.2026). Bez touch-action: none przeglądarka wzięłaby ruch palca za gest i przerwała ciągnięcie. Ciągnięte kółko jedzie pod
-   palcem, powiększone o 6%, z obwódką w akcencie i cieniem (w ciemnym sama obwódka), a wciśnięcie już go nie zmniejsza. */
-.glowa :is(#czat-otworz, #sciaga-otworz) { touch-action: none; }
-.glowa :is(#czat-otworz, #sciaga-otworz).ciagniety { z-index: 2; cursor: grabbing; }
-.glowa :is(#czat-otworz, #sciaga-otworz).ciagniety::before { transform: none; box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
-
 /* Zakładki: strona z komputera na całą resztę ekranu. */
 main { flex: 1; min-height: 0; position: relative; }
 .widok { position: absolute; inset: 0; }
@@ -270,7 +261,7 @@ main { flex: 1; min-height: 0; position: relative; }
 }
 
 /* Otwarte okno w stronie (szczegóły auta, filtry, galeria) dostaje cały ekran: bez nagłówka i bez zakładek. */
-body.okno .glowa { padding: env(safe-area-inset-top) 0 0; }
+body.okno .glowa { padding: var(--km-gora) 0 0; }
 body.okno .glowa > *, body.okno .dol { display: none; }
 body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 
@@ -289,7 +280,7 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 /* Od 1240 px zakładki mieszczą się w nagłówku, nad kolumną aut, na osi logo i kółek. */
 @media (min-width: 1240px) {
   body { position: relative; }
-  .dol { position: absolute; top: calc(env(safe-area-inset-top) + 12px); left: calc(var(--km-x0) + var(--km-kolumna)); padding: 0; background: none; }
+  .dol { position: absolute; top: calc(var(--km-gora) / 2 + 12px); left: calc(var(--km-x0) + var(--km-kolumna)); padding: 0; background: none; }
   .karty [role="tab"] { flex: none; }
 }
 /* Menu pod napisem (od 22.10.2026): te same wyszukiwania na Otomoto, ukryte pod napisem Kasiomobile® (Jacek: „easter egg”). Karta z włoskiem
@@ -317,7 +308,7 @@ dialog.poradnik { position: fixed; inset: 0; width: 100%; height: 100%; max-widt
   background: var(--strona); color: var(--tekst); overflow: hidden; }
 dialog.poradnik[open] { display: flex; flex-direction: column; }
 dialog.poradnik::backdrop { background: var(--strona); }
-.poradnik-pasek { position: relative; z-index: 2; flex: none; display: flex; align-items: center; gap: 16px; padding: calc(env(safe-area-inset-top) + 8px) calc(var(--prawo) - 4px) 8px var(--lewo); }
+.poradnik-pasek { position: relative; z-index: 2; flex: none; display: flex; align-items: center; gap: 16px; padding: calc(var(--km-gora) / 2 + 8px) calc(var(--prawo) - 4px) calc(var(--km-gora) / 2 + 8px) var(--lewo); }
 /* „Cofnij” po przestawieniu pigułek Poradnik i Atlas staje 12 px pod paskiem okna (app.js, pokazCofnij), jak pod zakładkami od 760 px. */
 .poradnik-pasek .cofnij-zakladki { top: 100%; bottom: auto; padding: 12px 0 0; }
 .poradnik-pasek .zamknij-poradnik { flex: none; margin-left: auto; --cz-otworz: var(--cz-szary); color: var(--tekst); }
@@ -395,8 +386,8 @@ dialog.poradnik::backdrop { background: var(--strona); }
 .czat[hidden], .czat-zaslona[hidden], .czat [hidden] { display: none !important; }
 
 /* Telefon: arkusz od dołu, jak w iOS. Stoi w widocznej części ekranu (--czat-y, --czat-h z visualViewport), więc klawiatura go nie zasłania. */
-.czat-arkusz { position: fixed; z-index: 41; left: 0; right: 0; top: calc(var(--czat-y, 0px) + env(safe-area-inset-top) + 10px);
-  height: calc(var(--czat-h, 100vh) - env(safe-area-inset-top) - 10px); border-radius: 16px 16px 0 0;
+.czat-arkusz { position: fixed; z-index: 41; left: 0; right: 0; top: calc(var(--czat-y, 0px) + var(--km-gora, env(safe-area-inset-top, 0px)) + 10px);
+  height: calc(var(--czat-h, 100vh) - var(--km-gora, env(safe-area-inset-top, 0px)) - 10px); border-radius: 16px 16px 0 0;
   box-shadow: 0 0 0 .5px var(--cz-wlosek), 0 -6px 30px var(--cz-cien); transform: translateY(105%); transition: transform 320ms cubic-bezier(.2, 0, 0, 1); }
 .czat-arkusz.widac { transform: none; }
 .czat-zaslona { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .32); opacity: 0; transition: opacity 320ms cubic-bezier(.2, 0, 0, 1); }
@@ -410,7 +401,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
 }
 /* Komputer: panel obok zakładek. Android: cała przeglądarka w aplikacji to czat. */
 .czat-panel { height: 100%; font-size: 16px; box-shadow: inset .5px 0 0 var(--cz-ramka); }
-.czat-strona { position: fixed; inset: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+.czat-strona { position: fixed; inset: 0; padding: var(--km-gora, env(safe-area-inset-top, 0px)) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
 @media (prefers-reduced-motion: reduce) { .czat-arkusz, .czat-zaslona { transition: none; } }
 
 .czat-gora { flex: none; position: relative; display: flex; justify-content: flex-end; align-items: center; min-height: 52px; padding: 4px 8px 0; }
@@ -441,10 +432,6 @@ dialog.poradnik::backdrop { background: var(--strona); }
 .czat-wyslij::before { background: var(--cz-przycisk); }
 .czat-wyslij:disabled { color: var(--cz-tekst2); cursor: default; }
 .czat-wyslij:disabled::before { background: var(--cz-szary); box-shadow: 0 0 0 .5px var(--cz-wlosek); }
-/* Kółko w nagłówku, które teraz nic nie zrobi (ściąga przy zakładce bez ściągi, od 24.10.2026), jest przygaszone, a nie schowane
-   (wytyczne Jacka: „Disabled is dimmed, not hidden”): szare i płaskie jak wyłączone wysyłanie, do tego o połowę słabsze. */
-.czat-otworz:disabled { color: var(--cz-tekst2); opacity: .5; cursor: default; }
-.czat-otworz:disabled::before { background: var(--cz-szary); box-shadow: 0 0 0 .5px var(--cz-wlosek); }
 .czat-mik.nagrywa { color: #ffffff; }
 .czat-mik.nagrywa::before { background: var(--cz-czerwony); }
 /* Puls wokół nagrywającego mikrofonu to sygnał stanu, więc zostaje także przy ograniczonym ruchu. */
@@ -531,8 +518,6 @@ dialog.poradnik::backdrop { background: var(--strona); }
 <header class="glowa">
   <button type="button" id="logo" class="logo" aria-label="Otwórz poradnik i Atlas" aria-controls="poradnik" aria-expanded="false"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjwhLS0gWnJvYmlvbmUgcHJ6ZXogenJvYi1sb2dvLXctYXBsaWthY2ppLmpzOiBsb2dvIG5yIDkg4oCeWiBrbG9ja8Ozd+KAnSB3IGthZmVsa3UsIHRlbiBzYW0gY28gdyBuYWfFgsOzd2t1IG5hIEFuZHJvaWR6aWUuIC0tPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFRUYwRjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHBhdGggZD0iTTEwMjQuMCw1MTIuMCAxMDIzLjgsNjUyLjIgMTAyMy40LDY5Ny4wIDEwMjIuNiw3MjkuNCAxMDIxLjUsNzU1LjggMTAyMC4wLDc3OC4zIDEwMTguMyw3OTguMSAxMDE2LjIsODE1LjkgMTAxMy44LDgzMi4xIDEwMTEuMSw4NDYuOSAxMDA4LjAsODYwLjcgMTAwNC42LDg3My40IDEwMDAuOSw4ODUuMyA5OTYuOCw4OTYuNSA5OTIuNCw5MDYuOSA5ODcuNiw5MTYuNyA5ODIuNCw5MjYuMCA5NzYuOCw5MzQuNiA5NzAuOSw5NDIuOCA5NjQuNSw5NTAuNSA5NTcuNyw5NTcuNyA5NTAuNSw5NjQuNSA5NDIuOCw5NzAuOSA5MzQuNiw5NzYuOCA5MjYuMCw5ODIuNCA5MTYuNyw5ODcuNiA5MDYuOSw5OTIuNCA4OTYuNSw5OTYuOCA4ODUuMywxMDAwLjkgODczLjQsMTAwNC42IDg2MC43LDEwMDguMCA4NDYuOSwxMDExLjEgODMyLjEsMTAxMy44IDgxNS45LDEwMTYuMiA3OTguMSwxMDE4LjMgNzc4LjMsMTAyMC4wIDc1NS44LDEwMjEuNSA3MjkuNCwxMDIyLjYgNjk3LjAsMTAyMy40IDY1Mi4yLDEwMjMuOCA1MTIuMCwxMDI0LjAgMzcxLjgsMTAyMy44IDMyNy4wLDEwMjMuNCAyOTQuNiwxMDIyLjYgMjY4LjIsMTAyMS41IDI0NS43LDEwMjAuMCAyMjUuOSwxMDE4LjMgMjA4LjEsMTAxNi4yIDE5MS45LDEwMTMuOCAxNzcuMSwxMDExLjEgMTYzLjMsMTAwOC4wIDE1MC42LDEwMDQuNiAxMzguNywxMDAwLjkgMTI3LjUsOTk2LjggMTE3LjEsOTkyLjQgMTA3LjMsOTg3LjYgOTguMCw5ODIuNCA4OS40LDk3Ni44IDgxLjIsOTcwLjkgNzMuNSw5NjQuNSA2Ni4zLDk1Ny43IDU5LjUsOTUwLjUgNTMuMSw5NDIuOCA0Ny4yLDkzNC42IDQxLjYsOTI2LjAgMzYuNCw5MTYuNyAzMS42LDkwNi45IDI3LjIsODk2LjUgMjMuMSw4ODUuMyAxOS40LDg3My40IDE2LjAsODYwLjcgMTIuOSw4NDYuOSAxMC4yLDgzMi4xIDcuOCw4MTUuOSA1LjcsNzk4LjEgNC4wLDc3OC4zIDIuNSw3NTUuOCAxLjQsNzI5LjQgMC42LDY5Ny4wIDAuMiw2NTIuMiAwLjAsNTEyLjAgMC4yLDM3MS44IDAuNiwzMjcuMCAxLjQsMjk0LjYgMi41LDI2OC4yIDQuMCwyNDUuNyA1LjcsMjI1LjkgNy44LDIwOC4xIDEwLjIsMTkxLjkgMTIuOSwxNzcuMSAxNi4wLDE2My4zIDE5LjQsMTUwLjYgMjMuMSwxMzguNyAyNy4yLDEyNy41IDMxLjYsMTE3LjEgMzYuNCwxMDcuMyA0MS42LDk4LjAgNDcuMiw4OS40IDUzLjEsODEuMiA1OS41LDczLjUgNjYuMyw2Ni4zIDczLjUsNTkuNSA4MS4yLDUzLjEgODkuNCw0Ny4yIDk4LjAsNDEuNiAxMDcuMywzNi40IDExNy4xLDMxLjYgMTI3LjUsMjcuMiAxMzguNywyMy4xIDE1MC42LDE5LjQgMTYzLjMsMTYuMCAxNzcuMSwxMi45IDE5MS45LDEwLjIgMjA4LjEsNy44IDIyNS45LDUuNyAyNDUuNyw0LjAgMjY4LjIsMi41IDI5NC42LDEuNCAzMjcuMCwwLjYgMzcxLjgsMC4yIDUxMi4wLDAuMCA2NTIuMiwwLjIgNjk3LjAsMC42IDcyOS40LDEuNCA3NTUuOCwyLjUgNzc4LjMsNC4wIDc5OC4xLDUuNyA4MTUuOSw3LjggODMyLjEsMTAuMiA4NDYuOSwxMi45IDg2MC43LDE2LjAgODczLjQsMTkuNCA4ODUuMywyMy4xIDg5Ni41LDI3LjIgOTA2LjksMzEuNiA5MTYuNywzNi40IDkyNi4wLDQxLjYgOTM0LjYsNDcuMiA5NDIuOCw1My4xIDk1MC41LDU5LjUgOTU3LjcsNjYuMyA5NjQuNSw3My41IDk3MC45LDgxLjIgOTc2LjgsODkuNCA5ODIuNCw5OC4wIDk4Ny42LDEwNy4zIDk5Mi40LDExNy4xIDk5Ni44LDEyNy41IDEwMDAuOSwxMzguNyAxMDA0LjYsMTUwLjYgMTAwOC4wLDE2My4zIDEwMTEuMSwxNzcuMSAxMDEzLjgsMTkxLjkgMTAxNi4yLDIwOC4xIDEwMTguMywyMjUuOSAxMDIwLjAsMjQ1LjcgMTAyMS41LDI2OC4yIDEwMjIuNiwyOTQuNiAxMDIzLjQsMzI3LjAgMTAyMy44LDM3MS44WiIgZmlsbD0idXJsKCN0KSIvPgo8cGF0aCBkPSJNMTAxOC4wLDUxMi4wIDEwMTcuOCw2NTAuNiAxMDE3LjQsNjk0LjggMTAxNi42LDcyNi45IDEwMTUuNSw3NTIuOSAxMDE0LjEsNzc1LjIgMTAxMi40LDc5NC44IDEwMTAuMyw4MTIuMyAxMDA3LjksODI4LjMgMTAwNS4yLDg0My4wIDEwMDIuMiw4NTYuNiA5OTguOSw4NjkuMiA5OTUuMiw4ODEuMCA5OTEuMSw4OTIuMCA5ODYuNyw5MDIuMyA5ODIuMCw5MTIuMCA5NzYuOSw5MjEuMSA5NzEuNCw5MjkuNyA5NjUuNSw5MzcuOCA5NTkuMiw5NDUuNCA5NTIuNSw5NTIuNSA5NDUuNCw5NTkuMiA5MzcuOCw5NjUuNSA5MjkuNyw5NzEuNCA5MjEuMSw5NzYuOSA5MTIuMCw5ODIuMCA5MDIuMyw5ODYuNyA4OTIuMCw5OTEuMSA4ODEuMCw5OTUuMiA4NjkuMiw5OTguOSA4NTYuNiwxMDAyLjIgODQzLjAsMTAwNS4yIDgyOC4zLDEwMDcuOSA4MTIuMywxMDEwLjMgNzk0LjgsMTAxMi40IDc3NS4yLDEwMTQuMSA3NTIuOSwxMDE1LjUgNzI2LjksMTAxNi42IDY5NC44LDEwMTcuNCA2NTAuNiwxMDE3LjggNTEyLjAsMTAxOC4wIDM3My40LDEwMTcuOCAzMjkuMiwxMDE3LjQgMjk3LjEsMTAxNi42IDI3MS4xLDEwMTUuNSAyNDguOCwxMDE0LjEgMjI5LjIsMTAxMi40IDIxMS43LDEwMTAuMyAxOTUuNywxMDA3LjkgMTgxLjAsMTAwNS4yIDE2Ny40LDEwMDIuMiAxNTQuOCw5OTguOSAxNDMuMCw5OTUuMiAxMzIuMCw5OTEuMSAxMjEuNyw5ODYuNyAxMTIuMCw5ODIuMCAxMDIuOSw5NzYuOSA5NC4zLDk3MS40IDg2LjIsOTY1LjUgNzguNiw5NTkuMiA3MS41LDk1Mi41IDY0LjgsOTQ1LjQgNTguNSw5MzcuOCA1Mi42LDkyOS43IDQ3LjEsOTIxLjEgNDIuMCw5MTIuMCAzNy4zLDkwMi4zIDMyLjksODkyLjAgMjguOCw4ODEuMCAyNS4xLDg2OS4yIDIxLjgsODU2LjYgMTguOCw4NDMuMCAxNi4xLDgyOC4zIDEzLjcsODEyLjMgMTEuNiw3OTQuOCA5LjksNzc1LjIgOC41LDc1Mi45IDcuNCw3MjYuOSA2LjYsNjk0LjggNi4yLDY1MC42IDYuMCw1MTIuMCA2LjIsMzczLjQgNi42LDMyOS4yIDcuNCwyOTcuMSA4LjUsMjcxLjEgOS45LDI0OC44IDExLjYsMjI5LjIgMTMuNywyMTEuNyAxNi4xLDE5NS43IDE4LjgsMTgxLjAgMjEuOCwxNjcuNCAyNS4xLDE1NC44IDI4LjgsMTQzLjAgMzIuOSwxMzIuMCAzNy4zLDEyMS43IDQyLjAsMTEyLjAgNDcuMSwxMDIuOSA1Mi42LDk0LjMgNTguNSw4Ni4yIDY0LjgsNzguNiA3MS41LDcxLjUgNzguNiw2NC44IDg2LjIsNTguNSA5NC4zLDUyLjYgMTAyLjksNDcuMSAxMTIuMCw0Mi4wIDEyMS43LDM3LjMgMTMyLjAsMzIuOSAxNDMuMCwyOC44IDE1NC44LDI1LjEgMTY3LjQsMjEuOCAxODEuMCwxOC44IDE5NS43LDE2LjEgMjExLjcsMTMuNyAyMjkuMiwxMS42IDI0OC44LDkuOSAyNzEuMSw4LjUgMjk3LjEsNy40IDMyOS4yLDYuNiAzNzMuNCw2LjIgNTEyLjAsNi4wIDY1MC42LDYuMiA2OTQuOCw2LjYgNzI2LjksNy40IDc1Mi45LDguNSA3NzUuMiw5LjkgNzk0LjgsMTEuNiA4MTIuMywxMy43IDgyOC4zLDE2LjEgODQzLjAsMTguOCA4NTYuNiwyMS44IDg2OS4yLDI1LjEgODgxLjAsMjguOCA4OTIuMCwzMi45IDkwMi4zLDM3LjMgOTEyLjAsNDIuMCA5MjEuMSw0Ny4xIDkyOS43LDUyLjYgOTM3LjgsNTguNSA5NDUuNCw2NC44IDk1Mi41LDcxLjUgOTU5LjIsNzguNiA5NjUuNSw4Ni4yIDk3MS40LDk0LjMgOTc2LjksMTAyLjkgOTgyLjAsMTEyLjAgOTg2LjcsMTIxLjcgOTkxLjEsMTMyLjAgOTk1LjIsMTQzLjAgOTk4LjksMTU0LjggMTAwMi4yLDE2Ny40IDEwMDUuMiwxODEuMCAxMDA3LjksMTk1LjcgMTAxMC4zLDIxMS43IDEwMTIuNCwyMjkuMiAxMDE0LjEsMjQ4LjggMTAxNS41LDI3MS4xIDEwMTYuNiwyOTcuMSAxMDE3LjQsMzI5LjIgMTAxNy44LDM3My40WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iLjEyIiBzdHJva2Utd2lkdGg9IjEyIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsLTM3KSI+CjxwYXRoIGQ9Ik0zNzIsNDc2TDQyOCwzNzJRNDM2LDM1NiA0NTQsMzU2TDU3MCwzNTZRNTg4LDM1NiA1OTYsMzcyTDY1Miw0NzZaIiBmaWxsPSIjMkVBNDRGIi8+CjxwYXRoIGQ9Ik0yODAsNDk0SDc0NEE0NCw0NCAwIDAgMSA3ODgsNTM4VjYwMEE0NCw0NCAwIDAgMSA3NDQsNjQ0SDI4MEE0NCw0NCAwIDAgMSAyMzYsNjAwVjUzOEE0NCw0NCAwIDAgMSAyODAsNDk0WiIgZmlsbD0iIzI0NDE4QSIvPgo8Y2lyY2xlIGN4PSIzNzIiIGN5PSI2NzIiIHI9IjYyIiBmaWxsPSIjNzA0Mjg1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTgiLz4KPGNpcmNsZSBjeD0iNjUyIiBjeT0iNjcyIiByPSI2MiIgZmlsbD0iIzcwNDI4NSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjE4Ii8+CjwvZz4KPC9zdmc+Cg==" width="40" height="40" alt=""></button>
   <!--napis--><h1><button type="button" id="napis" class="napis-przycisk" aria-label="Kasiomobile: te same wyszukiwania na Otomoto" aria-haspopup="menu" aria-expanded="false"><svg class="napis" viewBox="0 0 11602 1572" role="img" aria-label="Kasiomobile" style="--szer:5.6650;--wys:0.7676"><style>.napis-l{fill:#24418A}.napis-z{fill:#1C7C36}.napis-f{fill:#704285}@media (prefers-color-scheme: dark){.napis-l{fill:#FFFFFF}.napis-z{fill:#30D158}.napis-f{fill:#C495E8}}</style><path class="napis-l" d="M280 1531L16 1531L16 41L280 41L280 760Q338 692 397 625Q455 558 513 490L513 490L909 41L1235 41L662 686L1245 1531L937 1531L484 864L280 1095L280 1531ZM1675 1548L1675 1548Q1517 1548 1413 1469Q1310 1389 1310 1231L1310 1231Q1310 1111 1368 1046Q1427 980 1521 950Q1616 920 1725 909L1725 909Q1872 892 1930 879Q1988 866 1988 812L1988 812L1988 804Q1988 736 1936 693Q1885 650 1795 650L1795 650Q1703 650 1645 693Q1588 736 1583 803L1583 803L1340 803Q1349 646 1471 550Q1593 454 1800 454L1800 454Q2006 454 2122 550Q2238 646 2238 811L2238 811L2238 1531L1990 1531L1990 1382L1986 1382Q1948 1452 1876 1500Q1804 1548 1675 1548ZM1737 1361L1737 1361Q1861 1361 1925 1297Q1989 1232 1989 1140L1989 1140L1989 1026Q1966 1041 1900 1054Q1834 1066 1756 1078L1756 1078Q1675 1090 1615 1124Q1556 1157 1556 1229L1556 1229Q1556 1291 1605 1326Q1654 1361 1737 1361ZM2854 1556L2854 1556Q2661 1556 2532 1466Q2402 1375 2390 1205L2390 1205L2639 1205Q2647 1282 2701 1325Q2755 1367 2850 1367L2850 1367Q2941 1367 2994 1331Q3046 1295 3046 1239L3046 1239Q3046 1191 3007 1162Q2968 1133 2902 1119L2902 1119L2722 1082Q2414 1018 2414 777L2414 777Q2414 631 2530 542Q2646 452 2839 452L2839 452Q3031 452 3152 547Q3272 641 3276 804L3276 804L3039 804Q3037 733 2984 687Q2931 641 2845 641L2845 641Q2762 641 2714 678Q2666 715 2666 769L2666 769Q2666 816 2703 846Q2740 875 2806 890L2806 890L2996 929Q3153 962 3228 1033Q3302 1104 3302 1220L3302 1220Q3302 1323 3245 1399Q3187 1474 3086 1515Q2985 1556 2854 1556ZM3706 1531L3454 1531L3454 475L3706 475L3706 1531ZM3580 318L3580 318Q3515 318 3472 277Q3429 235 3429 174L3429 174Q3429 113 3472 72Q3515 31 3580 31L3580 31Q3644 31 3687 72Q3730 113 3730 174L3730 174Q3730 235 3687 277Q3644 318 3580 318ZM5308 1531L5056 1531L5056 475L5300 475L5300 658Q5348 556 5433 505Q5518 454 5618 454L5618 454Q5725 454 5807 509Q5889 563 5922 654L5922 654Q5964 563 6053 509Q6142 454 6258 454L6258 454Q6408 454 6510 551Q6612 648 6612 834L6612 834L6612 1531L6359 1531L6359 870Q6359 765 6301 717Q6244 668 6163 668L6163 668Q6067 668 6011 728Q5956 788 5956 883L5956 883L5956 1531L5711 1531L5711 858Q5711 772 5657 720Q5603 668 5519 668L5519 668Q5434 668 5371 728Q5308 787 5308 901L5308 901L5308 1531ZM8531 1552L8531 1552Q8427 1552 8343 1507Q8260 1462 8211 1370L8211 1370L8209 1370L8209 1531L7961 1531L7961 41L8213 41L8213 625L8215 625Q8266 538 8348 496Q8430 454 8532 454L8532 454Q8668 454 8770 524Q8873 593 8930 717Q8988 840 8988 1002L8988 1002Q8988 1167 8931 1291Q8875 1414 8772 1483Q8669 1552 8531 1552ZM8472 1341L8472 1341Q8589 1341 8661 1254Q8733 1166 8733 1002L8733 1002Q8733 839 8661 751Q8589 663 8472 663L8472 663Q8348 663 8273 756Q8199 848 8199 1002L8199 1002Q8199 1156 8273 1249Q8348 1341 8472 1341ZM9394 1531L9142 1531L9142 475L9394 475L9394 1531ZM9268 318L9268 318Q9203 318 9160 277Q9117 235 9117 174L9117 174Q9117 113 9160 72Q9203 31 9268 31L9268 31Q9332 31 9375 72Q9418 113 9418 174L9418 174Q9418 235 9375 277Q9332 318 9268 318ZM9598 41L9850 41L9850 1531L9598 1531L9598 41ZM10519 1555L10519 1555Q10361 1555 10245 1484Q10129 1413 10067 1289Q10004 1164 10004 1004L10004 1004Q10004 843 10069 719Q10133 594 10247 523Q10361 451 10509 451L10509 451Q10661 451 10775 521Q10889 591 10952 715Q11015 838 11015 1000L11015 1000L11015 1069L10251 1069Q10256 1198 10327 1277Q10398 1356 10525 1356L10525 1356Q10620 1356 10682 1315Q10744 1273 10766 1205L10766 1205L11002 1205Q10982 1308 10915 1387Q10847 1466 10745 1511Q10643 1555 10519 1555ZM10253 895L10253 895L10773 895Q10761 782 10692 717Q10622 651 10513 651L10513 651Q10403 651 10335 717Q10266 782 10253 895ZM11388 437L11388 437Q11347 437 11311 421Q11275 406 11248 379Q11221 351 11206 316Q11190 280 11190 239L11190 239Q11190 198 11206 162Q11221 126 11248 99Q11275 72 11311 56Q11347 41 11388 41L11388 41Q11429 41 11465 56Q11501 72 11528 99Q11555 126 11571 162Q11586 198 11586 239L11586 239Q11586 280 11571 316Q11555 351 11528 379Q11501 406 11465 421Q11429 437 11388 437ZM11388 389L11388 389Q11430 389 11464 369Q11498 348 11518 314Q11538 280 11538 239L11538 239Q11538 197 11518 163Q11498 129 11464 109Q11430 89 11388 89L11388 89Q11347 89 11313 109Q11279 129 11258 163Q11238 197 11238 239L11238 239Q11238 280 11258 314Q11279 348 11313 369Q11347 389 11388 389ZM11475 330L11430 330L11398 268L11359 268L11359 330L11318 330L11318 147L11411 147Q11422 147 11436 154Q11449 160 11458 173Q11468 186 11468 205L11468 205Q11468 224 11459 238Q11450 251 11438 259L11438 259L11475 330ZM11359 177L11359 238L11396 238Q11404 238 11414 230Q11423 222 11423 205L11423 205Q11423 189 11414 183Q11404 177 11397 177L11397 177L11359 177Z"/><path class="napis-z" fill-rule="evenodd" d="M4902.1,1003C4902.1,1290.7,4668.8,1524,4381.1,1524C4093.3,1524,3860.1,1290.7,3860.1,1003C3860.1,715.3,4093.3,482,4381.1,482C4668.8,482,4902.1,715.3,4902.1,1003ZM4695.4,1003C4695.4,829.4,4554.7,688.6,4381.1,688.6C4207.4,688.6,4066.7,829.4,4066.7,1003C4066.7,1176.6,4207.4,1317.4,4381.1,1317.4C4554.7,1317.4,4695.4,1176.6,4695.4,1003ZM4463.7,1003C4463.7,1048.6,4426.7,1085.7,4381.1,1085.7C4335.4,1085.7,4298.4,1048.6,4298.4,1003C4298.4,957.4,4335.4,920.3,4381.1,920.3C4426.7,920.3,4463.7,957.4,4463.7,1003Z"/><path class="napis-f" fill-rule="evenodd" d="M7807.1,1003C7807.1,1290.7,7573.8,1524,7286.1,1524C6998.4,1524,6765.1,1290.7,6765.1,1003C6765.1,715.3,6998.4,482,7286.1,482C7573.8,482,7807.1,715.3,7807.1,1003ZM7600.5,1003C7600.5,829.4,7459.7,688.6,7286.1,688.6C7112.5,688.6,6971.7,829.4,6971.7,1003C6971.7,1176.6,7112.5,1317.4,7286.1,1317.4C7459.7,1317.4,7600.5,1176.6,7600.5,1003ZM7368.7,1003C7368.7,1048.6,7331.7,1085.7,7286.1,1085.7C7240.4,1085.7,7203.4,1048.6,7203.4,1003C7203.4,957.4,7240.4,920.3,7286.1,920.3C7331.7,920.3,7368.7,957.4,7368.7,1003Z"/></svg></button></h1><!--/napis-->
-  <p id="stan-danych" class="stan-danych" hidden><span class="ukryte"></span><span class="sd-czas" aria-hidden="true"></span><span class="sd-dzien" aria-hidden="true"></span></p>
-  <button type="button" id="sciaga-otworz" class="czat-ikonka czat-otworz sciaga-otworz" aria-label="Pokaż ściągę" aria-haspopup="dialog"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="6.6" r="1.7" fill="currentColor"/><rect x="10.7" y="9.6" width="2.6" height="9" rx="1.3" fill="currentColor"/></svg></button>
   <button type="button" id="czat-otworz" class="czat-ikonka czat-otworz" aria-label="Zapytaj asystenta" aria-haspopup="dialog"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.5 4h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7l-4.5 3.4v-3.4h-1.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="10.25" r="1.25"/><circle cx="12" cy="10.25" r="1.25"/><circle cx="15.5" cy="10.25" r="1.25"/></svg></button>
 </header>
 <main>
@@ -554,14 +539,14 @@ dialog.poradnik::backdrop { background: var(--strona); }
   </section>
 </main>
 <dialog id="poradnik" class="poradnik" aria-label="Poradnik i Atlas">
-  <div class="poradnik-pasek"><div class="wiedza" role="tablist" aria-label="Poradnik i Atlas"><button type="button" role="tab" id="w-poradnik" data-w="poradnik" aria-controls="r-poradnik" aria-selected="true" style="--pastel:#d5e9ff;--pastel-c:#132f4d" data-odcien="211"><span class="nazwa" data-nazwa="Poradnik"><span>Poradnik</span></span></button><button type="button" role="tab" id="w-atlas" data-w="atlas" aria-controls="r-atlas" aria-selected="false" tabindex="-1" style="--pastel:#f1dbfc;--pastel-c:#391b49" data-odcien="280"><span class="nazwa" data-nazwa="Atlas"><span>Atlas</span></span></button></div><button type="button" id="zamknij-poradnik" class="czat-ikonka czat-otworz zamknij-poradnik" aria-label="Zamknij"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
+  <div class="poradnik-pasek"><div class="wiedza" role="tablist" aria-label="Poradnik i Atlas"><button type="button" role="tab" id="w-poradnik" data-w="poradnik" aria-controls="r-poradnik" aria-selected="true" style="--pastel:#d5e9ff;--pastel-c:#132f4d" data-odcien="211"><span class="nazwa" data-nazwa="Poradnik"><span>Poradnik</span></span></button><button type="button" role="tab" id="w-atlas" data-w="atlas" aria-controls="r-atlas" aria-selected="false" tabindex="-1" style="--pastel:#f1dbfc;--pastel-c:#391b49" data-odcien="280"><span class="nazwa" data-nazwa="Atlas wszystkich aut"><span>Atlas wszystkich aut</span></span></button></div><button type="button" id="zamknij-poradnik" class="czat-ikonka czat-otworz zamknij-poradnik" aria-label="Zamknij"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
   <div class="poradnik-tresc">
     <div id="r-poradnik" role="tabpanel" aria-labelledby="w-poradnik" class="wiedza-strona">
       <iframe id="ramka-poradnika" title="Poradnik: przebieg, licznik i usterki" hidden></iframe>
       <div id="pusty-poradnik" class="pusto" hidden><p class="pusto-tekst"></p></div>
     </div>
     <div id="r-atlas" role="tabpanel" aria-labelledby="w-atlas" class="wiedza-strona" hidden>
-      <iframe id="ramka-atlasu" title="Atlas Samochodów: marki i modele jak telefony"></iframe>
+      <iframe id="ramka-atlasu" title="Atlas wszystkich aut: marki i modele"></iframe>
       <div id="pusty-atlas" class="pusto" hidden><p class="pusto-tekst"></p></div>
     </div>
   </div>
@@ -1164,23 +1149,23 @@ dialog.poradnik::backdrop { background: var(--strona); }
 <script>
 // Kasiomobile na iPhone'a i w przeglądarce (do 18.10.2026 „Auta”): ten sam ekran co aplikacja na Androidzie.
 // Od 19.10.2026 cztery zakładki na dole, każda z kolorową ikoną (Jacek: „brakuje nam … kolorków na tych menu … oczywiste
-// i eleganckie, typu Apple Store”), a nagłówek to jeden rząd: logo, napis, stan danych, ściąga i asystent.
+// i eleganckie, typu Apple Store”), a nagłówek to jeden rząd: logo, napis i asystent.
 //   „Ogłoszenia” – katalog misji ze Skanera Produktów; auto dodane na Otomoto dziś albo wczoraj ma słowo „Nowe”. Do 19.10.2026
 //                  osobne zakładki „Nowe” i „Katalag” (Jacek: „trzeba zmerge'ować … żeby można było przesortowywać i widzieć
 //                  na bieżąco nowe”). Plik z cichego kanału „<kanał>-katalog”.
 //   „Katalag”    – katalog modeli aut z oceną bezpieczeństwa i bezawaryjności, kanał „<kanał>-modele” (do 19.10.2026 „Modele”).
 //   „Kredyt”     – kalkulator kredytu na auto z cichego kanału „<kanał>-kalkulator”.
 //   „Historia”   – historia ogłoszeń ze zdjęciami z cichego kanału „<kanał>-historia”.
-//   Stan danych  – drugim planem obok kółek: kiedy komputer ostatnio sprawdził Otomoto. Przycisku Odśwież nie ma (od 24.10.2026,
-//                  Jacek: „no refresh button anywhere … I trust you and the process … just tiny grayed out infos”): przy każdym
-//                  otwarciu prośba o skan idzie sama, gdy katalog ma ponad 10 minut (kanał „<kanał>-skanuj”, słucha go
-//                  skan-na-zadanie.ps1), otwarta aplikacja co minutę bierze nowy katalog, a po powrocie internetu pobiera wszystko.
-//   Ściąga („i”) – ściąga strony w bieżącej zakładce, obok asystenta (Ogłoszenia, Kredyt; strona bez ściągi „i” nie pokazuje).
+//   Dane w tle   – przycisku Odśwież ani godziny skanu nie ma (od 24.10.2026, Jacek: „no refresh button anywhere … I trust you
+//                  and the process”, a wieczorem: „nie potrzebujemy wiedzieć, kiedy został update'owany”): przy każdym otwarciu
+//                  prośba o skan idzie sama, gdy katalog ma ponad 10 minut (kanał „<kanał>-skanuj”, słucha go skan-na-zadanie.ps1),
+//                  otwarta aplikacja co minutę bierze nowy katalog, a po powrocie internetu pobiera wszystko. Ściągi „i” też nie ma
+//                  (Jacek: „napisać tę aplikację tak prosto, że nie będzie potrzeba ściągi”).
 //   Siatka       – nagłówek i strony w zakładkach mają te same marginesy i kolumny co Ogłoszenia (styl.css, „Siatka aplikacji”).
 //   Logo         – cały poradnik o używanych autach na cały ekran (od 22.10.2026), kanał „<kanał>-poradnik”, a od 23.10.2026
-//                  w tym samym oknie druga pigułka: Atlas Samochodów ze strony w sieci (jackoludek.github.io/atlas-samochodow).
+//                  w tym samym oknie druga pigułka: Atlas wszystkich aut ze strony w sieci (jackoludek.github.io/atlas-samochodow).
 //   Napis        – te same wyszukiwania na Otomoto co skan (od 22.10.2026; rano tego dnia stały pod logo).
-//   Przestawianie – zakładki i dwa kółka w nagłówku (ściąga i asystent) palcem, myszą i Alt+← →, z „Cofnij”, Ctrl+Z i Ctrl+Y.
+//   Przestawianie – zakładki i pigułki pod logo palcem, myszą i Alt+← →, z „Cofnij”, Ctrl+Z i Ctrl+Y.
 // ntfy.sh trzyma wiadomości 12 godzin, a pliki 3 godziny, więc wszystko zostaje w telefonie (localStorage i IndexedDB) i działa
 // też bez internetu. Nazwę kanału podaje kanal.js (window.KANAL), a w wersji z internetu adres strony (?k=…), zapamiętany potem.
 'use strict';
@@ -1416,26 +1401,6 @@ dialog.poradnik::backdrop { background: var(--strona); }
     }
   }
 
-  // ---------------------------------------------------------------- stan danych (od 24.10.2026)
-  // Drugim planem obok kółek: kiedy komputer ostatnio sprawdził Otomoto (czas katalogu). Dziś i wczoraj słowem, starsze datą.
-  // Na telefonie godzina nad dniem, szerzej w jednej linii (styl.css). Czytnik ekranu dostaje całe zdanie.
-  const stanDanych = $('#stan-danych');
-  let pracuje = false, brakOdpowiedzi = false;
-  const dwie = (n) => String(n).padStart(2, '0');
-  function opiszStan() {
-    const t = KATALOG.czas() * 1000;
-    stanDanych.hidden = !t;
-    if (!t) return;
-    const d = new Date(t), teraz = new Date(), wczoraj = new Date(teraz.getFullYear(), teraz.getMonth(), teraz.getDate() - 1);
-    const ten = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-    const dzien = ten(d, teraz) ? 'dziś' : ten(d, wczoraj) ? 'wczoraj' : `${dwie(d.getDate())}.${dwie(d.getMonth() + 1)}`;
-    const godz = `${dwie(d.getHours())}:${dwie(d.getMinutes())}`;
-    stanDanych.querySelector('.sd-czas').textContent = godz;
-    stanDanych.querySelector('.sd-dzien').textContent = dzien;
-    stanDanych.querySelector('.ukryte').textContent = `Ogłoszenia sprawdzone ${/\d/.test(dzien) ? dzien + '.' : dzien} o ${godz}`;
-  }
-  function pokazPrace(p) { pracuje = p; opiszStan(); }
-  setInterval(opiszStan, 60000);
   // Stan sieci dla pustych ekranów: w trakcie pobierania nie piszemy, że plik „nie dotarł”.
   let pobieram = false, bezSieci = false;
   // Zdanie mówi, co się dzieje i co dalej (wytyczne Jacka: błąd to jedno zdanie przy rzeczy, które mówi, co zrobić). Przycisku nie ma:
@@ -1523,7 +1488,6 @@ dialog.poradnik::backdrop { background: var(--strona); }
     });
     PANELE.forEach((p, i) => { p.hidden = i !== widok; });
     pokazOkno();
-    ustawSciage();
     // Zakładka zapisana nazwą (od 18.10.2026), bo numery przesuwają się, gdy zakładka dochodzi albo znika.
     if (zapisz) pamiec.zapisz('zakladka', WIDOKI[widok]);
     return pokazStrone(widok);
@@ -1934,21 +1898,6 @@ dialog.poradnik::backdrop { background: var(--strona); }
   }) : null;
   const przyciskCzatu = $('#czat-otworz');
   if (czat) { Czat.dymek(przyciskCzatu); przyciskCzatu.addEventListener('click', () => czat.otworz()); } else przyciskCzatu.hidden = true;
-  // Ściąga („i”, od 24.10.2026, Jacek: „info next to chat button really”): otwiera ściągę strony w bieżącej zakładce. Jej własne „i”
-  // stoi w schowanym tytule strony (SIATKA wyżej), więc wystarczy je kliknąć. Przy zakładce bez ściągi (Katalag, Historia) „i” jest
-  // przygaszone (wytyczne Jacka: wyłączone jest przygaszone, a nie schowane; wygląd w czat.css), więc nagłówek wszędzie wygląda tak samo.
-  const przyciskSciagi = $('#sciaga-otworz');
-  const sciagaStrony = () => { try { const d = STRONY[widok].el.contentDocument; return (d && d.querySelector('.info-przycisk, button#info')) || null; } catch { return null; } };
-  function ustawSciage() {
-    przyciskSciagi.disabled = !sciagaStrony();
-  }
-  if (window.Czat) Czat.dymek(przyciskSciagi);
-  przyciskSciagi.addEventListener('click', () => { const b = sciagaStrony(); if (b) b.click(); });
-  STRONY.forEach((s) => s.el.addEventListener('load', ustawSciage));
-  // Kółka w nagłówku przestawia się tak samo jak zakładki (od 22.10.2026, „przestawianie” wyżej). Bez przytrzymania palcem,
-  // bo przytrzymane kółko pokazuje dymek. Logo z napisem stoi w miejscu.
-  rzadPrzestawiany({ rodzic: $('.glowa'), elementy: [przyciskSciagi, przyciskCzatu], klucz: 'kolejnosc-glowy', id: (b) => b.id,
-    nazwa: (b) => (b === przyciskCzatu ? 'Asystent' : 'Ściąga'), cofnij: 'Cofnij przestawienie przycisków w nagłówku', przytrzymanie: false });
   // Gest „wstecz” (przeciągnięcie od lewej krawędzi, Aplikacja.swift): najpierw zamyka czat, potem okno w stronie
   // bieżącej zakładki (szczegóły auta, filtry, galerię zdjęć), jak przycisk Wstecz na Androidzie.
   function wstecz() {
@@ -1979,12 +1928,11 @@ dialog.poradnik::backdrop { background: var(--strona); }
     const koniec = Date.now() + CZEKAM_MS;
     while (Date.now() < koniec) {
       await pauza(10000);
-      try { if (await KATALOG.sprawdz()) opiszStan(); } catch { /* następna próba za 10 sekund */ }
+      try { await KATALOG.sprawdz(); } catch { /* następna próba za 10 sekund */ }
       // Katalog nowszy niż prośba: komputer skończył.
       if (KATALOG.czas() >= od) { doszedl = true; break; }
     }
     await Promise.allSettled([KALKULATOR.sprawdz(), HISTORIA.sprawdz(), MODELE.sprawdz(), PORADNIK.sprawdz()]);
-    brakOdpowiedzi = !doszedl;
     await pokazStrone(widok);
     await pokazPoradnik();
     return doszedl ? 'nowy katalog' : 'komputer nie odpowiedział';
@@ -1994,24 +1942,21 @@ dialog.poradnik::backdrop { background: var(--strona); }
     if (czekanie) return trwa || czekanie; // komputer już sprawdza na naszą prośbę
     if (recznie) prosba = true;
     if (trwa) return trwa;
-    pokazPrace(true);
     pobieram = true;
     pokazStrone(widok);
     trwa = (async () => {
       const [k, c, h, md, pr] = await Promise.allSettled([KATALOG.sprawdz(), KALKULATOR.sprawdz(), HISTORIA.sprawdz(), MODELE.sprawdz(), PORADNIK.sprawdz()]);
       pobieram = false;
       bezSieci = k.status === 'rejected';
-      opiszStan();
       await pokazStrone(widok);
       await pokazPoradnik();
       const wynik = { katalog: opis(k), kalkulator: opis(c), historia: opis(h), modele: opis(md), poradnik: opis(pr) };
       if (!bezSieci && (prosba || Date.now() - KATALOG.czas() * 1000 > SWIEZE)) {
         prosba = false;
         wynik.prosba = 'wysłana';
-        czekanie = czekajNaKomputer().finally(() => { czekanie = null; pokazPrace(false); });
+        czekanie = czekajNaKomputer().finally(() => { czekanie = null; });
       } else {
         prosba = false;
-        pokazPrace(false);
       }
       return wynik;
     })().finally(() => { trwa = null; pobieram = false; });
@@ -2025,7 +1970,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
   const TEST = /[?&]test=\d/.test(location.search);
   setInterval(async () => {
     if (document.hidden || !KANAL || TEST || trwa || czekanie) return;
-    try { if (await KATALOG.sprawdz()) { opiszStan(); await pokazStrone(widok); } } catch { /* następna próba za minutę */ }
+    try { if (await KATALOG.sprawdz()) await pokazStrone(widok); } catch { /* następna próba za minutę */ }
   }, 60000);
 
   // ---------------------------------------------------------------- start
@@ -2033,7 +1978,6 @@ dialog.poradnik::backdrop { background: var(--strona); }
     .then(([k, c, h, md]) => ({ katalog: Boolean(k), kalkulator: Boolean(c), historia: Boolean(h), modele: Boolean(md) }));
   // Ostatnia zakładka nazwą. Dawne „Nowe” (do 19.10.2026) i brak zapisu dają Ogłoszenia.
   pokazWidok(Math.max(0, WIDOKI.indexOf(pamiec.czytaj('zakladka', null))), false);
-  opiszStan();
   const pierwsze = KANAL ? naStarcie.then(() => odswiez()) : Promise.resolve({ blad: 'brak kanału' });
 
   window.Auta = {
