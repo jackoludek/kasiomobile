@@ -65,7 +65,13 @@
   /* Wcięcie u góry ekranu (wycięcie aparatu albo czujników): na iPhonie i w przeglądarce z env(), a na Androidzie, gdzie strona
      sięga pod pas przy aparacie, wpisuje je MainActivity.java (podajGore). Nagłówek stoi na środku tego pasa razem ze swoim rzędem. */
   --km-gora: env(safe-area-inset-top, 0px);
+  /* Siatka nawigacji (od 25.10.2026): jedna rynna między zakładkami i pigułkami i jeden promień rogów (Jacek: „wszystko musi być
+     równane do gridu … Kątki wszystkie też powinny być fajne”). Na wąskim telefonie rynna 8 px, żeby „Ogłoszenia” mieściły się
+     w zakładce. */
+  --km-rynna: 12px;
+  --km-rog: 18px;
 }
+@media (max-width: 379px) { :root { --km-rynna: 8px; } }
 @media (prefers-color-scheme: dark) {
   :root {
     --tlo: #000000;
@@ -122,7 +128,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .siatka-pasek { position: absolute; visibility: hidden; width: 100px; height: 40px; overflow: scroll; scrollbar-width: thin; }
 .siatka-sonda { position: absolute; visibility: hidden; height: 0; padding: 0 var(--km-prawo) 0 var(--km-lewo); }
 /* Logo nr 9 dla Kasi w kafelku jak ikona na ekranie głównym (logo.svg robi zrob-logo-w-aplikacji.js). Od 22.10.2026 to też
-   przycisk: stuknięcie otwiera cały poradnik (app.js, „logo”, i dialog.poradnik niżej). Wygląda dalej jak logo; pole dotyku ma 48 px,
+   przycisk: od 25.10.2026 stuknięcie otwiera to samo menu Otomoto co napis (app.js, „napis”), a do 24.10.2026 otwierało poradnik. Wygląda dalej jak logo; pole dotyku ma 48 px,
    a ujemny margines trzyma układ nagłówka taki, jak przy samym obrazku 40 px. */
 .logo { position: relative; flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin: -4px; padding: 0; border: 0; border-radius: 14px; background: none; }
 .logo img { display: block; width: 40px; height: 40px; transition: transform 120ms ease; }
@@ -135,9 +141,12 @@ h1 .napis { display: block; flex: none; width: calc(var(--napis) * var(--szer));
 h1 .napis-przycisk { display: flex; align-items: center; min-width: 0; max-width: 100%; height: 48px; margin: -14px 0; padding: 0; border: 0; border-radius: 12px; background: none; }
 h1 .napis-przycisk .napis { transition: transform 120ms ease; }
 h1 .napis-przycisk:active .napis { transform: scale(.97); }
-/* Zakładki: strona z komputera na całą resztę ekranu. */
 main { flex: 1; min-height: 0; position: relative; }
-.widok { position: absolute; inset: 0; }
+/* Zakładka: pigułki u góry (w Ogłoszeniach i w Katalagu) i pod nimi strona z komputera na całą resztę ekranu. Strony pod pigułkami
+   leżą jedna na drugiej, widać tę wybraną. */
+.widok { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.ramki { position: relative; flex: 1; min-height: 0; }
+.podwidok { position: absolute; inset: 0; }
 .widok iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--strona); }
 .pusto {
   position: absolute;
@@ -189,10 +198,10 @@ main { flex: 1; min-height: 0; position: relative; }
   background: var(--tlo);
   box-shadow: inset 0 .5px 0 var(--wlos);
 }
-.karty { position: relative; display: flex; gap: 12px; }
+.karty { position: relative; display: flex; gap: var(--km-rynna); }
 .karty [role="tab"] {
   flex: 1 1 0;
-  min-width: max-content;
+  min-width: 0;
   position: relative;
   isolation: isolate;
   display: flex;
@@ -201,13 +210,13 @@ main { flex: 1; min-height: 0; position: relative; }
   justify-content: center;
   /* 5 px między ikoną a nazwą: przy 6 px wybrana zakładka stała przy 1,5× o 0,6 px ekranu od środka (pomiar na zrzutach). */
   gap: 5px;
-  height: 60px;
-  padding: 0 6px;
+  height: 56px;
+  padding: 0 4px;
   border: 0;
-  border-radius: 18px;
+  border-radius: var(--km-rog);
   background-color: var(--zakladka);
   color: var(--tekst);
-  font-size: clamp(12px, 3.6vw, 13px);
+  font-size: clamp(12px, 3.4vw, 13px);
   font-weight: 500;
   white-space: nowrap;
   box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
@@ -230,7 +239,7 @@ main { flex: 1; min-height: 0; position: relative; }
   background-size: 260% 100%;
   background-repeat: no-repeat;
   background-position: 0 0;
-  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 2px var(--tlo), 0 0 0 4px var(--akcent), 0 4px 12px var(--cien-mocny);
+  box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px var(--strona), 0 4px 12px var(--cien-mocny);
   animation: kartaBlysk 6s ease-in-out infinite;
 }
 @keyframes kartaBlysk { 0% { background-position: 100% 0; } 20%, 100% { background-position: 0 0; } }
@@ -263,7 +272,7 @@ main { flex: 1; min-height: 0; position: relative; }
 
 /* Otwarte okno w stronie (szczegóły auta, filtry, galeria) dostaje cały ekran: bez nagłówka i bez zakładek. */
 body.okno .glowa { padding: var(--km-gora) 0 0; }
-body.okno .glowa > *, body.okno .dol { display: none; }
+body.okno .glowa > *, body.okno .dol, body.okno .podwidoki { display: none; }
 body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 
 /* Szeroki ekran: iPhone w poziomie i przeglądarka na komputerze. Zakładki stoją pod nagłówkiem, ikona obok napisu, i wypełniają
@@ -281,8 +290,12 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 /* Od 1240 px zakładki mieszczą się w nagłówku, nad kolumną aut, na osi logo i kółek. */
 @media (min-width: 1240px) {
   body { position: relative; }
-  .dol { position: absolute; top: calc(var(--km-gora) / 2 + 12px); left: calc(var(--km-x0) + var(--km-kolumna)); padding: 0; background: none; }
-  .karty [role="tab"] { flex: none; }
+  /* Zakładki stoją w nagłówku, a pigułki zostają w nawigacji pod nim, nad treścią. */
+  .dol { padding: 0 var(--km-x1) 12px calc(var(--km-x0) + var(--km-kolumna)); }
+  body.bez-pigulek .dol { padding-bottom: 0; }
+  .karty { position: fixed; z-index: 3; top: calc(var(--km-gora) / 2 + 12px); left: calc(var(--km-x0) + var(--km-kolumna)); }
+  /* Zakładki i pigułki po 176 px, co 16 px: dwie pigułki stoją dokładnie pod dwiema zakładkami, trzy pod trzema. */
+  .karty [role="tab"] { flex: 0 0 176px; }
 }
 /* Menu pod napisem (od 22.10.2026): te same wyszukiwania na Otomoto, ukryte pod napisem Kasiomobile® (Jacek: „easter egg”). Karta z włoskiem
    i miękkim cieniem, w ciemnym sama obwódka. Każda pozycja to osobny przycisk z głębią, napis na środku wersalików. */
@@ -302,64 +315,152 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 .menu-otomoto-nazwa { text-box: trim-both cap alphabetic; }
 .menu-otomoto-znak { flex: none; color: var(--akcent-tekst); }
 @media (prefers-color-scheme: dark) { .menu-otomoto { background: #1c1c1e; box-shadow: 0 0 0 1px #48484a; } }
-/* Poradnik pod logo (od 22.10.2026, Jacek: „Ten poradnik, tam trzeba by gdzieś schować. Póki co, wsadźmy go pod same tiny logo”):
-   cała strona poradnika na cały ekran, nad nagłówkiem i zakładkami, w kolorze stron. U góry tylko X na szarym kółku, w miejscu
-   Odśwież; zamyka go też Escape, gest wstecz i Wstecz na Androidzie (app.js, „logo”). */
-dialog.poradnik { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
-  background: var(--strona); color: var(--tekst); overflow: hidden; }
-dialog.poradnik[open] { display: flex; flex-direction: column; }
-dialog.poradnik::backdrop { background: var(--strona); }
-.poradnik-pasek { position: relative; z-index: 2; flex: none; display: flex; align-items: center; gap: 16px; padding: calc(var(--km-gora) / 2 + 8px) calc(var(--prawo) - 4px) calc(var(--km-gora) / 2 + 8px) var(--lewo); }
-/* „Cofnij” po przestawieniu pigułek Poradnik i Atlas staje 12 px pod paskiem okna (app.js, pokazCofnij), jak pod zakładkami od 760 px. */
-.poradnik-pasek .cofnij-zakladki { top: 100%; bottom: auto; padding: 12px 0 0; }
-.poradnik-pasek .zamknij-poradnik { flex: none; margin-left: auto; --cz-otworz: var(--cz-szary); color: var(--tekst); }
-.poradnik-tresc { flex: 1; min-height: 0; position: relative; }
-.poradnik-tresc .wiedza-strona { position: absolute; inset: 0; }
-.poradnik-tresc iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--strona); }
-/* Pigułki Poradnik i Atlas (od 23.10.2026, rozmowa Atlas Samochodów: „dyskretnie, w miejscu, które już jest”): osobne, co 16 px,
-   jak zakładki na dole, ale bez ikon. Wybrana stoi na pastelu barwy ikony swojej aplikacji (Poradnik #409cff, Atlas #bf5af2),
-   z pierścieniem 2 px w kolorze tła i 2 px w akcencie. Smuga światła przechodzi raz, przy wyborze, bo pod spodem jest tekst do
-   czytania. Pigułka ma 40 px, a pole dotyku 48 px daje niewidoczny pas ::before (obwódka przezroczysta rysowała włosek i pierścień
-   wokół 48 px, z przerwą). Kolejność przestawia się jak zakładki (app.js). Nazwa ma 16 px, jak w zakładkach na szerokim ekranie:
-   przy 15 px wersaliki stały o 0,45 px za wysoko przy 1 i 4 (pomiar 23.10.2026). */
-.wiedza { position: relative; display: flex; gap: 16px; min-width: 0; }
-.wiedza [role="tab"] {
-  position: relative; isolation: isolate; display: inline-grid; place-items: center; height: 40px; margin: 4px 0; padding: 0 20px;
-  border: 0; border-radius: 20px; background-color: var(--zakladka); color: var(--tekst);
-  font-size: 16px; font-weight: 500; white-space: nowrap;
+/* Pigułki w nawigacji (od 25.10.2026): w Ogłoszeniach Teraz i Historia, w Katalagu Podium Otomoto, Modele Otomoto i Wszystkie marki,
+   w Finansach Leasing i Kredyt. Rano stały u góry treści, a od wieczora są w nawigacji, przy zakładkach (Jacek: „żebyśmy nie dzielili
+   nawigacji na dwa, góra i dół”, „Powinny być … w nawigacji powyżej nieco tej dolnej. Żeby też łatwo kciukiem można było dostać”).
+   Widać rząd wybranej zakładki (app.js). Pigułka ma ten sam promień co zakładka i lekki pastel barwy ikony swojej zakładki, a wybrana
+   pełny pastel, pierścień rysowany do środka i połysk co 6 s, 3 s po zakładce (Jacek: „połyskowość dać tym, które są aktywne, a te,
+   które nie są aktywne, jakieś kolorki”). Pierścień do środka trzyma brzeg na linii siatki, tak jak brzeg pola szukania i kart (Jacek:
+   „Teraz jest przesunięte do lewej krawędzi, potem jest search box, który jest bardziej wysunięty do prawa”). Pigułka w Katalagu ma
+   dwie linie: co to jest i skąd (Jacek: „Czym są modele? … czy to są z Otomoto, czy nie”). Pole dotyku 48 px. */
+.podkarty { position: relative; }
+body.bez-pigulek .podkarty { display: none; }
+.podwidoki { display: flex; gap: var(--km-rynna); min-width: 0; }
+.podwidoki [role="radio"] {
+  position: relative; isolation: isolate; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 5px; height: 44px; padding: 0 8px; border: 0; border-radius: var(--km-rog); background-color: var(--zakladka); color: var(--tekst);
+  font-size: 15px; font-weight: 500; white-space: nowrap;
   box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
   touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   transition: transform 120ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
-.wiedza .nazwa { display: inline-grid; }
-.wiedza .nazwa > span, .wiedza .nazwa::after { grid-area: 1 / 1; white-space: nowrap; text-box: trim-both cap alphabetic; }
-.wiedza .nazwa::after { content: attr(data-nazwa); font-weight: 600; visibility: hidden; }
-.wiedza [aria-selected="true"] {
+.podwidoki .nazwa { display: inline-grid; }
+.podwidoki .nazwa > span, .podwidoki .nazwa::after { grid-area: 1 / 1; white-space: nowrap; text-box: trim-both cap alphabetic; }
+.podwidoki .nazwa::after { content: attr(data-nazwa); font-weight: 600; visibility: hidden; }
+.podwidoki .skad { color: var(--tekst2); font-size: 13px; font-weight: 500; text-box: trim-both cap alphabetic; }
+.podwidoki [aria-checked="true"] {
   font-weight: 600; background-color: var(--pastel, #ffffff);
   background-image: linear-gradient(105deg, transparent 38%, var(--blysk-j, rgba(255, 255, 255, .85)) 50%, transparent 62%);
   background-size: 260% 100%; background-repeat: no-repeat; background-position: 0 0;
-  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 2px var(--tlo), 0 0 0 4px var(--akcent), 0 4px 12px var(--cien-mocny);
+  box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px var(--strona), 0 4px 12px var(--cien-mocny);
+  animation: kartaBlysk 6s ease-in-out 3s infinite;
 }
-.wiedza [aria-selected="true"].blysk { animation: wiedzaBlysk 1.2s ease-in-out 1; }
-@keyframes wiedzaBlysk { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.podwidoki [aria-checked="true"] .skad { color: var(--tekst); }
+/* Smuga przechodzi też od razu przy wyborze, a potem co 6 s. */
+.podwidoki [aria-checked="true"].blysk { animation: podwidokBlysk 1.2s ease-in-out 1, kartaBlysk 6s ease-in-out 4s infinite; }
+@keyframes podwidokBlysk { from { background-position: 100% 0; } to { background-position: 0 0; } }
 @media (prefers-color-scheme: dark) {
-  .wiedza [aria-selected="true"] { background-color: var(--pastel-c, #3a3a3c);
-    background-image: linear-gradient(105deg, transparent 38%, var(--blysk-c, rgba(255, 255, 255, .45)) 50%, transparent 62%); }
+  .podwidoki [aria-checked="true"] { background-color: var(--pastel-c, #3a3a3c);
+    background-image: linear-gradient(105deg, transparent 38%, var(--blysk-c, rgba(255, 255, 255, .45)) 50%, transparent 62%);
+    box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px var(--strona); }
 }
-.wiedza [role="tab"]:focus-visible { outline: 2px solid var(--akcent); outline-offset: 2px; }
-.wiedza [role="tab"]::after {
+.podwidoki [role="radio"]:focus-visible { outline: 2px solid var(--akcent); outline-offset: 2px; }
+.podwidoki [role="radio"]::after {
   content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 200ms ease;
   background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .75), transparent 72%);
 }
-@media (hover: hover) { .wiedza [role="tab"]:hover::after { opacity: 1; } }
+@media (hover: hover) { .podwidoki [role="radio"]:hover::after { opacity: 1; } }
 @media (prefers-color-scheme: dark) {
-  .wiedza [role="tab"]::after { background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .16), transparent 72%); }
+  .podwidoki [role="radio"]::after { background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .16), transparent 72%); }
 }
-.wiedza [role="tab"]::before { content: ""; position: absolute; inset: -4px 0; }
-.wiedza [role="tab"]:active { transform: scale(.97); }
-.wiedza [role="tab"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
-/* Na szerokim ekranie pigułki stoją na środku paska, jak zakładki w nagłówku od 1100 px. */
-@media (min-width: 760px) { .poradnik-pasek .wiedza { position: absolute; left: 50%; transform: translateX(-50%); } }
+.podwidoki [role="radio"]::before { content: ""; position: absolute; inset: -2px 0; }
+.podwidoki [role="radio"]:active { transform: scale(.97); }
+.podwidoki [role="radio"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
+/* Niewybrane zakładki i pigułki: 35% pastelu swojej barwy na szarym, więc od razu widać, co do czego należy. */
+.karty [role="tab"]:not([aria-selected="true"]), .podwidoki [role="radio"]:not([aria-checked="true"]) { background-color: color-mix(in srgb, var(--pastel) 35%, var(--zakladka)); }
+@media (prefers-color-scheme: dark) {
+  .karty [role="tab"]:not([aria-selected="true"]), .podwidoki [role="radio"]:not([aria-checked="true"]) { background-color: color-mix(in srgb, var(--pastel-c) 35%, var(--zakladka)); }
+}
+
+/* Nawigacja na telefonie (od 25.10.2026 wieczorem; Jacek: „Podoba mi się layout 3”): zakładki i pigułki to jeden blok ze szkła nad
+   treścią, jak w iOS 26. Treść sięga dołu ekranu i płynie pod nim, a stuknięcie obok przycisków trafia w treść. Strony w ramkach mają na
+   końcu miejsce na blok (--km-dol z app.js), a Atlas z sieci kończy się nad nim. Wszystko stoi na siatce 12 kolumn z jedną rynną
+   (--km-rynna): cztery zakładki po 3 kolumny, dwie pigułki po 6 (każda dokładnie nad dwiema zakładkami), trzy po 4, a brzegi bloku
+   to brzegi treści. Wersja 1: pigułki nad zakładkami, jak przełącznik Lata, Miesiące, Dni nad paskiem kart w Zdjęciach na iPhonie, więc
+   zakładki zawsze stoją w tym samym miejscu. Wersja 2: pigułki pod zakładkami, które podjeżdżają w górę (Jacek: „logiczniejsze by było,
+   że te główne linie się przesuwa i pod spodem wyskakuje”). Blok przytrzymany 2 s przesuwa się wyżej i zostaje tam, gdzie go puścić
+   (app.js, „przenoszenie”; --km-nav-y to wysokość nad zwykłym miejscem). Kontrast napisów na szkle liczony skryptem nad czarnym i nad
+   białym zdjęciem: wszystkie od 4,5:1. */
+@media (max-width: 759px) {
+  .dol {
+    position: absolute; left: 0; right: 0; z-index: 2;
+    bottom: calc(max(calc(var(--km-gora) / 2 + 12px), calc(env(safe-area-inset-bottom) - 10px)) + var(--km-nav-y, 0px));
+    display: flex; flex-direction: column; gap: var(--km-rynna); padding: 8px var(--km-x1) 0 var(--km-x0);
+    background: none; box-shadow: none; pointer-events: none;
+    touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
+  .dol > .karty, .dol > .podkarty, .cofnij-zakladki .pigulka { pointer-events: auto; }
+  .podkarty { order: 0; }
+  .karty { order: 1; }
+  body[data-wersja="2"] .podkarty { order: 2; }
+  .karty [role="tab"], .podwidoki [role="radio"] { -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .9), 0 0 0 .5px rgba(0, 0, 0, .14), 0 2px 8px rgba(0, 0, 0, .14), 0 8px 24px rgba(0, 0, 0, .10); }
+  .karty [role="tab"]:not([aria-selected="true"]), .podwidoki [role="radio"]:not([aria-checked="true"]) { background-color: color-mix(in srgb, var(--pastel) 35%, rgba(236, 236, 240, .72)); }
+  .karty [aria-selected="true"], .podwidoki [aria-checked="true"] { background-color: color-mix(in srgb, var(--pastel) 86%, transparent);
+    box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px rgba(255, 255, 255, .9), 0 6px 18px rgba(0, 0, 0, .2); }
+  .pusto { padding-bottom: calc(24px + var(--km-dol, 0px)); }
+  .podwidok[data-p="atlas"] { bottom: var(--km-dol, 0px); }
+  /* Przenoszenie: przytrzymany blok pokazuje strzałki (Jacek: „delikatne, animowane strzałeczki, że to będzie szło w górę … I jak już
+     będzie u góry, to też, że na dole”), nad blokiem w górę, gdy stoi na dole, i pod nim w dół, gdy jest wyżej. Siedem szewronów stoi nad
+     środkiem każdej zakładki i każdej przerwy, po 0,25 s blado, potem zapala się po kolei od niebieskiego przez fiolet do różu, i to jest
+     postęp: gdy zapali się ostatni, po 2 s, blok unosi się i jedzie za palcem. Zapalony szewron kołysze się lekko w stronę ruchu.
+     Zapalanie to sygnał, więc zostaje przy ograniczonym ruchu, a fala to ozdoba. Strzałki stoją na pełnym pasie 22 px w kolorze tła
+     z włoskiem na zewnątrz, bo nad zdjęciem pod szkłem nie było ich widać (kontrast od 3,35:1, grafika, próg 3:1). */
+  .strzalki {
+    --od-boku: calc((100% - var(--km-x0) - var(--km-x1) - 3 * var(--km-rynna)) / 8 - 7px);
+    --szewron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 8'%3E%3Cpath d='M1.5 6.6 7 1.4l5.5 5.2' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    position: absolute; z-index: -1; bottom: 100%; left: 0; right: 0; height: 22px;
+    padding: 0 calc(var(--km-x1) + var(--od-boku)) 0 calc(var(--km-x0) + var(--od-boku));
+    display: flex; justify-content: space-between; align-items: center; pointer-events: none; opacity: 0; transition: opacity 150ms ease;
+    background: var(--tlo); box-shadow: inset 0 .5px 0 var(--wlos);
+  }
+  body.pasek-uniesiony .strzalki { bottom: auto; top: 100%; margin-top: 8px; transform: scaleY(-1); }
+  .strzalki i { flex: none; width: 14px; height: 8px; background: var(--c); opacity: .22;
+    -webkit-mask: var(--szewron) center / contain no-repeat; mask: var(--szewron) center / contain no-repeat; }
+  .strzalki i:nth-child(1) { --c: #007aff; }
+  .strzalki i:nth-child(2) { --c: #4268ea; }
+  .strzalki i:nth-child(3) { --c: #5856d6; }
+  .strzalki i:nth-child(4) { --c: #8656da; }
+  .strzalki i:nth-child(5) { --c: #af52de; }
+  .strzalki i:nth-child(6) { --c: #d74e9f; }
+  .strzalki i:nth-child(7) { --c: #ff2d55; }
+  .dol.trzyma .strzalki { opacity: 1; }
+  .dol.trzyma .strzalki i { animation: strzalkaZapal 200ms ease-out calc(var(--i) * var(--krok)) forwards,
+    strzalkaFala 1s ease-in-out calc(var(--i) * var(--krok)) infinite; }
+  /* Podniesiony blok rośnie o 2% i stoi nad wszystkim, póki jedzie za palcem. */
+  .dol.przenoszony { z-index: 30; }
+  .dol.przenoszony > .karty, .dol.przenoszony > .podkarty { transform: scale(1.02); transition: transform 120ms ease; }
+}
+@keyframes strzalkaZapal { to { opacity: 1; } }
+@keyframes strzalkaFala { 50% { transform: translateY(-3px); } }
+@media (max-width: 759px) and (prefers-reduced-motion: reduce) {
+  .dol.trzyma .strzalki i { animation: strzalkaZapal 200ms ease-out calc(var(--i) * var(--krok)) forwards; }
+}
+@media (max-width: 759px) and (prefers-color-scheme: dark) {
+  .karty [role="tab"], .podwidoki [role="radio"] { box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .14), 0 0 0 .5px rgba(255, 255, 255, .2); }
+  .karty [role="tab"]:not([aria-selected="true"]), .podwidoki [role="radio"]:not([aria-checked="true"]) { background-color: color-mix(in srgb, var(--pastel-c) 35%, rgba(30, 30, 32, .66)); }
+  .karty [aria-selected="true"], .podwidoki [aria-checked="true"] { background-color: color-mix(in srgb, var(--pastel-c) 86%, transparent);
+    box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px #000000; }
+  .strzalki i:nth-child(1) { --c: #0a84ff; }
+  .strzalki i:nth-child(2) { --c: #4771f2; }
+  .strzalki i:nth-child(3) { --c: #5e5ce6; }
+  .strzalki i:nth-child(4) { --c: #915dec; }
+  .strzalki i:nth-child(5) { --c: #bf5af2; }
+  .strzalki i:nth-child(6) { --c: #df55ad; }
+  .strzalki i:nth-child(7) { --c: #ff375f; }
+}
+/* Szeroki ekran: pigułki stoją w jednym rzędzie pod zakładkami, nad treścią, każda tak szeroka jak zakładka (do 1240 px ćwierć kolumny
+   treści, potem 176 px), z tą samą przerwą, drugie słowo w tej samej linii drugim planem. Nawigacja się nie przenosi. */
+@media (min-width: 760px) {
+  .dol { display: flex; flex-direction: column; gap: 12px; }
+  .podkarty { order: 1; }
+  .podwidoki { gap: 16px; }
+  .podwidoki [role="radio"] { flex: 0 0 calc((100% - 48px) / 4); flex-direction: row; gap: 6px; height: 40px; padding: 0 16px; border-radius: 20px; font-size: 16px; }
+  .podwidoki .skad { font-size: 16px; }
+  .podwidoki [role="radio"]::before { inset: -4px 0; }
+  .strzalki { display: none; }
+}
+@media (min-width: 1240px) { .podwidoki [role="radio"] { flex: 0 0 176px; } }
 
 </style>
 <style>
@@ -516,49 +617,61 @@ dialog.poradnik::backdrop { background: var(--strona); }
 </style>
 </head>
 <body>
-<svg class="wzory" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="kafel" d="M28 14L28 14.73L28 15.47L28 16.22L28 16.98L28 17.75L27.99 18.55L27.98 19.37L27.95 20.21L27.91 21.09L27.83 21.98L27.7 22.9L27.49 23.8L27.19 24.68L26.76 25.49L26.19 26.19L25.49 26.76L24.68 27.19L23.8 27.49L22.9 27.7L21.98 27.83L21.09 27.91L20.21 27.95L19.37 27.98L18.55 27.99L17.75 28L16.98 28L16.22 28L15.47 28L14.73 28L14 28L13.27 28L12.53 28L11.78 28L11.02 28L10.25 28L9.45 27.99L8.63 27.98L7.79 27.95L6.91 27.91L6.02 27.83L5.1 27.7L4.2 27.49L3.32 27.19L2.51 26.76L1.81 26.19L1.24 25.49L0.81 24.68L0.51 23.8L0.3 22.9L0.17 21.98L0.09 21.09L0.05 20.21L0.02 19.37L0.01 18.55L0 17.75L0 16.98L0 16.22L0 15.47L0 14.73L0 14L0 13.27L0 12.53L0 11.78L0 11.02L0 10.25L0.01 9.45L0.02 8.63L0.05 7.79L0.09 6.91L0.17 6.02L0.3 5.1L0.51 4.2L0.81 3.32L1.24 2.51L1.81 1.81L2.51 1.24L3.32 0.81L4.2 0.51L5.1 0.3L6.02 0.17L6.91 0.09L7.79 0.05L8.63 0.02L9.45 0.01L10.25 0L11.02 0L11.78 0L12.53 0L13.27 0L14 0L14.73 0L15.47 0L16.22 0L16.98 0L17.75 0L18.55 0.01L19.37 0.02L20.21 0.05L21.09 0.09L21.98 0.17L22.9 0.3L23.8 0.51L24.68 0.81L25.49 1.24L26.19 1.81L26.76 2.51L27.19 3.32L27.49 4.2L27.7 5.1L27.83 6.02L27.91 6.91L27.95 7.79L27.98 8.63L27.99 9.45L28 10.25L28 11.02L28 11.78L28 12.53L28 13.27Z"/><linearGradient id="g-ogl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#30d158"/><stop offset="1" stop-color="#248a3d"/></linearGradient><linearGradient id="g-kat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient><linearGradient id="g-kre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f0a"/><stop offset="1" stop-color="#e07000"/></linearGradient><linearGradient id="g-his" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bf5af2"/><stop offset="1" stop-color="#8944ab"/></linearGradient></defs></svg>
+<svg class="wzory" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="kafel" d="M28 14L28 14.73L28 15.47L28 16.22L28 16.98L28 17.75L27.99 18.55L27.98 19.37L27.95 20.21L27.91 21.09L27.83 21.98L27.7 22.9L27.49 23.8L27.19 24.68L26.76 25.49L26.19 26.19L25.49 26.76L24.68 27.19L23.8 27.49L22.9 27.7L21.98 27.83L21.09 27.91L20.21 27.95L19.37 27.98L18.55 27.99L17.75 28L16.98 28L16.22 28L15.47 28L14.73 28L14 28L13.27 28L12.53 28L11.78 28L11.02 28L10.25 28L9.45 27.99L8.63 27.98L7.79 27.95L6.91 27.91L6.02 27.83L5.1 27.7L4.2 27.49L3.32 27.19L2.51 26.76L1.81 26.19L1.24 25.49L0.81 24.68L0.51 23.8L0.3 22.9L0.17 21.98L0.09 21.09L0.05 20.21L0.02 19.37L0.01 18.55L0 17.75L0 16.98L0 16.22L0 15.47L0 14.73L0 14L0 13.27L0 12.53L0 11.78L0 11.02L0 10.25L0.01 9.45L0.02 8.63L0.05 7.79L0.09 6.91L0.17 6.02L0.3 5.1L0.51 4.2L0.81 3.32L1.24 2.51L1.81 1.81L2.51 1.24L3.32 0.81L4.2 0.51L5.1 0.3L6.02 0.17L6.91 0.09L7.79 0.05L8.63 0.02L9.45 0.01L10.25 0L11.02 0L11.78 0L12.53 0L13.27 0L14 0L14.73 0L15.47 0L16.22 0L16.98 0L17.75 0L18.55 0.01L19.37 0.02L20.21 0.05L21.09 0.09L21.98 0.17L22.9 0.3L23.8 0.51L24.68 0.81L25.49 1.24L26.19 1.81L26.76 2.51L27.19 3.32L27.49 4.2L27.7 5.1L27.83 6.02L27.91 6.91L27.95 7.79L27.98 8.63L27.99 9.45L28 10.25L28 11.02L28 11.78L28 12.53L28 13.27Z"/><linearGradient id="g-ogl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#30d158"/><stop offset="1" stop-color="#248a3d"/></linearGradient><linearGradient id="g-kat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient><linearGradient id="g-kre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f0a"/><stop offset="1" stop-color="#e07000"/></linearGradient><linearGradient id="g-por" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5e5ce6"/><stop offset="1" stop-color="#3634a3"/></linearGradient></defs></svg>
 <header class="glowa">
-  <button type="button" id="logo" class="logo" aria-label="Otwórz poradnik i Atlas" aria-controls="poradnik" aria-expanded="false"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjwhLS0gWnJvYmlvbmUgcHJ6ZXogenJvYi1sb2dvLXctYXBsaWthY2ppLmpzOiBsb2dvIG5yIDkg4oCeWiBrbG9ja8Ozd+KAnSB3IGthZmVsa3UsIHRlbiBzYW0gY28gdyBuYWfFgsOzd2t1IG5hIEFuZHJvaWR6aWUuIC0tPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFRUYwRjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHBhdGggZD0iTTEwMjQuMCw1MTIuMCAxMDIzLjgsNjUyLjIgMTAyMy40LDY5Ny4wIDEwMjIuNiw3MjkuNCAxMDIxLjUsNzU1LjggMTAyMC4wLDc3OC4zIDEwMTguMyw3OTguMSAxMDE2LjIsODE1LjkgMTAxMy44LDgzMi4xIDEwMTEuMSw4NDYuOSAxMDA4LjAsODYwLjcgMTAwNC42LDg3My40IDEwMDAuOSw4ODUuMyA5OTYuOCw4OTYuNSA5OTIuNCw5MDYuOSA5ODcuNiw5MTYuNyA5ODIuNCw5MjYuMCA5NzYuOCw5MzQuNiA5NzAuOSw5NDIuOCA5NjQuNSw5NTAuNSA5NTcuNyw5NTcuNyA5NTAuNSw5NjQuNSA5NDIuOCw5NzAuOSA5MzQuNiw5NzYuOCA5MjYuMCw5ODIuNCA5MTYuNyw5ODcuNiA5MDYuOSw5OTIuNCA4OTYuNSw5OTYuOCA4ODUuMywxMDAwLjkgODczLjQsMTAwNC42IDg2MC43LDEwMDguMCA4NDYuOSwxMDExLjEgODMyLjEsMTAxMy44IDgxNS45LDEwMTYuMiA3OTguMSwxMDE4LjMgNzc4LjMsMTAyMC4wIDc1NS44LDEwMjEuNSA3MjkuNCwxMDIyLjYgNjk3LjAsMTAyMy40IDY1Mi4yLDEwMjMuOCA1MTIuMCwxMDI0LjAgMzcxLjgsMTAyMy44IDMyNy4wLDEwMjMuNCAyOTQuNiwxMDIyLjYgMjY4LjIsMTAyMS41IDI0NS43LDEwMjAuMCAyMjUuOSwxMDE4LjMgMjA4LjEsMTAxNi4yIDE5MS45LDEwMTMuOCAxNzcuMSwxMDExLjEgMTYzLjMsMTAwOC4wIDE1MC42LDEwMDQuNiAxMzguNywxMDAwLjkgMTI3LjUsOTk2LjggMTE3LjEsOTkyLjQgMTA3LjMsOTg3LjYgOTguMCw5ODIuNCA4OS40LDk3Ni44IDgxLjIsOTcwLjkgNzMuNSw5NjQuNSA2Ni4zLDk1Ny43IDU5LjUsOTUwLjUgNTMuMSw5NDIuOCA0Ny4yLDkzNC42IDQxLjYsOTI2LjAgMzYuNCw5MTYuNyAzMS42LDkwNi45IDI3LjIsODk2LjUgMjMuMSw4ODUuMyAxOS40LDg3My40IDE2LjAsODYwLjcgMTIuOSw4NDYuOSAxMC4yLDgzMi4xIDcuOCw4MTUuOSA1LjcsNzk4LjEgNC4wLDc3OC4zIDIuNSw3NTUuOCAxLjQsNzI5LjQgMC42LDY5Ny4wIDAuMiw2NTIuMiAwLjAsNTEyLjAgMC4yLDM3MS44IDAuNiwzMjcuMCAxLjQsMjk0LjYgMi41LDI2OC4yIDQuMCwyNDUuNyA1LjcsMjI1LjkgNy44LDIwOC4xIDEwLjIsMTkxLjkgMTIuOSwxNzcuMSAxNi4wLDE2My4zIDE5LjQsMTUwLjYgMjMuMSwxMzguNyAyNy4yLDEyNy41IDMxLjYsMTE3LjEgMzYuNCwxMDcuMyA0MS42LDk4LjAgNDcuMiw4OS40IDUzLjEsODEuMiA1OS41LDczLjUgNjYuMyw2Ni4zIDczLjUsNTkuNSA4MS4yLDUzLjEgODkuNCw0Ny4yIDk4LjAsNDEuNiAxMDcuMywzNi40IDExNy4xLDMxLjYgMTI3LjUsMjcuMiAxMzguNywyMy4xIDE1MC42LDE5LjQgMTYzLjMsMTYuMCAxNzcuMSwxMi45IDE5MS45LDEwLjIgMjA4LjEsNy44IDIyNS45LDUuNyAyNDUuNyw0LjAgMjY4LjIsMi41IDI5NC42LDEuNCAzMjcuMCwwLjYgMzcxLjgsMC4yIDUxMi4wLDAuMCA2NTIuMiwwLjIgNjk3LjAsMC42IDcyOS40LDEuNCA3NTUuOCwyLjUgNzc4LjMsNC4wIDc5OC4xLDUuNyA4MTUuOSw3LjggODMyLjEsMTAuMiA4NDYuOSwxMi45IDg2MC43LDE2LjAgODczLjQsMTkuNCA4ODUuMywyMy4xIDg5Ni41LDI3LjIgOTA2LjksMzEuNiA5MTYuNywzNi40IDkyNi4wLDQxLjYgOTM0LjYsNDcuMiA5NDIuOCw1My4xIDk1MC41LDU5LjUgOTU3LjcsNjYuMyA5NjQuNSw3My41IDk3MC45LDgxLjIgOTc2LjgsODkuNCA5ODIuNCw5OC4wIDk4Ny42LDEwNy4zIDk5Mi40LDExNy4xIDk5Ni44LDEyNy41IDEwMDAuOSwxMzguNyAxMDA0LjYsMTUwLjYgMTAwOC4wLDE2My4zIDEwMTEuMSwxNzcuMSAxMDEzLjgsMTkxLjkgMTAxNi4yLDIwOC4xIDEwMTguMywyMjUuOSAxMDIwLjAsMjQ1LjcgMTAyMS41LDI2OC4yIDEwMjIuNiwyOTQuNiAxMDIzLjQsMzI3LjAgMTAyMy44LDM3MS44WiIgZmlsbD0idXJsKCN0KSIvPgo8cGF0aCBkPSJNMTAxOC4wLDUxMi4wIDEwMTcuOCw2NTAuNiAxMDE3LjQsNjk0LjggMTAxNi42LDcyNi45IDEwMTUuNSw3NTIuOSAxMDE0LjEsNzc1LjIgMTAxMi40LDc5NC44IDEwMTAuMyw4MTIuMyAxMDA3LjksODI4LjMgMTAwNS4yLDg0My4wIDEwMDIuMiw4NTYuNiA5OTguOSw4NjkuMiA5OTUuMiw4ODEuMCA5OTEuMSw4OTIuMCA5ODYuNyw5MDIuMyA5ODIuMCw5MTIuMCA5NzYuOSw5MjEuMSA5NzEuNCw5MjkuNyA5NjUuNSw5MzcuOCA5NTkuMiw5NDUuNCA5NTIuNSw5NTIuNSA5NDUuNCw5NTkuMiA5MzcuOCw5NjUuNSA5MjkuNyw5NzEuNCA5MjEuMSw5NzYuOSA5MTIuMCw5ODIuMCA5MDIuMyw5ODYuNyA4OTIuMCw5OTEuMSA4ODEuMCw5OTUuMiA4NjkuMiw5OTguOSA4NTYuNiwxMDAyLjIgODQzLjAsMTAwNS4yIDgyOC4zLDEwMDcuOSA4MTIuMywxMDEwLjMgNzk0LjgsMTAxMi40IDc3NS4yLDEwMTQuMSA3NTIuOSwxMDE1LjUgNzI2LjksMTAxNi42IDY5NC44LDEwMTcuNCA2NTAuNiwxMDE3LjggNTEyLjAsMTAxOC4wIDM3My40LDEwMTcuOCAzMjkuMiwxMDE3LjQgMjk3LjEsMTAxNi42IDI3MS4xLDEwMTUuNSAyNDguOCwxMDE0LjEgMjI5LjIsMTAxMi40IDIxMS43LDEwMTAuMyAxOTUuNywxMDA3LjkgMTgxLjAsMTAwNS4yIDE2Ny40LDEwMDIuMiAxNTQuOCw5OTguOSAxNDMuMCw5OTUuMiAxMzIuMCw5OTEuMSAxMjEuNyw5ODYuNyAxMTIuMCw5ODIuMCAxMDIuOSw5NzYuOSA5NC4zLDk3MS40IDg2LjIsOTY1LjUgNzguNiw5NTkuMiA3MS41LDk1Mi41IDY0LjgsOTQ1LjQgNTguNSw5MzcuOCA1Mi42LDkyOS43IDQ3LjEsOTIxLjEgNDIuMCw5MTIuMCAzNy4zLDkwMi4zIDMyLjksODkyLjAgMjguOCw4ODEuMCAyNS4xLDg2OS4yIDIxLjgsODU2LjYgMTguOCw4NDMuMCAxNi4xLDgyOC4zIDEzLjcsODEyLjMgMTEuNiw3OTQuOCA5LjksNzc1LjIgOC41LDc1Mi45IDcuNCw3MjYuOSA2LjYsNjk0LjggNi4yLDY1MC42IDYuMCw1MTIuMCA2LjIsMzczLjQgNi42LDMyOS4yIDcuNCwyOTcuMSA4LjUsMjcxLjEgOS45LDI0OC44IDExLjYsMjI5LjIgMTMuNywyMTEuNyAxNi4xLDE5NS43IDE4LjgsMTgxLjAgMjEuOCwxNjcuNCAyNS4xLDE1NC44IDI4LjgsMTQzLjAgMzIuOSwxMzIuMCAzNy4zLDEyMS43IDQyLjAsMTEyLjAgNDcuMSwxMDIuOSA1Mi42LDk0LjMgNTguNSw4Ni4yIDY0LjgsNzguNiA3MS41LDcxLjUgNzguNiw2NC44IDg2LjIsNTguNSA5NC4zLDUyLjYgMTAyLjksNDcuMSAxMTIuMCw0Mi4wIDEyMS43LDM3LjMgMTMyLjAsMzIuOSAxNDMuMCwyOC44IDE1NC44LDI1LjEgMTY3LjQsMjEuOCAxODEuMCwxOC44IDE5NS43LDE2LjEgMjExLjcsMTMuNyAyMjkuMiwxMS42IDI0OC44LDkuOSAyNzEuMSw4LjUgMjk3LjEsNy40IDMyOS4yLDYuNiAzNzMuNCw2LjIgNTEyLjAsNi4wIDY1MC42LDYuMiA2OTQuOCw2LjYgNzI2LjksNy40IDc1Mi45LDguNSA3NzUuMiw5LjkgNzk0LjgsMTEuNiA4MTIuMywxMy43IDgyOC4zLDE2LjEgODQzLjAsMTguOCA4NTYuNiwyMS44IDg2OS4yLDI1LjEgODgxLjAsMjguOCA4OTIuMCwzMi45IDkwMi4zLDM3LjMgOTEyLjAsNDIuMCA5MjEuMSw0Ny4xIDkyOS43LDUyLjYgOTM3LjgsNTguNSA5NDUuNCw2NC44IDk1Mi41LDcxLjUgOTU5LjIsNzguNiA5NjUuNSw4Ni4yIDk3MS40LDk0LjMgOTc2LjksMTAyLjkgOTgyLjAsMTEyLjAgOTg2LjcsMTIxLjcgOTkxLjEsMTMyLjAgOTk1LjIsMTQzLjAgOTk4LjksMTU0LjggMTAwMi4yLDE2Ny40IDEwMDUuMiwxODEuMCAxMDA3LjksMTk1LjcgMTAxMC4zLDIxMS43IDEwMTIuNCwyMjkuMiAxMDE0LjEsMjQ4LjggMTAxNS41LDI3MS4xIDEwMTYuNiwyOTcuMSAxMDE3LjQsMzI5LjIgMTAxNy44LDM3My40WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iLjEyIiBzdHJva2Utd2lkdGg9IjEyIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsLTM3KSI+CjxwYXRoIGQ9Ik0zNzIsNDc2TDQyOCwzNzJRNDM2LDM1NiA0NTQsMzU2TDU3MCwzNTZRNTg4LDM1NiA1OTYsMzcyTDY1Miw0NzZaIiBmaWxsPSIjMkVBNDRGIi8+CjxwYXRoIGQ9Ik0yODAsNDk0SDc0NEE0NCw0NCAwIDAgMSA3ODgsNTM4VjYwMEE0NCw0NCAwIDAgMSA3NDQsNjQ0SDI4MEE0NCw0NCAwIDAgMSAyMzYsNjAwVjUzOEE0NCw0NCAwIDAgMSAyODAsNDk0WiIgZmlsbD0iIzI0NDE4QSIvPgo8Y2lyY2xlIGN4PSIzNzIiIGN5PSI2NzIiIHI9IjYyIiBmaWxsPSIjNzA0Mjg1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTgiLz4KPGNpcmNsZSBjeD0iNjUyIiBjeT0iNjcyIiByPSI2MiIgZmlsbD0iIzcwNDI4NSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjE4Ii8+CjwvZz4KPC9zdmc+Cg==" width="40" height="40" alt=""></button>
+  <button type="button" id="logo" class="logo" aria-label="Kasiomobile: te same ogłoszenia na Otomoto" aria-haspopup="menu" aria-expanded="false"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjwhLS0gWnJvYmlvbmUgcHJ6ZXogenJvYi1sb2dvLXctYXBsaWthY2ppLmpzOiBsb2dvIG5yIDkg4oCeWiBrbG9ja8Ozd+KAnSB3IGthZmVsa3UsIHRlbiBzYW0gY28gdyBuYWfFgsOzd2t1IG5hIEFuZHJvaWR6aWUuIC0tPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFRUYwRjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHBhdGggZD0iTTEwMjQuMCw1MTIuMCAxMDIzLjgsNjUyLjIgMTAyMy40LDY5Ny4wIDEwMjIuNiw3MjkuNCAxMDIxLjUsNzU1LjggMTAyMC4wLDc3OC4zIDEwMTguMyw3OTguMSAxMDE2LjIsODE1LjkgMTAxMy44LDgzMi4xIDEwMTEuMSw4NDYuOSAxMDA4LjAsODYwLjcgMTAwNC42LDg3My40IDEwMDAuOSw4ODUuMyA5OTYuOCw4OTYuNSA5OTIuNCw5MDYuOSA5ODcuNiw5MTYuNyA5ODIuNCw5MjYuMCA5NzYuOCw5MzQuNiA5NzAuOSw5NDIuOCA5NjQuNSw5NTAuNSA5NTcuNyw5NTcuNyA5NTAuNSw5NjQuNSA5NDIuOCw5NzAuOSA5MzQuNiw5NzYuOCA5MjYuMCw5ODIuNCA5MTYuNyw5ODcuNiA5MDYuOSw5OTIuNCA4OTYuNSw5OTYuOCA4ODUuMywxMDAwLjkgODczLjQsMTAwNC42IDg2MC43LDEwMDguMCA4NDYuOSwxMDExLjEgODMyLjEsMTAxMy44IDgxNS45LDEwMTYuMiA3OTguMSwxMDE4LjMgNzc4LjMsMTAyMC4wIDc1NS44LDEwMjEuNSA3MjkuNCwxMDIyLjYgNjk3LjAsMTAyMy40IDY1Mi4yLDEwMjMuOCA1MTIuMCwxMDI0LjAgMzcxLjgsMTAyMy44IDMyNy4wLDEwMjMuNCAyOTQuNiwxMDIyLjYgMjY4LjIsMTAyMS41IDI0NS43LDEwMjAuMCAyMjUuOSwxMDE4LjMgMjA4LjEsMTAxNi4yIDE5MS45LDEwMTMuOCAxNzcuMSwxMDExLjEgMTYzLjMsMTAwOC4wIDE1MC42LDEwMDQuNiAxMzguNywxMDAwLjkgMTI3LjUsOTk2LjggMTE3LjEsOTkyLjQgMTA3LjMsOTg3LjYgOTguMCw5ODIuNCA4OS40LDk3Ni44IDgxLjIsOTcwLjkgNzMuNSw5NjQuNSA2Ni4zLDk1Ny43IDU5LjUsOTUwLjUgNTMuMSw5NDIuOCA0Ny4yLDkzNC42IDQxLjYsOTI2LjAgMzYuNCw5MTYuNyAzMS42LDkwNi45IDI3LjIsODk2LjUgMjMuMSw4ODUuMyAxOS40LDg3My40IDE2LjAsODYwLjcgMTIuOSw4NDYuOSAxMC4yLDgzMi4xIDcuOCw4MTUuOSA1LjcsNzk4LjEgNC4wLDc3OC4zIDIuNSw3NTUuOCAxLjQsNzI5LjQgMC42LDY5Ny4wIDAuMiw2NTIuMiAwLjAsNTEyLjAgMC4yLDM3MS44IDAuNiwzMjcuMCAxLjQsMjk0LjYgMi41LDI2OC4yIDQuMCwyNDUuNyA1LjcsMjI1LjkgNy44LDIwOC4xIDEwLjIsMTkxLjkgMTIuOSwxNzcuMSAxNi4wLDE2My4zIDE5LjQsMTUwLjYgMjMuMSwxMzguNyAyNy4yLDEyNy41IDMxLjYsMTE3LjEgMzYuNCwxMDcuMyA0MS42LDk4LjAgNDcuMiw4OS40IDUzLjEsODEuMiA1OS41LDczLjUgNjYuMyw2Ni4zIDczLjUsNTkuNSA4MS4yLDUzLjEgODkuNCw0Ny4yIDk4LjAsNDEuNiAxMDcuMywzNi40IDExNy4xLDMxLjYgMTI3LjUsMjcuMiAxMzguNywyMy4xIDE1MC42LDE5LjQgMTYzLjMsMTYuMCAxNzcuMSwxMi45IDE5MS45LDEwLjIgMjA4LjEsNy44IDIyNS45LDUuNyAyNDUuNyw0LjAgMjY4LjIsMi41IDI5NC42LDEuNCAzMjcuMCwwLjYgMzcxLjgsMC4yIDUxMi4wLDAuMCA2NTIuMiwwLjIgNjk3LjAsMC42IDcyOS40LDEuNCA3NTUuOCwyLjUgNzc4LjMsNC4wIDc5OC4xLDUuNyA4MTUuOSw3LjggODMyLjEsMTAuMiA4NDYuOSwxMi45IDg2MC43LDE2LjAgODczLjQsMTkuNCA4ODUuMywyMy4xIDg5Ni41LDI3LjIgOTA2LjksMzEuNiA5MTYuNywzNi40IDkyNi4wLDQxLjYgOTM0LjYsNDcuMiA5NDIuOCw1My4xIDk1MC41LDU5LjUgOTU3LjcsNjYuMyA5NjQuNSw3My41IDk3MC45LDgxLjIgOTc2LjgsODkuNCA5ODIuNCw5OC4wIDk4Ny42LDEwNy4zIDk5Mi40LDExNy4xIDk5Ni44LDEyNy41IDEwMDAuOSwxMzguNyAxMDA0LjYsMTUwLjYgMTAwOC4wLDE2My4zIDEwMTEuMSwxNzcuMSAxMDEzLjgsMTkxLjkgMTAxNi4yLDIwOC4xIDEwMTguMywyMjUuOSAxMDIwLjAsMjQ1LjcgMTAyMS41LDI2OC4yIDEwMjIuNiwyOTQuNiAxMDIzLjQsMzI3LjAgMTAyMy44LDM3MS44WiIgZmlsbD0idXJsKCN0KSIvPgo8cGF0aCBkPSJNMTAxOC4wLDUxMi4wIDEwMTcuOCw2NTAuNiAxMDE3LjQsNjk0LjggMTAxNi42LDcyNi45IDEwMTUuNSw3NTIuOSAxMDE0LjEsNzc1LjIgMTAxMi40LDc5NC44IDEwMTAuMyw4MTIuMyAxMDA3LjksODI4LjMgMTAwNS4yLDg0My4wIDEwMDIuMiw4NTYuNiA5OTguOSw4NjkuMiA5OTUuMiw4ODEuMCA5OTEuMSw4OTIuMCA5ODYuNyw5MDIuMyA5ODIuMCw5MTIuMCA5NzYuOSw5MjEuMSA5NzEuNCw5MjkuNyA5NjUuNSw5MzcuOCA5NTkuMiw5NDUuNCA5NTIuNSw5NTIuNSA5NDUuNCw5NTkuMiA5MzcuOCw5NjUuNSA5MjkuNyw5NzEuNCA5MjEuMSw5NzYuOSA5MTIuMCw5ODIuMCA5MDIuMyw5ODYuNyA4OTIuMCw5OTEuMSA4ODEuMCw5OTUuMiA4NjkuMiw5OTguOSA4NTYuNiwxMDAyLjIgODQzLjAsMTAwNS4yIDgyOC4zLDEwMDcuOSA4MTIuMywxMDEwLjMgNzk0LjgsMTAxMi40IDc3NS4yLDEwMTQuMSA3NTIuOSwxMDE1LjUgNzI2LjksMTAxNi42IDY5NC44LDEwMTcuNCA2NTAuNiwxMDE3LjggNTEyLjAsMTAxOC4wIDM3My40LDEwMTcuOCAzMjkuMiwxMDE3LjQgMjk3LjEsMTAxNi42IDI3MS4xLDEwMTUuNSAyNDguOCwxMDE0LjEgMjI5LjIsMTAxMi40IDIxMS43LDEwMTAuMyAxOTUuNywxMDA3LjkgMTgxLjAsMTAwNS4yIDE2Ny40LDEwMDIuMiAxNTQuOCw5OTguOSAxNDMuMCw5OTUuMiAxMzIuMCw5OTEuMSAxMjEuNyw5ODYuNyAxMTIuMCw5ODIuMCAxMDIuOSw5NzYuOSA5NC4zLDk3MS40IDg2LjIsOTY1LjUgNzguNiw5NTkuMiA3MS41LDk1Mi41IDY0LjgsOTQ1LjQgNTguNSw5MzcuOCA1Mi42LDkyOS43IDQ3LjEsOTIxLjEgNDIuMCw5MTIuMCAzNy4zLDkwMi4zIDMyLjksODkyLjAgMjguOCw4ODEuMCAyNS4xLDg2OS4yIDIxLjgsODU2LjYgMTguOCw4NDMuMCAxNi4xLDgyOC4zIDEzLjcsODEyLjMgMTEuNiw3OTQuOCA5LjksNzc1LjIgOC41LDc1Mi45IDcuNCw3MjYuOSA2LjYsNjk0LjggNi4yLDY1MC42IDYuMCw1MTIuMCA2LjIsMzczLjQgNi42LDMyOS4yIDcuNCwyOTcuMSA4LjUsMjcxLjEgOS45LDI0OC44IDExLjYsMjI5LjIgMTMuNywyMTEuNyAxNi4xLDE5NS43IDE4LjgsMTgxLjAgMjEuOCwxNjcuNCAyNS4xLDE1NC44IDI4LjgsMTQzLjAgMzIuOSwxMzIuMCAzNy4zLDEyMS43IDQyLjAsMTEyLjAgNDcuMSwxMDIuOSA1Mi42LDk0LjMgNTguNSw4Ni4yIDY0LjgsNzguNiA3MS41LDcxLjUgNzguNiw2NC44IDg2LjIsNTguNSA5NC4zLDUyLjYgMTAyLjksNDcuMSAxMTIuMCw0Mi4wIDEyMS43LDM3LjMgMTMyLjAsMzIuOSAxNDMuMCwyOC44IDE1NC44LDI1LjEgMTY3LjQsMjEuOCAxODEuMCwxOC44IDE5NS43LDE2LjEgMjExLjcsMTMuNyAyMjkuMiwxMS42IDI0OC44LDkuOSAyNzEuMSw4LjUgMjk3LjEsNy40IDMyOS4yLDYuNiAzNzMuNCw2LjIgNTEyLjAsNi4wIDY1MC42LDYuMiA2OTQuOCw2LjYgNzI2LjksNy40IDc1Mi45LDguNSA3NzUuMiw5LjkgNzk0LjgsMTEuNiA4MTIuMywxMy43IDgyOC4zLDE2LjEgODQzLjAsMTguOCA4NTYuNiwyMS44IDg2OS4yLDI1LjEgODgxLjAsMjguOCA4OTIuMCwzMi45IDkwMi4zLDM3LjMgOTEyLjAsNDIuMCA5MjEuMSw0Ny4xIDkyOS43LDUyLjYgOTM3LjgsNTguNSA5NDUuNCw2NC44IDk1Mi41LDcxLjUgOTU5LjIsNzguNiA5NjUuNSw4Ni4yIDk3MS40LDk0LjMgOTc2LjksMTAyLjkgOTgyLjAsMTEyLjAgOTg2LjcsMTIxLjcgOTkxLjEsMTMyLjAgOTk1LjIsMTQzLjAgOTk4LjksMTU0LjggMTAwMi4yLDE2Ny40IDEwMDUuMiwxODEuMCAxMDA3LjksMTk1LjcgMTAxMC4zLDIxMS43IDEwMTIuNCwyMjkuMiAxMDE0LjEsMjQ4LjggMTAxNS41LDI3MS4xIDEwMTYuNiwyOTcuMSAxMDE3LjQsMzI5LjIgMTAxNy44LDM3My40WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iLjEyIiBzdHJva2Utd2lkdGg9IjEyIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsLTM3KSI+CjxwYXRoIGQ9Ik0zNzIsNDc2TDQyOCwzNzJRNDM2LDM1NiA0NTQsMzU2TDU3MCwzNTZRNTg4LDM1NiA1OTYsMzcyTDY1Miw0NzZaIiBmaWxsPSIjMkVBNDRGIi8+CjxwYXRoIGQ9Ik0yODAsNDk0SDc0NEE0NCw0NCAwIDAgMSA3ODgsNTM4VjYwMEE0NCw0NCAwIDAgMSA3NDQsNjQ0SDI4MEE0NCw0NCAwIDAgMSAyMzYsNjAwVjUzOEE0NCw0NCAwIDAgMSAyODAsNDk0WiIgZmlsbD0iIzI0NDE4QSIvPgo8Y2lyY2xlIGN4PSIzNzIiIGN5PSI2NzIiIHI9IjYyIiBmaWxsPSIjNzA0Mjg1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTgiLz4KPGNpcmNsZSBjeD0iNjUyIiBjeT0iNjcyIiByPSI2MiIgZmlsbD0iIzcwNDI4NSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjE4Ii8+CjwvZz4KPC9zdmc+Cg==" width="40" height="40" alt=""></button>
   <!--napis--><h1><button type="button" id="napis" class="napis-przycisk" aria-label="Kasiomobile: te same wyszukiwania na Otomoto" aria-haspopup="menu" aria-expanded="false"><svg class="napis" viewBox="0 0 11602 1572" role="img" aria-label="Kasiomobile" style="--szer:5.6650;--wys:0.7676"><style>.napis-l{fill:#24418A}.napis-z{fill:#1C7C36}.napis-f{fill:#704285}@media (prefers-color-scheme: dark){.napis-l{fill:#FFFFFF}.napis-z{fill:#30D158}.napis-f{fill:#C495E8}}</style><path class="napis-l" d="M280 1531L16 1531L16 41L280 41L280 760Q338 692 397 625Q455 558 513 490L513 490L909 41L1235 41L662 686L1245 1531L937 1531L484 864L280 1095L280 1531ZM1675 1548L1675 1548Q1517 1548 1413 1469Q1310 1389 1310 1231L1310 1231Q1310 1111 1368 1046Q1427 980 1521 950Q1616 920 1725 909L1725 909Q1872 892 1930 879Q1988 866 1988 812L1988 812L1988 804Q1988 736 1936 693Q1885 650 1795 650L1795 650Q1703 650 1645 693Q1588 736 1583 803L1583 803L1340 803Q1349 646 1471 550Q1593 454 1800 454L1800 454Q2006 454 2122 550Q2238 646 2238 811L2238 811L2238 1531L1990 1531L1990 1382L1986 1382Q1948 1452 1876 1500Q1804 1548 1675 1548ZM1737 1361L1737 1361Q1861 1361 1925 1297Q1989 1232 1989 1140L1989 1140L1989 1026Q1966 1041 1900 1054Q1834 1066 1756 1078L1756 1078Q1675 1090 1615 1124Q1556 1157 1556 1229L1556 1229Q1556 1291 1605 1326Q1654 1361 1737 1361ZM2854 1556L2854 1556Q2661 1556 2532 1466Q2402 1375 2390 1205L2390 1205L2639 1205Q2647 1282 2701 1325Q2755 1367 2850 1367L2850 1367Q2941 1367 2994 1331Q3046 1295 3046 1239L3046 1239Q3046 1191 3007 1162Q2968 1133 2902 1119L2902 1119L2722 1082Q2414 1018 2414 777L2414 777Q2414 631 2530 542Q2646 452 2839 452L2839 452Q3031 452 3152 547Q3272 641 3276 804L3276 804L3039 804Q3037 733 2984 687Q2931 641 2845 641L2845 641Q2762 641 2714 678Q2666 715 2666 769L2666 769Q2666 816 2703 846Q2740 875 2806 890L2806 890L2996 929Q3153 962 3228 1033Q3302 1104 3302 1220L3302 1220Q3302 1323 3245 1399Q3187 1474 3086 1515Q2985 1556 2854 1556ZM3706 1531L3454 1531L3454 475L3706 475L3706 1531ZM3580 318L3580 318Q3515 318 3472 277Q3429 235 3429 174L3429 174Q3429 113 3472 72Q3515 31 3580 31L3580 31Q3644 31 3687 72Q3730 113 3730 174L3730 174Q3730 235 3687 277Q3644 318 3580 318ZM5308 1531L5056 1531L5056 475L5300 475L5300 658Q5348 556 5433 505Q5518 454 5618 454L5618 454Q5725 454 5807 509Q5889 563 5922 654L5922 654Q5964 563 6053 509Q6142 454 6258 454L6258 454Q6408 454 6510 551Q6612 648 6612 834L6612 834L6612 1531L6359 1531L6359 870Q6359 765 6301 717Q6244 668 6163 668L6163 668Q6067 668 6011 728Q5956 788 5956 883L5956 883L5956 1531L5711 1531L5711 858Q5711 772 5657 720Q5603 668 5519 668L5519 668Q5434 668 5371 728Q5308 787 5308 901L5308 901L5308 1531ZM8531 1552L8531 1552Q8427 1552 8343 1507Q8260 1462 8211 1370L8211 1370L8209 1370L8209 1531L7961 1531L7961 41L8213 41L8213 625L8215 625Q8266 538 8348 496Q8430 454 8532 454L8532 454Q8668 454 8770 524Q8873 593 8930 717Q8988 840 8988 1002L8988 1002Q8988 1167 8931 1291Q8875 1414 8772 1483Q8669 1552 8531 1552ZM8472 1341L8472 1341Q8589 1341 8661 1254Q8733 1166 8733 1002L8733 1002Q8733 839 8661 751Q8589 663 8472 663L8472 663Q8348 663 8273 756Q8199 848 8199 1002L8199 1002Q8199 1156 8273 1249Q8348 1341 8472 1341ZM9394 1531L9142 1531L9142 475L9394 475L9394 1531ZM9268 318L9268 318Q9203 318 9160 277Q9117 235 9117 174L9117 174Q9117 113 9160 72Q9203 31 9268 31L9268 31Q9332 31 9375 72Q9418 113 9418 174L9418 174Q9418 235 9375 277Q9332 318 9268 318ZM9598 41L9850 41L9850 1531L9598 1531L9598 41ZM10519 1555L10519 1555Q10361 1555 10245 1484Q10129 1413 10067 1289Q10004 1164 10004 1004L10004 1004Q10004 843 10069 719Q10133 594 10247 523Q10361 451 10509 451L10509 451Q10661 451 10775 521Q10889 591 10952 715Q11015 838 11015 1000L11015 1000L11015 1069L10251 1069Q10256 1198 10327 1277Q10398 1356 10525 1356L10525 1356Q10620 1356 10682 1315Q10744 1273 10766 1205L10766 1205L11002 1205Q10982 1308 10915 1387Q10847 1466 10745 1511Q10643 1555 10519 1555ZM10253 895L10253 895L10773 895Q10761 782 10692 717Q10622 651 10513 651L10513 651Q10403 651 10335 717Q10266 782 10253 895ZM11388 437L11388 437Q11347 437 11311 421Q11275 406 11248 379Q11221 351 11206 316Q11190 280 11190 239L11190 239Q11190 198 11206 162Q11221 126 11248 99Q11275 72 11311 56Q11347 41 11388 41L11388 41Q11429 41 11465 56Q11501 72 11528 99Q11555 126 11571 162Q11586 198 11586 239L11586 239Q11586 280 11571 316Q11555 351 11528 379Q11501 406 11465 421Q11429 437 11388 437ZM11388 389L11388 389Q11430 389 11464 369Q11498 348 11518 314Q11538 280 11538 239L11538 239Q11538 197 11518 163Q11498 129 11464 109Q11430 89 11388 89L11388 89Q11347 89 11313 109Q11279 129 11258 163Q11238 197 11238 239L11238 239Q11238 280 11258 314Q11279 348 11313 369Q11347 389 11388 389ZM11475 330L11430 330L11398 268L11359 268L11359 330L11318 330L11318 147L11411 147Q11422 147 11436 154Q11449 160 11458 173Q11468 186 11468 205L11468 205Q11468 224 11459 238Q11450 251 11438 259L11438 259L11475 330ZM11359 177L11359 238L11396 238Q11404 238 11414 230Q11423 222 11423 205L11423 205Q11423 189 11414 183Q11404 177 11397 177L11397 177L11359 177Z"/><path class="napis-z" fill-rule="evenodd" d="M4902.1,1003C4902.1,1290.7,4668.8,1524,4381.1,1524C4093.3,1524,3860.1,1290.7,3860.1,1003C3860.1,715.3,4093.3,482,4381.1,482C4668.8,482,4902.1,715.3,4902.1,1003ZM4695.4,1003C4695.4,829.4,4554.7,688.6,4381.1,688.6C4207.4,688.6,4066.7,829.4,4066.7,1003C4066.7,1176.6,4207.4,1317.4,4381.1,1317.4C4554.7,1317.4,4695.4,1176.6,4695.4,1003ZM4463.7,1003C4463.7,1048.6,4426.7,1085.7,4381.1,1085.7C4335.4,1085.7,4298.4,1048.6,4298.4,1003C4298.4,957.4,4335.4,920.3,4381.1,920.3C4426.7,920.3,4463.7,957.4,4463.7,1003Z"/><path class="napis-f" fill-rule="evenodd" d="M7807.1,1003C7807.1,1290.7,7573.8,1524,7286.1,1524C6998.4,1524,6765.1,1290.7,6765.1,1003C6765.1,715.3,6998.4,482,7286.1,482C7573.8,482,7807.1,715.3,7807.1,1003ZM7600.5,1003C7600.5,829.4,7459.7,688.6,7286.1,688.6C7112.5,688.6,6971.7,829.4,6971.7,1003C6971.7,1176.6,7112.5,1317.4,7286.1,1317.4C7459.7,1317.4,7600.5,1176.6,7600.5,1003ZM7368.7,1003C7368.7,1048.6,7331.7,1085.7,7286.1,1085.7C7240.4,1085.7,7203.4,1048.6,7203.4,1003C7203.4,957.4,7240.4,920.3,7286.1,920.3C7331.7,920.3,7368.7,957.4,7368.7,1003Z"/></svg></button></h1><!--/napis-->
   <button type="button" id="czat-otworz" class="czat-ikonka czat-otworz" aria-label="Zapytaj asystenta" aria-haspopup="dialog"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.5 4h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7l-4.5 3.4v-3.4h-1.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="10.25" r="1.25"/><circle cx="12" cy="10.25" r="1.25"/><circle cx="15.5" cy="10.25" r="1.25"/></svg></button>
 </header>
 <main>
   <section id="katalog" class="widok" role="tabpanel" aria-labelledby="seg-katalog">
-    <iframe id="ramka-katalogu" title="Ogłoszenia z Otomoto" hidden></iframe>
-    <div id="pusty-katalog" class="pusto" hidden><p class="pusto-tekst"></p></div>
+    <div class="ramki">
+      <div class="podwidok" data-p="teraz">
+        <iframe id="ramka-katalogu" title="Ogłoszenia z Otomoto" hidden></iframe>
+        <div id="pusty-katalog" class="pusto" hidden><p class="pusto-tekst"></p></div>
+      </div>
+      <div class="podwidok" data-p="historia" hidden>
+        <iframe id="ramka-historii" title="Historia ogłoszeń" hidden></iframe>
+        <div id="pusty-historia" class="pusto" hidden><p class="pusto-tekst"></p></div>
+      </div>
+    </div>
   </section>
   <section id="modele" class="widok" role="tabpanel" aria-labelledby="seg-modele" hidden>
-    <iframe id="ramka-modeli" title="Katalog aut" hidden></iframe>
-    <div id="pusty-modele" class="pusto" hidden><p class="pusto-tekst"></p></div>
+    <div class="ramki">
+      <div class="podwidok" data-p="podium">
+        <iframe id="ramka-modeli" title="Podium: najlepsze modele w Waszej cenie" hidden></iframe>
+        <div id="pusty-modele" class="pusto" hidden><p class="pusto-tekst"></p></div>
+      </div>
+      <div class="podwidok" data-p="atlas" hidden>
+        <iframe id="ramka-atlasu" title="Atlas wszystkich aut: marki i modele" hidden></iframe>
+        <div id="pusty-atlas" class="pusto" hidden><p class="pusto-tekst"></p></div>
+      </div>
+    </div>
   </section>
   <section id="kredyt" class="widok" role="tabpanel" aria-labelledby="seg-kredyt" hidden>
-    <iframe id="ramka-kredytu" title="Kalkulator kredytu na auto" hidden></iframe>
-    <div id="pusty-kredyt" class="pusto" hidden><p class="pusto-tekst"></p></div>
+    <div class="ramki">
+      <div class="podwidok" data-p="finanse">
+        <iframe id="ramka-kredytu" title="Finanse: leasing i kredyt na auto" hidden></iframe>
+        <div id="pusty-kredyt" class="pusto" hidden><p class="pusto-tekst"></p></div>
+      </div>
+    </div>
   </section>
-  <section id="historia" class="widok" role="tabpanel" aria-labelledby="seg-historia" hidden>
-    <iframe id="ramka-historii" title="Historia ogłoszeń" hidden></iframe>
-    <div id="pusty-historia" class="pusto" hidden><p class="pusto-tekst"></p></div>
+  <section id="poradnik" class="widok" role="tabpanel" aria-labelledby="seg-poradnik" hidden>
+    <iframe id="ramka-poradnika" title="Poradnik: jak kupić używane auto" hidden></iframe>
+    <div id="pusty-poradnik" class="pusto" hidden><p class="pusto-tekst"></p></div>
   </section>
 </main>
-<dialog id="poradnik" class="poradnik" aria-label="Poradnik i Atlas">
-  <div class="poradnik-pasek"><div class="wiedza" role="tablist" aria-label="Poradnik i Atlas"><button type="button" role="tab" id="w-poradnik" data-w="poradnik" aria-controls="r-poradnik" aria-selected="true" style="--pastel:#d5e9ff;--pastel-c:#132f4d" data-odcien="211"><span class="nazwa" data-nazwa="Poradnik"><span>Poradnik</span></span></button><button type="button" role="tab" id="w-atlas" data-w="atlas" aria-controls="r-atlas" aria-selected="false" tabindex="-1" style="--pastel:#f1dbfc;--pastel-c:#391b49" data-odcien="280"><span class="nazwa" data-nazwa="Atlas wszystkich aut"><span>Atlas wszystkich aut</span></span></button></div><button type="button" id="zamknij-poradnik" class="czat-ikonka czat-otworz zamknij-poradnik" aria-label="Zamknij"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
-  <div class="poradnik-tresc">
-    <div id="r-poradnik" role="tabpanel" aria-labelledby="w-poradnik" class="wiedza-strona">
-      <iframe id="ramka-poradnika" title="Poradnik: przebieg, licznik i usterki" hidden></iframe>
-      <div id="pusty-poradnik" class="pusto" hidden><p class="pusto-tekst"></p></div>
-    </div>
-    <div id="r-atlas" role="tabpanel" aria-labelledby="w-atlas" class="wiedza-strona" hidden>
-      <iframe id="ramka-atlasu" title="Atlas wszystkich aut: marki i modele"></iframe>
-      <div id="pusty-atlas" class="pusto" hidden><p class="pusto-tekst"></p></div>
-    </div>
-  </div>
-</dialog>
 <div class="dol">
+  <div class="podkarty">
+    <div class="podwidoki" role="radiogroup" aria-label="Ogłoszenia" data-z="katalog" style="--pastel:#d1f5da;--pastel-c:#0e3f1a" data-odcien="135"><button type="button" role="radio" aria-checked="true" data-p="teraz"><span class="nazwa" data-nazwa="Teraz"><span>Teraz</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="historia"><span class="nazwa" data-nazwa="Historia"><span>Historia</span></span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Katalag" data-z="modele" style="--pastel:#c9e4ff;--pastel-c:#03284d" data-odcien="210" hidden><button type="button" role="radio" aria-checked="true" data-p="podium"><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span> <span class="skad">Otomoto</span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="modele"><span class="nazwa" data-nazwa="Modele"><span>Modele</span></span> <span class="skad">Otomoto</span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="marki"><span class="nazwa" data-nazwa="Marki"><span>Marki</span></span> <span class="skad">wszystkie</span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Finanse" data-z="kredyt" style="--pastel:#ffeac9;--pastel-c:#4d3003" data-odcien="36" hidden><button type="button" role="radio" aria-checked="true" data-p="leasing"><span class="nazwa" data-nazwa="Leasing"><span>Leasing</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="kredyt"><span class="nazwa" data-nazwa="Kredyt"><span>Kredyt</span></span></button></div>
+  </div>
   <div class="karty" role="tablist" aria-label="Zakładki">
     <button type="button" role="tab" id="seg-katalog" aria-controls="katalog" aria-selected="true" style="--pastel:#d1f5da;--pastel-c:#0e3f1a" data-odcien="135"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-ogl)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.44)" d="M8.2 4.5h7.6c.9 0 1.6.5 1.9 1.3L19.2 10H19.6A1.9 1.9 0 0 1 21.5 11.9V16.4a.9.9 0 0 1-.9.9H20v1.6a1.1 1.1 0 0 1-1.1 1.1h-1.3a1.1 1.1 0 0 1-1.1-1.1V17.3H7.5v1.6a1.1 1.1 0 0 1-1.1 1.1H5.1A1.1 1.1 0 0 1 4 18.9V17.3h-.6a.9.9 0 0 1-.9-.9V11.9A1.9 1.9 0 0 1 4.4 10h.4L6.3 5.8c.3-.8 1-1.3 1.9-1.3zM8.4 6.4 7.2 9.6h9.6l-1.2-3.2zM5.3 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0zM16.1 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z"/></svg><span class="nazwa" data-nazwa="Ogłoszenia"><span>Ogłoszenia</span></span></button>
     <button type="button" role="tab" id="seg-modele" aria-controls="modele" aria-selected="false" tabindex="-1" style="--pastel:#c9e4ff;--pastel-c:#03284d" data-odcien="210"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kat)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M5.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM5.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z"/></svg><span class="nazwa" data-nazwa="Katalag"><span>Katalag</span></span></button>
-    <button type="button" role="tab" id="seg-kredyt" aria-controls="kredyt" aria-selected="false" tabindex="-1" style="--pastel:#ffeac9;--pastel-c:#4d3003" data-odcien="36"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kre)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4.5 6.5h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0zM5.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0zM17.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0z"/></svg><span class="nazwa" data-nazwa="Kredyt"><span>Kredyt</span></span></button>
-    <button type="button" role="tab" id="seg-historia" aria-controls="historia" aria-selected="false" tabindex="-1" style="--pastel:#f1dbfc;--pastel-c:#391b49" data-odcien="280"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-his)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0zM11 6.5h2v5.1l3.4 2-1 1.7-4.4-2.6z"/></svg><span class="nazwa" data-nazwa="Historia"><span>Historia</span></span></button>
+    <button type="button" role="tab" id="seg-kredyt" aria-controls="kredyt" aria-selected="false" tabindex="-1" style="--pastel:#ffeac9;--pastel-c:#4d3003" data-odcien="36"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kre)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4.5 6.5h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0zM5.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0zM17.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0z"/></svg><span class="nazwa" data-nazwa="Finanse"><span>Finanse</span></span></button>
+    <button type="button" role="tab" id="seg-poradnik" aria-controls="poradnik" aria-selected="false" tabindex="-1" style="--pastel:#dcdbfa;--pastel-c:#1c1c45" data-odcien="241"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-por)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4 5.5c2.6-.9 5-.6 7 .9v12.1c-2-1.5-4.4-1.8-7-.9zM13 6.4c2-1.5 4.4-1.8 7-.9v12.1c-2.6-.9-5-.6-7 .9z"/></svg><span class="nazwa" data-nazwa="Poradnik"><span>Poradnik</span></span></button>
   </div>
   <div class="cofnij-zakladki" hidden><button type="button" id="cofnij-zakladki" class="pigulka" aria-label="Cofnij przestawienie zakładek">Cofnij</button></div>
 </div>
@@ -1151,23 +1264,30 @@ dialog.poradnik::backdrop { background: var(--strona); }
 <script>
 // Kasiomobile na iPhone'a i w przeglądarce (do 18.10.2026 „Auta”): ten sam ekran co aplikacja na Androidzie.
 // Od 19.10.2026 cztery zakładki na dole, każda z kolorową ikoną (Jacek: „brakuje nam … kolorków na tych menu … oczywiste
-// i eleganckie, typu Apple Store”), a nagłówek to jeden rząd: logo, napis i asystent.
-//   „Ogłoszenia” – katalog misji ze Skanera Produktów; auto dodane na Otomoto dziś albo wczoraj ma słowo „Nowe”. Do 19.10.2026
-//                  osobne zakładki „Nowe” i „Katalag” (Jacek: „trzeba zmerge'ować … żeby można było przesortowywać i widzieć
-//                  na bieżąco nowe”). Plik z cichego kanału „<kanał>-katalog”.
-//   „Katalag”    – katalog modeli aut z oceną bezpieczeństwa i bezawaryjności, kanał „<kanał>-modele” (do 19.10.2026 „Modele”).
-//   „Kredyt”     – kalkulator kredytu na auto z cichego kanału „<kanał>-kalkulator”.
-//   „Historia”   – historia ogłoszeń ze zdjęciami z cichego kanału „<kanał>-historia”.
+// i eleganckie, typu Apple Store”), a nagłówek to jeden rząd: logo, napis i asystent. Od 25.10.2026 (układ 1 z czterech
+// propozycji) zakładka może mieć u góry jeden rząd pigułek:
+//   „Ogłoszenia” – pigułka Teraz: katalog misji ze Skanera Produktów; auto dodane na Otomoto dziś albo wczoraj ma słowo „Nowe”
+//                  (do 19.10.2026 osobne zakładki „Nowe” i „Katalag”), plik z cichego kanału „<kanał>-katalog”. Pigułka Historia:
+//                  historia ogłoszeń ze zdjęciami, kanał „<kanał>-historia” (do 24.10.2026 osobna zakładka).
+//   „Katalag”    – pigułka Podium Otomoto: katalog modeli aut z oceną bezpieczeństwa i bezawaryjności, kanał „<kanał>-modele”. Pigułki
+//                  Modele Otomoto i Wszystkie marki: Atlas wszystkich aut ze strony w sieci (jackoludek.github.io/atlas-samochodow),
+//                  do 24.10.2026 pod logo.
+//   „Finanse”    – pigułki Leasing i Kredyt nad jednym kalkulatorem z cichego kanału „<kanał>-kalkulator”, każda ze swoim skrótem
+//                  i swoją całością (do 25.10.2026 zakładka „Kredyt”; Jacek: „Finanse powinny być pierw leasing … a drugi kredyt”).
+//   Nawigacja    – na telefonie zakładki i pigułki wybranej zakładki to jeden blok ze szkła nad treścią (Jacek, 25.10.2026 wieczorem:
+//                  „Podoba mi się layout 3”, „żebyśmy nie dzielili nawigacji na dwa góra i dół”). Wersja 1: pigułki nad zakładkami,
+//                  wersja 2: pod nimi. Numer daje window.WERSJA (kanal.js w aplikacji „Wersja 2”) albo ?wersja=N w adresie, bez niego
+//                  wersja 1. Blok przytrzymany 2 s przesuwa się palcem wyżej i zostaje tam, gdzie go puścić. Na szerokim ekranie zakładki
+//                  i pigułki stoją u góry i się nie przenoszą. Do wieczora 25.10.2026 było pięć układów do porównania (aplikacje „Układ 1–5”).
+//   „Poradnik”   – cały poradnik o używanych autach, kanał „<kanał>-poradnik” (od 22 do 24.10.2026 pod logo).
 //   Dane w tle   – przycisku Odśwież ani godziny skanu nie ma (od 24.10.2026, Jacek: „no refresh button anywhere … I trust you
 //                  and the process”, a wieczorem: „nie potrzebujemy wiedzieć, kiedy został update'owany”): przy każdym otwarciu
 //                  prośba o skan idzie sama, gdy katalog ma ponad 10 minut (kanał „<kanał>-skanuj”, słucha go skan-na-zadanie.ps1),
 //                  otwarta aplikacja co minutę bierze nowy katalog, a po powrocie internetu pobiera wszystko. Ściągi „i” też nie ma
 //                  (Jacek: „napisać tę aplikację tak prosto, że nie będzie potrzeba ściągi”).
 //   Siatka       – nagłówek i strony w zakładkach mają te same marginesy i kolumny co Ogłoszenia (styl.css, „Siatka aplikacji”).
-//   Logo         – cały poradnik o używanych autach na cały ekran (od 22.10.2026), kanał „<kanał>-poradnik”, a od 23.10.2026
-//                  w tym samym oknie druga pigułka: Atlas wszystkich aut ze strony w sieci (jackoludek.github.io/atlas-samochodow).
-//   Napis        – te same wyszukiwania na Otomoto co skan (od 22.10.2026; rano tego dnia stały pod logo).
-//   Przestawianie – zakładki i pigułki pod logo palcem, myszą i Alt+← →, z „Cofnij”, Ctrl+Z i Ctrl+Y.
+//   Logo i napis – jedno menu z wyszukiwaniem Otomoto „Pomorskie, każda marka” (napis od 22.10.2026, logo od 25.10.2026).
+//   Przestawianie – zakładki i pigułki palcem, myszą i Alt+← →, z „Cofnij”, Ctrl+Z i Ctrl+Y.
 // ntfy.sh trzyma wiadomości 12 godzin, a pliki 3 godziny, więc wszystko zostaje w telefonie (localStorage i IndexedDB) i działa
 // też bez internetu. Nazwę kanału podaje kanal.js (window.KANAL), a w wersji z internetu adres strony (?k=…), zapamiętany potem.
 'use strict';
@@ -1373,17 +1493,61 @@ dialog.poradnik::backdrop { background: var(--strona); }
   const GAZETA = `main{${KONTENER};position:relative}main>header.hero h1{display:none!important}main p,main section>ul>li,main .card li{max-width:72ch}`
     + `@media (width>1100px){main{padding-left:calc(${L} + 336px)!important}main>header.hero{position:absolute;left:${L};top:0;width:312px;margin:0}`
     + 'main>header.hero{padding-top:0!important}main>header.hero>:first-child{margin-top:0!important}main>header.hero .pigulki-widoku{flex-wrap:wrap}}';
+  // Przycisk całości na końcu skrótu (od 25.10.2026 wieczorem, Jacek o „Cały kalkulator”: „Buton, który nie wygląda jak buton w ogóle …
+  // wygląda jak jakiś napis na niebieskim tle … It's wrong”): w Podium, Historii i Finansach ten sam wypełniony przycisk co „Czytaj całość”
+  // w Poradniku: 48 px, akcent, głębia i strzałka w dół. Napis biały w jasnym (4,7:1), czarny w ciemnym (7,0:1). W Finansach widać go
+  // na każdej szerokości, bo rzędu „Skrót | Pełny widok” w aplikacji nie ma (kalkulator chował go od 721 px).
+  const STRZALKA_W_DOL = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 5.75 8 10.25l4.5-4.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`;
+  const CALOSC = (s) => `${s}{display:inline-flex!important;align-items:center;gap:8px;height:48px!important;min-height:48px;margin-top:24px!important;padding:0 21px 0 24px!important;`
+    + 'border:0!important;border-radius:24px!important;background:#0071e3!important;color:#ffffff!important;font:inherit;font-size:17px!important;font-weight:600!important;'
+    + 'line-height:1!important;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,box-shadow .15s ease;'
+    + 'box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 1px 2px rgba(0,0,0,.14),0 4px 12px rgba(0,0,0,.12)!important}'
+    + `${s}::after{content:"";flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:${STRZALKA_W_DOL} center/16px no-repeat;mask:${STRZALKA_W_DOL} center/16px no-repeat}`
+    + `${s}:active{transform:scale(.97)}@media (hover:hover){${s}:hover{transform:translateY(-1px)}}`
+    + `@media (prefers-color-scheme:dark){${s}{background:#2997ff!important;color:#000000!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 .5px rgba(255,255,255,.2)!important}}`;
+  // Pierścień wybranej pigułki w stronach (pigulki-widoku.css w misji) rysowany do środka, jak w nawigacji: brzeg pigułki stoi na linii
+  // siatki, a nie 4 px przed nią (Jacek, 25.10.2026: „nie jest to wszystko według kratek, a powinno być poukładane według kratek”).
+  const PIERSCIEN = '.pigulki-widoku button[aria-pressed="true"],.pigulki-widoku button[aria-checked="true"]'
+    + '{box-shadow:var(--pig-krawedz),inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--bg),var(--pig-cien-wybranej)!important}';
+  // Podium: cena i „Tylko Toyota” w tej samej siatce co cztery kategorie pod nimi, „Tylko Toyota” tej samej szerokości co kategoria,
+  // liczba na środku pola, a „Cena do … tys. zł” ciaśniej (Jacek: „Te 75 powinno być pośrodkowane … w tej rameczce”, „Tylko Toyota
+  // … przytulone do prawej krawędzi … musi być w tej samej szerokości co bezpieczeństwo i bagażnik pod nią”).
+  const PODIUM = '.podium .podium-rzad{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:12px}'
+    + '.podium .podium-rzad .budzet{min-width:0;justify-content:center;gap:6px;font-size:15px;white-space:nowrap}'
+    + '.podium .podium-rzad .budzet input{width:3.2em;padding:0 4px;text-align:center}.podium #podium-toyota{width:100%;justify-content:center}'
+    + '@container (min-width:680px){.podium .podium-rzad{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}'
+    + '.podium .podium-rzad .budzet{grid-column:span 2;justify-content:flex-start}.podium #podium-toyota{grid-column:4}}';
   const SIATKA = {
     katalog: `#pasek,.strona>.naglowek{display:none!important}.strona{${KONTENER}}.katalog{column-gap:24px!important}`
-      + '.panel-filtrow{top:clamp(16px,2.5vw,32px)!important;max-height:calc(100vh - 2 * clamp(16px,2.5vw,32px))!important}',
-    modele: GAZETA,
+      + '.panel-filtrow{top:clamp(16px,2.5vw,32px)!important;max-height:calc(100vh - 2 * clamp(16px,2.5vw,32px))!important}'
+      // Karty ogłoszeń (od 25.10.2026, Jacek: „więcej odstępu … pomiędzy listingami, żeby oddychało”): szare tło strony, białe karty,
+      // a w ciemnym grafitowe na czerni, jak w App Store; 32 px między rzędami kart i 24 px między kolumnami.
+      + 'html,body{background:light-dark(#f5f5f7,#000000)!important}.produkty{gap:32px 24px!important}.karta-produktu{background:light-dark(#ffffff,#1c1c1e)!important}',
+    // Podium i Historia bez rzędu „Skrót | Pełny widok” (od 25.10.2026): w zakładce najwyżej jeden rząd pigułek, a całość otwiera
+    // przycisk na końcu skrótu (app.js, „Skrót i całość”).
+    modele: GAZETA + '.widok-modeli{display:none!important}' + CALOSC('.przycisk-p[data-widok-modeli="pelny"]') + PIERSCIEN + PODIUM,
     kalkulator: `.strona{${KONTENER}}button#info{display:none!important}`
-      + '@media (width>1100px){.uklad{grid-template-columns:312px minmax(0,1fr)!important;column-gap:24px!important}}',
-    historia: GAZETA,
+      + '@media (width>1100px){.uklad{grid-template-columns:312px minmax(0,1fr)!important;column-gap:24px!important}}'
+      // Finanse (od 25.10.2026): aplikacja wpisuje stronie data-czesc, leasing albo kredyt, i pokazuje tylko tę część. Nagłówek z tytułem
+      // i przełącznikiem Skrót | Pełny widok znika, bo część mówi pigułka, a całość otwiera przycisk na końcu skrótu. Bez atrybutu
+      // (okno na komputerze) strona zostaje cała.
+      + 'html[data-czesc] .strona>header.glowa,html[data-czesc] .karta-skrot>h2{display:none!important}'
+      + ['section[aria-labelledby="sk-kredyt"]', '#skrot-dol', '#podsum', '#tabela', '#wyniki>.legenda', '.pole:has(#cel)', '.check:has(#warunki)',
+        '.pole:has(#nadplata)', '.kwota', '.reszta', '#h-leasing-tab'].map((s) => `html[data-czesc="leasing"] ${s}`).join(',') + '{display:none!important}'
+      + 'html[data-czesc="leasing"] .blok-leasing{margin-top:0!important}'
+      + 'html[data-czesc="kredyt"] section[aria-labelledby="sk-leasing"],html[data-czesc="kredyt"] .blok-leasing{display:none!important}'
+      + CALOSC('html[data-czesc] #skrot>.przycisk') + PIERSCIEN,
+    historia: GAZETA + '.widok-strony{display:none!important}' + CALOSC('.przycisk-p[data-widok-strony="pelny"]') + PIERSCIEN,
+    // Poradnik w zakładce (od 25.10.2026; wcześniej w oknie pod logo): data nad tytułem bliżej nagłówka, a na telefonie tekst
+    // w siatce aplikacji, czyli od tej samej krawędzi co logo (strona z programu 13 ma tam kolumnę 87,5%).
+    poradnik: 'main>header.hero{padding-top:16px!important}'
+      + `@media (max-width:734px){main{box-sizing:border-box!important;width:100%!important;padding-left:${L}!important;padding-right:${P}!important}}`,
   };
   const cssSiatki = (nazwa) => `html{scrollbar-width:thin;scrollbar-gutter:stable}${SIATKA[nazwa]}`;
   // </siatka>
-  const wSiatce = (nazwa) => (html) => html.replace(/<\/head>/i, `<style id="kasiomobile-siatka">${cssSiatki(nazwa)}</style></head>`);
+  // Pod stroną miejsce na nawigację ze szkła, która na telefonie leży nad nią (wysokość --km-dol wpisuje ustawSiatke; na szerokim ekranie 0).
+  const SZKLO = 'body::after{content:"";display:block;height:var(--km-dol,0px)}';
+  const wSiatce = (nazwa) => (html) => html.replace(/<\/head>/i, () => `<style id="kasiomobile-siatka">${cssSiatki(nazwa)}${SZKLO}</style></head>`);
 
   // ---------------------------------------------------------------- prośba o skan
   // Komputer skanuje i wysyła nowy katalog. Czas prośby bierzemy z odpowiedzi ntfy.sh, żeby porównać go
@@ -1412,25 +1576,59 @@ dialog.poradnik::backdrop { background: var(--strona); }
       : bezSieci ? `Brak internetu. Pobiorę ${biernik}, gdy internet wróci.`
         : nieDotarl);
 
-  // ---------------------------------------------------------------- zakładki
-  // Cztery zakładki (od 19.10.2026). W pamięci telefonu stoją pod nazwami z WIDOKI, więc dawny zapis działa dalej:
-  // „Nowe” to dziś Ogłoszenia, a w zapisanej kolejności po prostu znika.
-  const WIDOKI = ['Katalog', 'Modele', 'Kredyt', 'Historia'];
-  // Nazwy na ekranie. „Katalag” to żart Jacka (18.10.2026), od 19.10.2026 na katalogu modeli aut.
-  const NAZWY = ['Ogłoszenia', 'Katalag', 'Kredyt', 'Historia'];
-  const PANELE = ['#katalog', '#modele', '#kredyt', '#historia'].map((s) => $(s));
-  const segmenty = ['#seg-katalog', '#seg-modele', '#seg-kredyt', '#seg-historia'].map((s) => $(s));
+  // ---------------------------------------------------------------- zakładki i pigułki
+  // Cztery zakładki (od 25.10.2026): Ogłoszenia z pigułkami Teraz i Historia, Katalag z pigułkami Podium Otomoto, Modele Otomoto
+  // i Wszystkie marki (Modele i Marki to Atlas wszystkich aut z sieci; Jacek: „marki powinny być w ostatnim tabie”), Finanse
+  // z pigułkami Leasing i Kredyt (Jacek: „wpierw leasing a dopiero po nim kredyt”) i Poradnik. Do 24.10.2026 Historia była czwartą
+  // zakładką, a Poradnik i Atlas stały w oknie pod logo. Zakładka ma w kodzie stały identyfikator (ID_ZAKLADEK, ten sam co jej sekcja
+  // w index.html), a w pamięci telefonu stoi pod nazwą z WIDOKI, więc dawny zapis działa dalej, a zapisana „Historia” to dziś Ogłoszenia
+  // z pigułką Historia. Pigułki stoją w nawigacji, przy zakładkach (index.html, .podkarty), i widać tylko rząd wybranej zakładki.
+  // Dwie wersje do porównania (Jacek, 25.10.2026 wieczorem: „daj mi … dwie, trzy wersje”): 1 pigułki nad zakładkami, jak przełącznik
+  // Lata, Miesiące, Dni nad paskiem kart w Zdjęciach na iPhonie, 2 pod nimi (Jacek: „logiczniejsze by było, że te główne linie się
+  // przesuwa i pod spodem wyskakuje”). Wersje różnią się tylko stylem (body[data-wersja]).
+  const WERSJA = (() => { const w = Number(window.WERSJA || new URLSearchParams(location.search).get('wersja')); return w === 2 ? 2 : 1; })();
+  document.body.dataset.wersja = String(WERSJA);
+  const ID_ZAKLADEK = ['katalog', 'modele', 'kredyt', 'poradnik'];
+  // Nazwy w pamięci (od 18.10.2026) i na ekranie. „Katalag” to żart Jacka (18.10.2026), od 19.10.2026 na katalogu modeli aut.
+  const WIDOKI = ['Katalog', 'Modele', 'Kredyt', 'Poradnik'];
+  const NAZWY = ['Ogłoszenia', 'Katalag', 'Finanse', 'Poradnik'];
+  const PANELE = ID_ZAKLADEK.map((id) => $('#' + id));
+  const segmenty = ID_ZAKLADEK.map((id) => $('#seg-' + id));
+  const nrZakladki = (id) => ID_ZAKLADEK.indexOf(id);
   const strona = (r, puste, p, poprawka, zdania) => ({ el: $(r), plik: p, pusty: pusty(...zdania), ramka: ramka($(r), $(puste), poprawka) });
-  const STRONY = [
-    strona('#ramka-katalogu', '#pusty-katalog', KATALOG, wSiatce('katalog'),
+  const STRONY = {
+    katalog: strona('#ramka-katalogu', '#pusty-katalog', KATALOG, wSiatce('katalog'),
       ['ogłoszenia', 'Ogłoszenia jeszcze nie dotarły. Komputer wysyła je co godzinę, gdy jest włączony.']),
-    strona('#ramka-modeli', '#pusty-modele', MODELE, wSiatce('modele'),
-      ['katalag', 'Katalag aut jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
-    strona('#ramka-kredytu', '#pusty-kredyt', KALKULATOR, wSiatce('kalkulator'),
-      ['kalkulator', 'Kalkulator jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
-    strona('#ramka-historii', '#pusty-historia', HISTORIA, wSiatce('historia'),
+    historia: strona('#ramka-historii', '#pusty-historia', HISTORIA, wSiatce('historia'),
       ['historię', 'Historia jeszcze nie dotarła. Komputer wysyła ją co godzinę, gdy jest włączony.']),
-  ];
+    modele: strona('#ramka-modeli', '#pusty-modele', MODELE, wSiatce('modele'),
+      ['katalag', 'Katalag aut jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
+    kredyt: strona('#ramka-kredytu', '#pusty-kredyt', KALKULATOR, (html) => czescNaStart(wSiatce('kalkulator')(html)),
+      ['kalkulator', 'Kalkulator leasingu i kredytu jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
+    poradnik: strona('#ramka-poradnika', '#pusty-poradnik', PORADNIK, wSiatce('poradnik'),
+      ['poradnik', 'Poradnik jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
+  };
+  const LISTA_STRON = Object.entries(STRONY);
+  // Pigułki zakładki: zakładka → pigułka → [miejsce w zakładce, strona]. Modele i Marki to ta sama ramka Atlasu, a Leasing i Kredyt
+  // ta sama ramka kalkulatora, w której aplikacja pokazuje jedną część (ustawCzesc niżej). Kolejność kluczy to kolejność domyślna.
+  const PIGULKI = {
+    katalog: { teraz: ['teraz', 'katalog'], historia: ['historia', 'historia'] },
+    modele: { podium: ['podium', 'modele'], modele: ['atlas', 'atlas'], marki: ['atlas', 'atlas'] },
+    kredyt: { leasing: ['finanse', 'kredyt'], kredyt: ['finanse', 'kredyt'] },
+  };
+  // Zakładka z Atlasem i strona zakładki bez pigułek.
+  const Z_ATLASEM = 'modele';
+  const BEZ_PIGULEK = { poradnik: 'poradnik' };
+  const jestPigulka = (id, p) => Boolean(PIGULKI[id]) && typeof p === 'string' && Object.keys(PIGULKI[id]).includes(p);
+  // Wybrana pigułka każdej zakładki. Do 25.10.2026 w pamięci pod numerem zakładki (pigulka-0, pigulka-1), od teraz pod identyfikatorem.
+  const DAWNY_NUMER = { katalog: 0, modele: 1 };
+  const wybrane = {};
+  for (const id of Object.keys(PIGULKI)) {
+    let z = pamiec.czytaj('pigulka-' + id, null);
+    if (z === null && id in DAWNY_NUMER) z = pamiec.czytaj('pigulka-' + DAWNY_NUMER[id], null);
+    wybrane[id] = jestPigulka(id, z) ? z : Object.keys(PIGULKI[id])[0];
+  }
+  const klucz = (nr) => { const id = ID_ZAKLADEK[nr]; return PIGULKI[id] ? PIGULKI[id][wybrane[id]][1] : BEZ_PIGULEK[id]; };
   let widok = 0;
   // Siatka w ramkach: cienki pasek przewijania (jak w katalogu Skanera) mierzymy tu raz, a marginesy w pikselach, razem z wcięciami
   // ekranu, których ramka nie zna, wpisujemy do każdej ramki przy wczytaniu i przy zmianie okna (styl.css, „Siatka aplikacji”).
@@ -1442,12 +1640,14 @@ dialog.poradnik::backdrop { background: var(--strona); }
   document.body.append(sonda);
   function ustawSiatke() {
     const cs = getComputedStyle(sonda);
-    for (const s of STRONY) {
+    for (const [, s] of LISTA_STRON) {
       try {
         const d = s.el.contentDocument;
         if (!d || !d.documentElement) continue;
         d.documentElement.style.setProperty('--km-lewo', cs.paddingLeft);
         d.documentElement.style.setProperty('--km-prawo', cs.paddingRight);
+        // Pasek ze szkła (układ 3) leży nad stroną: strona dostaje jego wysokość, żeby jej koniec dało się przewinąć nad pasek.
+        d.documentElement.style.setProperty('--km-dol', document.documentElement.style.getPropertyValue('--km-dol') || '0px');
         // Katalag i Historia od 1100 px: góra strony w lewej kolumnie stoi na wysokości pierwszej rzeczy w prawej.
         const h = d.querySelector('main > header.hero'), n = h && h.nextElementSibling;
         if (h) h.style.top = '';
@@ -1456,19 +1656,19 @@ dialog.poradnik::backdrop { background: var(--strona); }
     }
   }
   addEventListener('resize', ustawSiatke);
-  STRONY.forEach((s) => s.el.addEventListener('load', ustawSiatke));
+  LISTA_STRON.forEach(([, s]) => s.el.addEventListener('load', ustawSiatke));
 
-  // Otwarte okno w stronie (filtry, szczegóły auta, galeria) dostaje cały ekran: nagłówek i zakładki chowają się,
+  // Otwarte okno w stronie (filtry, szczegóły auta, galeria) dostaje cały ekran: nagłówek, pigułki i zakładki chowają się,
   // a po zamknięciu wracają. Strony w ramkach mają to samo pochodzenie (blob:), więc ich okna widać stąd.
-  const okna = STRONY.map(() => false);
-  const pokazOkno = () => document.body.classList.toggle('okno', Boolean(okna[widok]));
-  STRONY.forEach((s, nr) => {
+  const okna = {};
+  const pokazOkno = () => document.body.classList.toggle('okno', Boolean(okna[klucz(widok)]));
+  LISTA_STRON.forEach(([k, s]) => {
     s.el.addEventListener('load', () => {
       let w = null;
       try { w = s.el.contentWindow; if (!w || !w.document || !w.document.documentElement) return; } catch { return; }
       const sprawdz = () => {
         const o = Boolean(w.document.querySelector('dialog[open]'));
-        if (o !== okna[nr]) { okna[nr] = o; pokazOkno(); }
+        if (o !== Boolean(okna[k])) { okna[k] = o; pokazOkno(); }
       };
       // Odnośnik bez target otwiera się jak każdy inny, w nowym oknie, czyli w przeglądarce telefonu, a nie w ramce zamiast
       // strony z komputera (19.10.2026: na Androidzie ramka Kredytu przechodziła na obcą stronę).
@@ -1481,7 +1681,12 @@ dialog.poradnik::backdrop { background: var(--strona); }
     });
   });
 
-  const pokazStrone = (nr) => STRONY[nr].ramka.pokaz(STRONY[nr].plik, STRONY[nr].pusty);
+  function pokazStrone(nr) {
+    const k = klucz(nr);
+    if (k === 'atlas') return pokazAtlas(wybrane[Z_ATLASEM]);
+    const s = STRONY[k];
+    return s.ramka.pokaz(s.plik, s.pusty);
+  }
   function pokazWidok(nr, zapisz) {
     widok = nr >= 0 && nr < WIDOKI.length ? nr : 0;
     segmenty.forEach((s, i) => {
@@ -1489,42 +1694,140 @@ dialog.poradnik::backdrop { background: var(--strona); }
       s.tabIndex = i === widok ? 0 : -1;
     });
     PANELE.forEach((p, i) => { p.hidden = i !== widok; });
+    // W nawigacji widać rząd pigułek wybranej zakładki; Poradnik pigułek nie ma.
+    const id = ID_ZAKLADEK[widok];
+    for (const [z, g] of Object.entries(grupyPigulek)) g.hidden = z !== id;
+    document.body.classList.toggle('bez-pigulek', !PIGULKI[id]);
     pokazOkno();
     // Zakładka zapisana nazwą (od 18.10.2026), bo numery przesuwają się, gdy zakładka dochodzi albo znika.
     if (zapisz) pamiec.zapisz('zakladka', WIDOKI[widok]);
     return pokazStrone(widok);
   }
-  // Kolejność zakładek (od 18.10.2026, Jacek: „żeby taby na nawigacji w mobile menu też były dragable”; od 20.10.2026 zakładka jedzie
-  // pod palcem, Jacek: „żeby one były styl dragable”). Samo przestawianie jest niżej („przestawianie”), wspólne z kółkami w nagłówku.
+  // Skrót i całość w Podium, Historii i Finansach (od 25.10.2026): rząd „Skrót | Pełny widok” w stronie jest schowany (siatka wyżej),
+  // bo w zakładce stoi najwyżej jeden rząd pigułek. Strona zaczyna każde otwarcie aplikacji od skrótu (start, niżej), przycisk na końcu
+  // skrótu („Ranking i wszystkie modele”, „Cała historia”, „Cały kalkulator”) otwiera całość, a do skrótu wraca stuknięcie w wybraną
+  // pigułkę albo zakładkę i Wstecz.
+  const SKROT = {
+    modele: { b: '[data-widok-modeli="skrot"]', pelny: (d) => d.documentElement.dataset.widok === 'pelny' },
+    historia: { b: '[data-widok-strony="skrot"]', pelny: (d) => d.documentElement.dataset.widok === 'pelny' },
+    kredyt: { b: '.przelacznik [data-widok="skrot"]', pelny: (d) => { const p = d.getElementById('pelny'); return Boolean(p && !p.hidden); } },
+  };
+  function doSkrotu(k) {
+    try {
+      const s = SKROT[k], d = STRONY[k].el.contentDocument, b = s && d.querySelector(s.b);
+      if (!b || !s.pelny(d)) return false;
+      b.click();
+      STRONY[k].el.contentWindow.scrollTo(0, 0);
+      return true;
+    } catch { return false; }
+  }
+  // Finanse: kalkulator ma kredyt i leasing na jednej stronie, a aplikacja pokazuje z niej jedną część, tę z wybranej pigułki (atrybut
+  // data-czesc, który czyta siatka kalkulatora wyżej). Nowy plik dostaje część już w HTML, więc nic nie mignie.
+  const czescNaStart = (html) => html.replace(/<html\b/i, () => `<html data-czesc="${wybrane.kredyt}"`)
+    .replace('data-widok="pelny">Zmień kwotę, okres i leasing</button>', () => 'data-widok="pelny">Cały kalkulator</button>');
+  function ustawCzesc() {
+    try {
+      const d = STRONY.kredyt.el.contentDocument;
+      if (d && d.documentElement) d.documentElement.dataset.czesc = wybrane.kredyt;
+    } catch { /* obce pochodzenie */ }
+  }
+  STRONY.kredyt.el.addEventListener('load', ustawCzesc);
+  // Stuknięcie w wybraną zakładkę albo pigułkę przewija stronę na początek, jak w iPhonie, a w całości wraca do skrótu. W Atlasie ten sam
+  // widok jeszcze raz: Atlas zamyka wtedy podstrony i staje na górze.
+  function naPoczatek() {
+    const k = klucz(widok);
+    if (k === 'atlas') { try { ramkaAtlasu.contentWindow.postMessage({ atlas: 'widok', widok: wybrane[Z_ATLASEM] }, '*'); } catch { /* ramka się wczytuje */ } return; }
+    if (doSkrotu(k)) return;
+    try { STRONY[k].el.contentWindow.scrollTo({ top: 0, behavior: 'smooth' }); } catch { /* strona się wczytuje */ }
+  }
   const pasekZakladek = $('.karty');
-  // Przebłysk wybranej zakładki (od 22.10.2026, jak w Czytadle): barwa losowana przy każdym otwarciu, co najmniej 70° od odcienia
-  // pastelu zakładki i co najmniej 1,4:1 do niego, żeby nie było żółtego na żółtym ani na białym.
+  // Przebłysk wybranej zakładki i pigułki (od 22.10.2026, jak w Czytadle): barwa losowana przy każdym otwarciu, co najmniej 70° od
+  // odcienia pastelu i co najmniej 1,4:1 do niego, żeby nie było żółtego na żółtym ani na białym.
   const BLYSKI = [['#ffcc00', 48], ['#5ac8fa', 199], ['#ff78be', 329], ['#3cdcb4', 164], ['#af82ff', 262], ['#ff965a', 22]];
   const roznicaOdcieni = (a, b) => Math.abs(((((a - b) % 360) + 540) % 360) - 180);
   const jasnoscBarwy = (h) => { const v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
   const kontrastBarw = (a, b) => { const x = jasnoscBarwy(a), y = jasnoscBarwy(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-  for (const b of segmenty) {
-    const o = Number(b.dataset.odcien) || 0, tlo = (b.style.getPropertyValue('--pastel') || '#ffffff').trim();
+  function barwaBlysku(e) {
+    const o = Number(e.dataset.odcien) || 0, tlo = (e.style.getPropertyValue('--pastel') || '#ffffff').trim();
     const wolne = BLYSKI.filter(([k, x]) => roznicaOdcieni(x, o) >= 70 && kontrastBarw(k, tlo) >= 1.4);
     const [k] = wolne[Math.floor(Math.random() * wolne.length)] || ['#ffffff'];
-    b.style.setProperty('--blysk-j', k + 'd9');
-    b.style.setProperty('--blysk-c', k + '73');
-    b.dataset.blysk = k;
+    e.style.setProperty('--blysk-j', k + 'd9');
+    e.style.setProperty('--blysk-c', k + '73');
+    e.dataset.blysk = k;
   }
-  // Szkło pod kursorem: plama światła idzie za myszą (styl ::after zakładki czyta --mx i --my).
-  pasekZakladek.addEventListener('pointermove', (e) => {
+  segmenty.forEach(barwaBlysku);
+  // Szkło pod kursorem: plama światła idzie za myszą (styl ::after zakładki i pigułki czyta --mx i --my).
+  function szklo(e) {
     if (e.pointerType !== 'mouse') return;
-    const b = e.target.closest && e.target.closest('[role="tab"]');
+    const b = e.target.closest && e.target.closest('[role="tab"], [role="radio"]');
     if (!b) return;
     const r = b.getBoundingClientRect();
     b.style.setProperty('--mx', Math.round(e.clientX - r.left) + 'px');
     b.style.setProperty('--my', Math.round(e.clientY - r.top) + 'px');
-  }, { passive: true });
-  // ---------------------------------------------------------------- przestawianie: zakładki i kółka w nagłówku
+  }
+  pasekZakladek.addEventListener('pointermove', szklo, { passive: true });
+
+  // ---------------------------------------------------------------- pigułki w nawigacji (od 25.10.2026)
+  // Pigułka zmienia stronę pod sobą bez przeładowania, a wybór wraca po ponownym otwarciu aplikacji. Nowa strona wjeżdża z tej
+  // strony, po której stoi pigułka (300 ms), a smuga światła przechodzi przez pigułkę raz, przy wyborze. Przy ograniczonym ruchu
+  // strona zmienia się od razu, bo wjazd to ozdoba, a smuga zostaje, bo mówi, co jest wybrane.
+  const grupyPigulek = Object.fromEntries(Object.keys(PIGULKI).map((id) => [id, $(`.podkarty .podwidoki[data-z="${id}"]`)]));
+  const malyRuch = matchMedia('(prefers-reduced-motion: reduce)');
+  function oznaczPigulke(id, p) {
+    for (const b of grupyPigulek[id].querySelectorAll('[role="radio"]')) {
+      const tak = b.dataset.p === p;
+      b.setAttribute('aria-checked', String(tak));
+      b.tabIndex = tak ? 0 : -1;
+    }
+    const panel = $('#' + id), miejsce = PIGULKI[id][p][0];
+    panel.dataset.p = p;
+    let pod = null;
+    for (const d of panel.querySelectorAll('.podwidok')) { d.hidden = d.dataset.p !== miejsce; if (!d.hidden) pod = d; }
+    return pod;
+  }
+  function ustawPigulke(id, p, zapisz, ruch) {
+    if (!jestPigulka(id, p)) return Promise.resolve(false);
+    const g = grupyPigulek[id], stara = wybrane[id], kolejnosc = [...g.querySelectorAll('[role="radio"]')].map((b) => b.dataset.p);
+    wybrane[id] = p;
+    if (zapisz) pamiec.zapisz('pigulka-' + id, p);
+    const pod = oznaczPigulke(id, p);
+    if (ruch && stara !== p) {
+      const b = g.querySelector(`[data-p="${p}"]`);
+      b.classList.remove('blysk'); void b.offsetWidth; b.classList.add('blysk');
+      if (pod && pod.animate && !malyRuch.matches) {
+        pod.animate([{ transform: `translateX(${kolejnosc.indexOf(p) > kolejnosc.indexOf(stara) ? 40 : -40}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }],
+          { duration: 300, easing: 'cubic-bezier(0.2, 0, 0, 1)' });
+      }
+    }
+    // Leasing i Kredyt to dwie części jednej strony: druga część zaczyna od swojego skrótu, od góry.
+    if (id === 'kredyt' && stara !== p) {
+      ustawCzesc();
+      if (!doSkrotu('kredyt')) { try { STRONY.kredyt.el.contentWindow.scrollTo(0, 0); } catch { /* strona się wczytuje */ } }
+    }
+    pokazOkno();
+    return id === ID_ZAKLADEK[widok] ? pokazStrone(widok) : Promise.resolve(true);
+  }
+  for (const [id, g] of Object.entries(grupyPigulek)) {
+    barwaBlysku(g);
+    g.addEventListener('pointermove', szklo, { passive: true });
+    for (const b of g.querySelectorAll('[role="radio"]')) {
+      b.addEventListener('click', () => { if (id === ID_ZAKLADEK[widok] && b.dataset.p === wybrane[id]) naPoczatek(); else ustawPigulke(id, b.dataset.p, true, true); });
+      // Strzałki bez Alt przełączają pigułkę, w kolejności z ekranu (Alt+← → przestawia, niżej).
+      b.addEventListener('keydown', (e) => {
+        if (e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+        e.preventDefault();
+        const k = [...g.querySelectorAll('[role="radio"]')].map((x) => x.dataset.p), m = k.indexOf(b.dataset.p);
+        const n = k[(m + (e.key === 'ArrowRight' ? 1 : -1) + k.length) % k.length];
+        ustawPigulke(id, n, true, true);
+        g.querySelector(`[data-p="${n}"]`).focus();
+      });
+    }
+  }
+  // ---------------------------------------------------------------- przestawianie: zakładki i pigułki
   // Jacek, 22.10.2026 (punkt 3 w „05 --- Jacek Design Guidelines”): „co może być, powinna być dragable … Czemu nie? Nikt cię nie
   // zmusza do przyciskania i przytrzymywania myszy”, „kocham mieć możliwość zmieniania tej kolejności ze względu na to, jak moje
-  // potrzeby z czasem się zmieniają”. Jeden kod dla zakładek na dole i dla dwóch kółek w nagłówku (ściąga i asystent). Logo
-  // z napisem stoi w miejscu: to znak aplikacji, a pod nim i pod napisem są schowane poradnik i Otomoto.
+  // potrzeby z czasem się zmieniają”. Jeden kod dla zakładek na dole i dla pigułek u góry zakładek (do 24.10.2026 także dla kółek w nagłówku
+  // i pigułek pod logo). Logo z napisem stoi w miejscu: to znak aplikacji, a pod nim jest schowane Otomoto.
   // Element jedzie pod palcem albo kursorem w granicach swojego rzędu, a sąsiad, którego zakrył do połowy, dojeżdża na jego dawne
   // miejsce (240 ms). Wystarczy pociągnąć w bok: palcem o 10 px (bardziej w bok niż w pionie), myszą o 6 px. Zakładkę można też
   // przytrzymać palcem 450 ms, kółka nie, bo przytrzymane kółko pokazuje dymek. Stuknięcie i ruch w pionie niczego nie przestawiają.
@@ -1536,17 +1839,13 @@ dialog.poradnik::backdrop { background: var(--strona); }
   ogloszenie.setAttribute('aria-live', 'polite');
   document.body.append(ogloszenie);
   function powiedz(t) { ogloszenie.textContent = ''; requestAnimationFrame(() => { ogloszenie.textContent = t; }); }
-  const cofnijPole = $('.cofnij-zakladki'), przyciskCofnij = $('#cofnij-zakladki'), domCofnij = cofnijPole.parentNode;
+  const cofnijPole = $('.cofnij-zakladki'), przyciskCofnij = $('#cofnij-zakladki');
   const PRZESTAWIENIA = { wstecz: [], naprzod: [] };
   let zegarCofnij = 0;
   function pokazCofnij(rzad) {
     clearTimeout(zegarCofnij);
     cofnijPole.hidden = !rzad;
     if (!rzad) return;
-    // Okno poradnika i Atlasu jest modalne (górna warstwa), więc po przestawieniu jego pigułek „Cofnij” staje pod jego paskiem,
-    // a przy zakładkach i kółkach wraca na swoje miejsce przy zakładkach (od 23.10.2026: wcześniej stał pod oknem, niewidoczny).
-    const gdzie = document.querySelector('dialog.poradnik[open] .poradnik-pasek') || domCofnij;
-    if (cofnijPole.parentNode !== gdzie) gdzie.append(cofnijPole);
     przyciskCofnij.setAttribute('aria-label', rzad.cofnij);
     zegarCofnij = setTimeout(() => pokazCofnij(null), 6000);
   }
@@ -1570,7 +1869,8 @@ dialog.poradnik::backdrop { background: var(--strona); }
   const RUCH = 'transform 240ms cubic-bezier(.2, 0, 0, 1), box-shadow 240ms ease, background-color 240ms ease';
   const UNIES = 'box-shadow 120ms ease, background-color 120ms ease';
   // o: rodzic (w nim stoją elementy, obok siebie), elementy, klucz w pamięci, id(element) do zapisu, nazwa(element) dla czytnika
-  // ekranu, cofnij (opis przycisku „Cofnij”), przytrzymanie (palec może zacząć przytrzymaniem 450 ms). Oddaje { kolejnosc(), ustaw() }.
+  // ekranu, cofnij (opis przycisku „Cofnij”), przytrzymanie (palec może zacząć przytrzymaniem 450 ms), podniesiony (woła, gdy element
+  // ruszył). Oddaje { kolejnosc(), ustaw(), przerwij() }.
   function rzadPrzestawiany(o) {
     const { rodzic, elementy } = o, ids = elementy.map(o.id);
     const ulozone = () => [...elementy].sort((a, b) => (a.compareDocumentPosition(b) & 4 ? -1 : 1));
@@ -1584,6 +1884,8 @@ dialog.poradnik::backdrop { background: var(--strona); }
         for (const id of k) { const i = ids.indexOf(id); if (i >= 0) rodzic.insertBefore(elementy[i], za); }
         if (zapisz) pamiec.zapisz(o.klucz, rzad.kolejnosc());
       },
+      // Pasek, który ktoś zaczął przenosić (układ 5), przerywa czekające przestawienie: palec należy już do paska.
+      przerwij() { clearTimeout(ciag.zegar); if (!ciag.aktywne) ciag.b = null; },
     };
     // Zapisana kolejność. Element, którego nie ma w zapisie (doszedł w nowej wersji), staje za swoim poprzednikiem.
     const zapis = pamiec.czytaj(o.klucz, null);
@@ -1610,6 +1912,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
       for (const d of document.querySelectorAll('.czat-dymek')) d.remove();
       b.style.transition = 'transform 120ms ease, ' + UNIES;
       b.style.transform = 'scale(1.06)';
+      if (o.podniesiony) o.podniesiony();
     }
     // Ciągnięty stoi tam, gdzie palec, ale nie wychodzi poza swój rząd. Oddaje jego lewy brzeg w układzie offsetLeft.
     function nies(e) {
@@ -1637,7 +1940,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
         bylRuch: false, l0: b.offsetLeft, min: w[0].offsetLeft, max: ost.offsetLeft + ost.offsetWidth - b.offsetWidth });
       // Przechwycenie od razu: ruch i puszczenie wracają tu także spoza rzędu, więc nic nie zostaje uniesione.
       try { b.setPointerCapture(e.pointerId); } catch { /* wskaźnik z testu */ }
-      if (!ciag.mysz && o.przytrzymanie) ciag.zegar = setTimeout(podnies, 450);
+      if (!ciag.mysz && (typeof o.przytrzymanie === 'function' ? o.przytrzymanie() : o.przytrzymanie)) ciag.zegar = setTimeout(podnies, 450);
     });
     rodzic.addEventListener('pointermove', (e) => {
       if (!ciag.b || e.pointerId !== ciag.id) return;
@@ -1700,10 +2003,22 @@ dialog.poradnik::backdrop { background: var(--strona); }
     }
     return rzad;
   }
+  // Na telefonie przytrzymanie należy do całej nawigacji (2 s przenoszą ją wyżej, „przenoszenie” niżej), więc zakładki i pigułki przestawia
+  // tam ruch w bok, a przytrzymanie 450 ms tylko na szerokim ekranie, gdzie nawigacja stoi w miejscu.
   const ZAKLADKI = rzadPrzestawiany({ rodzic: pasekZakladek, elementy: segmenty, klucz: 'kolejnosc', id: (b) => WIDOKI[segmenty.indexOf(b)],
-    nazwa: (b) => b.textContent.trim(), cofnij: 'Cofnij przestawienie zakładek', przytrzymanie: true });
+    nazwa: (b) => b.textContent.trim(), cofnij: 'Cofnij przestawienie zakładek', przytrzymanie: () => !waski.matches, podniesiony: () => przerwijPasek() });
+  // Kolejność pigułek w pamięci pod identyfikatorem zakładki (do 25.10.2026 pod jej numerem, raz przepisana). Katalag ma od wieczora
+  // 25.10.2026 nowy klucz, bo zmieniła się kolejność domyślna: Wszystkie marki na końcu.
+  const KLUCZ_PIGULEK = { katalog: 'pigulki-kolejnosc-katalog', modele: 'pigulki-kolejnosc-katalag', kredyt: 'pigulki-kolejnosc-kredyt' };
+  const RZEDY_PIGULEK = Object.fromEntries(Object.entries(grupyPigulek).map(([id, g]) => {
+    const k = KLUCZ_PIGULEK[id];
+    if (id === 'katalog' && pamiec.czytaj(k, null) === null) { const z = pamiec.czytaj('pigulki-kolejnosc-0', null); if (z !== null) pamiec.zapisz(k, z); }
+    return [id, rzadPrzestawiany({ rodzic: g, elementy: [...g.querySelectorAll('[role="radio"]')], klucz: k, id: (b) => b.dataset.p,
+      nazwa: (b) => b.textContent.trim().replace(/\s+/g, ' '), cofnij: 'Cofnij przestawienie pigułek', przytrzymanie: () => !waski.matches,
+      podniesiony: () => przerwijPasek() })];
+  }));
   segmenty.forEach((s, i) => {
-    s.addEventListener('click', () => pokazWidok(i, true));
+    s.addEventListener('click', () => { if (i === widok) naPoczatek(); else pokazWidok(i, true); });
     // Strzałki bez Alt przełączają zakładkę, w kolejności z ekranu.
     s.addEventListener('keydown', (e) => {
       if (e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
@@ -1715,22 +2030,23 @@ dialog.poradnik::backdrop { background: var(--strona); }
     });
   });
 
-  // ---------------------------------------------------------------- napis: te same wyszukiwania na Otomoto (od 22.10.2026)
-  // Jacek: „darujmy sobie Otomoto … hide this functionality under kasiomobile logo /easter egg/”, a 22.10.2026 rano: logo dostaje
-  // poradnik („Jedno jest ikonka, samochodzik, pod który ja chcę wkleić ten poradnik, a pod »Kasio Mobile« było coś jeszcze”),
-  // a Otomoto zostaje „jako easter egg póki co” pod napisem. Stuknięcie w napis Kasiomobile® pyta katalog w Ogłoszeniach (Skaner
-  // Produktów od 0.4.27, wiadomość { skaner: 'wyszukiwania' }) o te same wyszukiwania co skan, z zakresami z filtrów, i pokazuje je
-  // w małym menu pod napisem. Adres otwiera ta strona, w stuknięciu w pozycję menu, więc idzie do przeglądarki jak każdy odnośnik
-  // z ogłoszeń. Napis dalej wygląda jak napis. Escape, stuknięcie obok, Tab i gest wstecz zamykają menu.
+  // ---------------------------------------------------------------- logo i napis: Otomoto (napis od 22.10.2026, logo od 25.10.2026)
+  // Jacek: „darujmy sobie Otomoto … hide this functionality under kasiomobile logo /easter egg/”. Od 25.10.2026 logo i napis otwierają
+  // to samo małe menu z jedną pozycją, „Pomorskie, każda marka” (Jacek: „Wystarczyłoby … pomorska każda marka. A nie Toyota i Lexus,
+  // cała Polska, bez sensu”), a Poradnik i Atlas mają swoje miejsca w zakładkach. Pozycję daje katalog w Ogłoszeniach (Skaner
+  // Produktów od 0.4.27, wiadomość { skaner: 'wyszukiwania' }): te same wyszukiwania co skan, z zakresami z filtrów. Gdy katalogu
+  // jeszcze nie było na ekranie, wczytuje się w tle, w swojej ramce. Adres otwiera ta strona, w stuknięciu w pozycję menu, więc idzie
+  // do przeglądarki jak każdy odnośnik z ogłoszeń. Logo i napis dalej wyglądają jak logo i napis. Escape, stuknięcie obok, Tab i gest
+  // wstecz zamykają menu.
   const napis = $('#napis'), logo = $('#logo');
-  let menuOtomoto = null;
+  let menuOtomoto = null, zrodloMenu = napis;
   const ZNAK_ZEWN = '<svg class="menu-otomoto-znak" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-8 8M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4"/></svg>';
   function zamknijMenuOtomoto(fokus) {
     if (!menuOtomoto) return;
     menuOtomoto.remove();
     menuOtomoto = null;
-    napis.setAttribute('aria-expanded', 'false');
-    if (fokus) napis.focus();
+    for (const b of [napis, logo]) b.setAttribute('aria-expanded', 'false');
+    if (fokus) zrodloMenu.focus();
   }
   // Katalog odpowiada, gdy już się zbudował (gotowe). Do tego czasu pytamy co 250 ms, najwyżej 3 sekundy.
   function pytajOWyszukiwania(okno) {
@@ -1752,14 +2068,17 @@ dialog.poradnik::backdrop { background: var(--strona); }
       zegar = setInterval(pytaj, 250);
     });
   }
-  async function otworzMenuOtomoto() {
+  async function otworzMenuOtomoto(zrodlo) {
     if (menuOtomoto) { zamknijMenuOtomoto(true); return; }
-    // Katalog żyje w ramce Ogłoszeń; gdy jeszcze go nie było na ekranie, najpierw Ogłoszenia.
-    if (!['blob', 'srcdoc'].includes(STRONY[0].ramka.sposob) && !(await pokazWidok(0, true))) return;
-    const okno = STRONY[0].el.contentWindow;
-    const lista = okno ? await pytajOWyszukiwania(okno) : [];
+    zrodloMenu = zrodlo;
+    const s = STRONY.katalog;
+    if (!['blob', 'srcdoc'].includes(s.ramka.sposob) && !(await s.ramka.pokaz(s.plik, s.pusty))) return;
+    const okno = s.el.contentWindow;
+    const wszystkie = okno ? await pytajOWyszukiwania(okno) : [];
+    const pomorskie = wszystkie.filter((w) => /^pomorskie/i.test(w.nazwa.trim()));
+    const lista = pomorskie.length ? pomorskie : wszystkie;
     if (!lista.length || menuOtomoto) return;
-    menuOtomoto = el('div', { class: 'menu-otomoto', role: 'menu', 'aria-label': 'Na Otomoto' }, el('p', { class: 'menu-otomoto-tytul', 'aria-hidden': 'true', text: 'Na Otomoto' }));
+    menuOtomoto = el('div', { class: 'menu-otomoto', role: 'menu', 'aria-label': 'Otomoto' }, el('p', { class: 'menu-otomoto-tytul', 'aria-hidden': 'true', text: 'Otomoto' }));
     for (const w of lista) {
       const b = el('button', { type: 'button', role: 'menuitem' }, el('span', { class: 'menu-otomoto-nazwa', text: w.nazwa }));
       b.insertAdjacentHTML('beforeend', ZNAK_ZEWN);
@@ -1767,13 +2086,14 @@ dialog.poradnik::backdrop { background: var(--strona); }
       menuOtomoto.append(b);
     }
     document.body.append(menuOtomoto);
-    const r = napis.getBoundingClientRect(), m = menuOtomoto.getBoundingClientRect();
+    const r = zrodlo.getBoundingClientRect(), m = menuOtomoto.getBoundingClientRect();
     menuOtomoto.style.left = Math.round(Math.max(8, Math.min(r.left, innerWidth - m.width - 8))) + 'px';
     menuOtomoto.style.top = Math.round(r.bottom + 6) + 'px';
-    napis.setAttribute('aria-expanded', 'true');
+    zrodlo.setAttribute('aria-expanded', 'true');
     menuOtomoto.querySelector('button').focus({ preventScroll: true });
   }
-  napis.addEventListener('click', () => { otworzMenuOtomoto(); });
+  napis.addEventListener('click', () => { otworzMenuOtomoto(napis); });
+  logo.addEventListener('click', () => { otworzMenuOtomoto(logo); });
   document.addEventListener('keydown', (e) => {
     if (!menuOtomoto) return;
     const l = [...menuOtomoto.querySelectorAll('button')], i = l.indexOf(document.activeElement);
@@ -1782,139 +2102,109 @@ dialog.poradnik::backdrop { background: var(--strona); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); l[(i - 1 + l.length) % l.length].focus(); }
     else if (e.key === 'Tab') zamknijMenuOtomoto(false);
   }, true);
-  document.addEventListener('pointerdown', (e) => { if (menuOtomoto && !menuOtomoto.contains(e.target) && !napis.contains(e.target)) zamknijMenuOtomoto(false); }, true);
+  document.addEventListener('pointerdown', (e) => {
+    if (menuOtomoto && !menuOtomoto.contains(e.target) && !napis.contains(e.target) && !logo.contains(e.target)) zamknijMenuOtomoto(false);
+  }, true);
   addEventListener('blur', () => zamknijMenuOtomoto(false));
 
-  // ---------------------------------------------------------------- logo: poradnik i Atlas (od 22.10 i 23.10.2026)
-  // Jacek, 22.10.2026: „Ten poradnik, tam trzeba by gdzieś schować. Póki co, wsadźmy go pod same tiny logo”. Stuknięcie w logo
-  // pokazuje na cały ekran poradnik o używanych autach, ten sam co strona w Czytadle (wyniki\poradnik.html z poradnik.js w misji,
-  // kanał „<kanał>-poradnik”). Od 23.10.2026 (Jacek: „podłączone pod … Kasio Mobile … dyskretny i delikatny sposób”, „żeby się nie
-  // zrobiło za dużo tych wszystkich tabów i opcji”) u góry tego okna stoją dwie pigułki: Poradnik (pierwszy i domyślny) i Atlas
-  // Samochodów, strona z sieci w ramce (?w=kasiomobile). Ostatnio wybrana i kolejność zostają w telefonie; kolejność przestawia się
-  // jak zakładki. Zamykają X u góry, gest wstecz i Wstecz na Androidzie (w Atlasie najpierw cofa w Atlasie), a na klawiaturze Escape,
-  // także w samej stronie: strona mówi to wiadomością „zamknij-poradnik”. Logo dalej wygląda jak logo.
-  const ATLAS = 'https://jackoludek.github.io/atlas-samochodow/?w=kasiomobile';
-  const poradnik = $('#poradnik'), ramkaPoradnika = ramka($('#ramka-poradnika'), $('#pusty-poradnik'), null);
-  const ramkaAtlasu = $('#ramka-atlasu'), pustyAtlas = $('#pusty-atlas'), wiedza = $('.wiedza');
-  // Atlas mówi „atlas-gotowy”, gdy wstał w ramce. Bez internetu albo bez tej wiadomości w 15 s stoi zdanie (przycisku nie ma od
-  // 24.10.2026): po powrocie internetu Atlas wczytuje się sam (zdarzenie online niżej), a inaczej przy następnym otwarciu.
-  // Wstecz zamyka wtedy całe okno, bo nie ma komu cofać.
-  let atlasGotowy = false, zegarAtlasu = 0;
+  // ---------------------------------------------------------------- Atlas wszystkich aut w Katalagu (od 25.10.2026)
+  // Pigułki Marki i Modele pokazują Atlas Samochodów ze strony w sieci, w ramce (od 23 do 24.10.2026 w oknie pod logo). Z k=katalag
+  // Atlas chowa swój rząd widoków, bo widok wybierają pigułki (umowa z rozmową Atlas Samochodów), a przełączenie Marki i Modele idzie
+  // wiadomością { atlas: 'widok' }, bez przeładowania. Atlas mówi „atlas-gotowy”, gdy wstał. Bez internetu albo bez tej wiadomości
+  // w 15 s stoi zdanie, a Atlas wczytuje się znowu po powrocie internetu albo przy następnym wyborze pigułki.
+  const ATLAS = 'https://jackoludek.github.io/atlas-samochodow/?w=kasiomobile&k=katalag';
+  const ramkaAtlasu = $('#ramka-atlasu'), pustyAtlas = $('#pusty-atlas');
+  let atlasGotowy = false, zegarAtlasu = 0, atlasWidok = '', atlasWstecz = 0;
   function bezAtlasu(tekst) {
     clearTimeout(zegarAtlasu);
     ramkaAtlasu.removeAttribute('src');
     ramkaAtlasu.hidden = true;
+    atlasGotowy = false;
     pustyAtlas.hidden = false;
     pustyAtlas.querySelector('.pusto-tekst').textContent = tekst;
   }
-  function wczytajAtlas() {
-    if (atlasGotowy || ramkaAtlasu.getAttribute('src')) return;
-    if (!navigator.onLine) { bezAtlasu('Brak internetu. Atlas wczyta się sam, gdy internet wróci.'); return; }
+  function pokazAtlas(w) {
+    if (ramkaAtlasu.getAttribute('src')) {
+      if (w !== atlasWidok) {
+        atlasWidok = w;
+        try { ramkaAtlasu.contentWindow.postMessage({ atlas: 'widok', widok: w }, '*'); } catch { /* ramka się wczytuje */ }
+      }
+      return Promise.resolve(true);
+    }
+    if (!navigator.onLine) { bezAtlasu('Brak internetu. Atlas wczyta się sam, gdy internet wróci.'); return Promise.resolve(false); }
+    atlasWidok = w;
     pustyAtlas.hidden = true;
     ramkaAtlasu.hidden = false;
-    ramkaAtlasu.src = ATLAS;
+    ramkaAtlasu.src = ATLAS + '&widok=' + encodeURIComponent(w);
     clearTimeout(zegarAtlasu);
-    zegarAtlasu = setTimeout(() => { if (!atlasGotowy) bezAtlasu('Atlas się nie wczytał. Spróbuję jeszcze raz przy następnym otwarciu.'); }, 15000);
+    zegarAtlasu = setTimeout(() => { if (!atlasGotowy) bezAtlasu('Atlas się nie wczytał. Spróbuję jeszcze raz przy następnym wyborze.'); }, 15000);
+    return Promise.resolve(true);
   }
-
-  const WIEDZA = ['poradnik', 'atlas'], pigulkiWiedzy = WIEDZA.map((w) => $('#w-' + w));
-  const pustyPoradnik = pusty('poradnik', 'Poradnik jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.');
-  let wybranaWiedza = WIEDZA.includes(pamiec.czytaj('wiedza', null)) ? pamiec.czytaj('wiedza', null) : 'poradnik';
-  const pokazPoradnik = () => (poradnik.open && wybranaWiedza === 'poradnik' ? ramkaPoradnika.pokaz(PORADNIK, pustyPoradnik) : Promise.resolve(false));
-  const zamknijPoradnik = () => { if (poradnik.open) poradnik.close(); };
-  for (const b of pigulkiWiedzy) {
-    const o = Number(b.dataset.odcien) || 0, tlo = (b.style.getPropertyValue('--pastel') || '#ffffff').trim();
-    const wolne = BLYSKI.filter(([k, x]) => roznicaOdcieni(x, o) >= 70 && kontrastBarw(k, tlo) >= 1.4);
-    const [k] = wolne[Math.floor(Math.random() * wolne.length)] || ['#ffffff'];
-    b.style.setProperty('--blysk-j', k + 'd9');
-    b.style.setProperty('--blysk-c', k + '73');
-  }
-  wiedza.addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse') return;
-    const b = e.target.closest && e.target.closest('[role="tab"]');
-    if (!b) return;
-    const r = b.getBoundingClientRect();
-    b.style.setProperty('--mx', Math.round(e.clientX - r.left) + 'px');
-    b.style.setProperty('--my', Math.round(e.clientY - r.top) + 'px');
-  }, { passive: true });
-  function pokazWiedze(w, fokus) {
-    wybranaWiedza = w;
-    pamiec.zapisz('wiedza', w);
-    for (const [i, x] of WIEDZA.entries()) {
-      const b = pigulkiWiedzy[i], tak = x === w;
-      b.setAttribute('aria-selected', String(tak));
-      b.tabIndex = tak ? 0 : -1;
-      $('#r-' + x).hidden = !tak;
-    }
-    const b = pigulkiWiedzy[WIEDZA.indexOf(w)];
-    b.classList.remove('blysk'); void b.offsetWidth; b.classList.add('blysk');
-    if (w === 'atlas') wczytajAtlas();
-    if (fokus) b.focus();
-    return pokazPoradnik();
-  }
-  function otworzPoradnik() {
-    if (poradnik.open) return;
-    zamknijMenuOtomoto(false);
-    poradnik.showModal();
-    logo.setAttribute('aria-expanded', 'true');
-    pokazWiedze(wybranaWiedza, true);
-  }
-  poradnik.addEventListener('close', () => {
-    if (poradnik.contains(cofnijPole)) pokazCofnij(null);
-    logo.setAttribute('aria-expanded', 'false');
-    logo.focus({ preventScroll: true });
-  });
-  logo.addEventListener('click', otworzPoradnik);
-  $('#zamknij-poradnik').addEventListener('click', zamknijPoradnik);
   addEventListener('message', (e) => {
     const d = e.data;
-    if (d && d.kasiomobile === 'atlas-gotowy' && e.source === ramkaAtlasu.contentWindow) { atlasGotowy = true; clearTimeout(zegarAtlasu); }
-    if (d && d.kasiomobile === 'zamknij-poradnik' && (e.source === $('#ramka-poradnika').contentWindow || e.source === ramkaAtlasu.contentWindow)) zamknijPoradnik();
+    if (!d || e.source !== ramkaAtlasu.contentWindow) return;
+    if (d.kasiomobile === 'atlas-gotowy') { atlasGotowy = true; clearTimeout(zegarAtlasu); }
+    // Atlas sam zmienił widok („Otwórz Modele” w Moim rankingu, „Pokaż modele ›” w Typach aut, Ctrl+Z): zaznaczamy pigułkę, bez echa.
+    if (d.kasiomobile === 'atlas-widok' && (d.widok === 'marki' || d.widok === 'modele')) {
+      atlasWidok = d.widok;
+      if (wybrane[Z_ATLASEM] !== d.widok) { wybrane[Z_ATLASEM] = d.widok; pamiec.zapisz('pigulka-' + Z_ATLASEM, d.widok); oznaczPigulke(Z_ATLASEM, d.widok); }
+    }
+    // Wstecz w Atlasie, w którym nie ma nic do zamknięcia: Atlas odpisuje „zamknij-poradnik”, a Kasiomobile wraca na pierwszą pigułkę
+    // (w układzie 1 Podium). Sam Escape w Atlasie wysyła to samo, ale liczy się tylko zaraz po naszym Wstecz.
+    if (d.kasiomobile === 'zamknij-poradnik' && Date.now() - atlasWstecz < 2000) { atlasWstecz = 0; zAtlasuWstecz(); }
   });
-  const WIEDZA_RZAD = rzadPrzestawiany({ rodzic: wiedza, elementy: pigulkiWiedzy, klucz: 'wiedza-kolejnosc', id: (b) => b.dataset.w,
-    nazwa: (b) => b.textContent.trim(), cofnij: 'Cofnij przestawienie pigułek Poradnik i Atlas', przytrzymanie: true });
-  pigulkiWiedzy.forEach((b) => {
-    b.addEventListener('click', () => pokazWiedze(b.dataset.w));
-    b.addEventListener('keydown', (e) => {
-      if (e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
-      e.preventDefault();
-      const k = WIEDZA_RZAD.kolejnosc(), m = k.indexOf(b.dataset.w);
-      pokazWiedze(k[(m + (e.key === 'ArrowRight' ? 1 : -1) + k.length) % k.length], true);
-    });
-  });
+  // Wstecz z Atlasu: na pierwszą pigułkę zakładki, a z niej (Atlas w układzie 2) na pierwszą zakładkę.
+  function zAtlasuWstecz() {
+    const pierwsza = RZEDY_PIGULEK[Z_ATLASEM].kolejnosc()[0];
+    if (wybrane[Z_ATLASEM] !== pierwsza) { ustawPigulke(Z_ATLASEM, pierwsza, true, true); return; }
+    pokazWidok(Math.max(0, WIDOKI.indexOf(ZAKLADKI.kolejnosc()[0])), true);
+  }
   // ---------------------------------------------------------------- asystent (od 19.10.2026)
-  // Czat z komputerem w domu (czat.js). „Ręce”: odpowiedź pokazuje zakładkę, a w Katalagu model albo Podium.
-  // Mikrofon tylko tam, gdzie strona go dostaje (Safari i Chrome pod https); spod auta:// w aplikacji na iPhone'a go nie ma.
-  const ZAKLADKI_CZATU = ['katalog', 'modele', 'kredyt', 'historia'];
-  // Bez mikrofonu w aplikacji na iPhone'a: Info.plist nie ma zgody na mikrofon (NSMicrophoneUsageDescription), więc nagrywać
-  // by nie mogła. Na iPhonie mikrofon ma strona w sieci w Safari.
+  // Czat z komputerem w domu (czat.js). „Ręce”: odpowiedź pokazuje zakładkę, a w Katalagu model albo Podium. Asystent zna zakładki
+  // po dawnych nazwach: katalog (Ogłoszenia, Teraz), historia, modele (Katalag, Podium), kredyt (Finanse) i poradnik.
+  // Mikrofon tylko tam, gdzie strona go dostaje (Safari i Chrome pod https); spod auta:// w aplikacji na iPhone'a go nie ma:
+  // Info.plist nie ma zgody na mikrofon (NSMicrophoneUsageDescription), więc nagrywać by nie mogła.
   const czat = window.Czat && KANAL ? Czat.uruchom({
     kanal: KANAL, tryb: 'arkusz', mikrofon: SKAD !== 'iPhone', skad: SKAD,
-    zakladka: () => ZAKLADKI_CZATU[widok],
+    zakladka: () => { const k = klucz(widok); return k === 'atlas' ? 'modele' : k; },
     async pokaz(p) {
-      const nr = ZAKLADKI_CZATU.indexOf(p.zakladka === 'nowe' ? 'katalog' : p.zakladka);
-      if (nr < 0) return;
-      await pokazWidok(nr, true);
-      if (nr === 1 && (p.model || p.podium)) STRONY[1].el.contentWindow.postMessage({ auta: 'pokaz', model: p.model || null, podium: p.podium || null }, '*');
+      const z = p.zakladka === 'nowe' ? 'katalog' : p.zakladka;
+      if (z === 'katalog' || z === 'historia') { await ustawPigulke('katalog', z === 'historia' ? 'historia' : 'teraz', true, false); await pokazWidok(nrZakladki('katalog'), true); }
+      else if (z === 'modele') {
+        if (PIGULKI.modele) await ustawPigulke('modele', 'podium', true, false);
+        await pokazWidok(nrZakladki('modele'), true);
+        if (p.model || p.podium) STRONY.modele.el.contentWindow.postMessage({ auta: 'pokaz', model: p.model || null, podium: p.podium || null }, '*');
+      } else if (z === 'kredyt') await pokazWidok(nrZakladki('kredyt'), true);
+      else if (z === 'poradnik') await pokazWidok(nrZakladki('poradnik'), true);
     },
   }) : null;
   const przyciskCzatu = $('#czat-otworz');
   if (czat) { Czat.dymek(przyciskCzatu); przyciskCzatu.addEventListener('click', () => czat.otworz()); } else przyciskCzatu.hidden = true;
-  // Gest „wstecz” (przeciągnięcie od lewej krawędzi, Aplikacja.swift): najpierw zamyka czat, potem okno w stronie
-  // bieżącej zakładki (szczegóły auta, filtry, galerię zdjęć), jak przycisk Wstecz na Androidzie.
+  // Wstecz (gest od lewej krawędzi w Aplikacja.swift, przycisk Wstecz na Androidzie): najpierw menu i czat, potem okno w stronie
+  // (szczegóły auta, filtry, galeria), w Atlasie najpierw to, co otwarte w Atlasie, w całości powrót do skrótu, a na drugiej pigułce
+  // powrót do pierwszej (Historia do Teraz, Marki do Podium, Kredyt do Leasingu). Dopiero potem Wstecz wychodzi z aplikacji. Atlas
+  // odpowiada dopiero po chwili, więc z jego pierwszej pigułki w układzie 2 Wstecz idzie na pierwszą zakładkę.
   function wstecz() {
     if (menuOtomoto) { zamknijMenuOtomoto(true); return true; }
     if (czat && czat.otwarty()) { czat.zamknij(); return true; }
-    // W Atlasie Wstecz najpierw cofa w samym Atlasie (szczegóły, arkusz filtrów, ściąga), a dopiero potem zamyka okno.
-    if (poradnik.open && wybranaWiedza === 'atlas' && atlasGotowy) { ramkaAtlasu.contentWindow.postMessage({ atlas: 'wstecz' }, '*'); return true; }
-    if (poradnik.open) { zamknijPoradnik(); return true; }
+    const k = klucz(widok);
+    if (k === 'atlas') {
+      if (atlasGotowy) { atlasWstecz = Date.now(); ramkaAtlasu.contentWindow.postMessage({ atlas: 'wstecz' }, '*'); }
+      else zAtlasuWstecz();
+      return true;
+    }
     try {
-      const d = STRONY[widok].el.contentDocument.querySelector('dialog[open]');
+      const d = STRONY[k].el.contentDocument.querySelector('dialog[open]');
       if (d) { d.close(); return true; }
     } catch { /* strona się jeszcze wczytuje */ }
+    if (doSkrotu(k)) return true;
+    const id = ID_ZAKLADEK[widok];
+    if (PIGULKI[id]) {
+      const pierwsza = RZEDY_PIGULEK[id].kolejnosc()[0];
+      if (wybrane[id] !== pierwsza) { ustawPigulke(id, pierwsza, true, true); return true; }
+    }
     return false;
   }
-
   // ---------------------------------------------------------------- odświeżanie
   // Przy każdym otwarciu aplikacji: najpierw to, co komputer już przysłał, potem (katalog starszy niż 10 minut
   // albo powrót internetu) prośba o skan i czekanie na nowy katalog, najwyżej 6 minut, co 10 sekund.
@@ -1936,7 +2226,6 @@ dialog.poradnik::backdrop { background: var(--strona); }
     }
     await Promise.allSettled([KALKULATOR.sprawdz(), HISTORIA.sprawdz(), MODELE.sprawdz(), PORADNIK.sprawdz()]);
     await pokazStrone(widok);
-    await pokazPoradnik();
     return doszedl ? 'nowy katalog' : 'komputer nie odpowiedział';
   }
   function odswiez(recznie = false) {
@@ -1951,7 +2240,6 @@ dialog.poradnik::backdrop { background: var(--strona); }
       pobieram = false;
       bezSieci = k.status === 'rejected';
       await pokazStrone(widok);
-      await pokazPoradnik();
       const wynik = { katalog: opis(k), kalkulator: opis(c), historia: opis(h), modele: opis(md), poradnik: opis(pr) };
       if (!bezSieci && (prosba || Date.now() - KATALOG.czas() * 1000 > SWIEZE)) {
         prosba = false;
@@ -1966,7 +2254,7 @@ dialog.poradnik::backdrop { background: var(--strona); }
   }
   // Bez przycisku (od 24.10.2026): dane przychodzą same przy otwarciu, co minutę i zaraz po powrocie internetu.
   document.addEventListener('visibilitychange', () => { if (!document.hidden) odswiez(); });
-  addEventListener('online', () => { odswiez(); if (poradnik.open && wybranaWiedza === 'atlas') wczytajAtlas(); });
+  addEventListener('online', () => { odswiez(); if (klucz(widok) === 'atlas') pokazStrone(widok); });
   // Póki aplikacja jest na ekranie, co minutę sprawdza, czy komputer przysłał nowe ogłoszenia (od 20.10.2026: e-mail z Otomoto
   // robi skan od razu, a nowe auto ma być w aplikacji od razu). Bez prośby o skan, więc komputer nie pracuje przez to więcej.
   const TEST = /[?&]test=\d/.test(location.search);
@@ -1975,21 +2263,163 @@ dialog.poradnik::backdrop { background: var(--strona); }
     try { if (await KATALOG.sprawdz()) await pokazStrone(widok); } catch { /* następna próba za minutę */ }
   }, 60000);
 
+  // ---------------------------------------------------------------- nawigacja na telefonie: szkło i przenoszenie
+  // Zakładki i pigułki to na telefonie jeden blok ze szkła nad treścią, jak w iOS 26 (styl.css, „Nawigacja na telefonie”). Strony w ramkach
+  // dostają jego wysokość razem z miejscem pod nim (--km-dol), żeby ich koniec dało się przewinąć nad nawigację, a Atlas z sieci, który
+  // naszej siatki nie bierze, kończy się nad nią. Na szerokim ekranie nawigacja stoi u góry, więc --km-dol to 0.
+  const dol = $('.dol'), naglowek = $('.glowa'), waski = matchMedia('(max-width: 759px)');
+  function ustawDol() {
+    if (!dol.getClientRects().length) return; // otwarte okno w stronie chowa nawigację
+    const v = (waski.matches ? Math.max(0, Math.ceil(innerHeight - dol.getBoundingClientRect().top + 8)) : 0) + 'px';
+    if (document.documentElement.style.getPropertyValue('--km-dol') === v) return;
+    document.documentElement.style.setProperty('--km-dol', v);
+    ustawSiatke();
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(ustawDol).observe(dol);
+  addEventListener('resize', ustawDol);
+  // Przenoszenie (Jacek, 25.10.2026: „przytrzymuję przez 4 sekundy … Wtedy ja mogę przenieść, gdzie chcę”, potem „zróbmy 2”, a wieczorem:
+  // „Do góry nie ma sensu, ale jak ktoś chce trochę wyżej, no to okej … nie działa na tej zasadzie, że można tylko góra i dół. Można se
+  // przesunąć i zostawić, gdzie się chce, całą nawigację”): przytrzymanie zakładki albo pigułki przez 2 s podnosi cały blok. Od 0,25 s
+  // strzałki przy bloku mówią, dokąd pójdzie i ile jeszcze: nad blokiem w górę, gdy stoi na dole, pod nim w dół, gdy jest wyżej. Podniesiony
+  // blok jedzie za palcem w pionie, najwyżej do 8 px pod nagłówkiem, i zostaje tam, gdzie go puścić; bliżej niż 24 px od zwykłego miejsca
+  // wraca na nie. Ruch o ponad 10 px przed czasem przerywa przytrzymanie, a ruch w bok przestawia zakładki i pigułki jak zawsze. Miejsce
+  // zostaje w telefonie (pasek-wysokosc, piksele nad zwykłym miejscem), przez 6 s stoi „Cofnij”, a Ctrl+Z i Ctrl+Y cofają i ponawiają.
+  // Z klawiatury Alt+↑ i Alt+↓ na zakładce albo pigułce przesuwają o 48 px.
+  const PRZENIES_MS = 2000, STRZALKI_MS = 250, PROG_PASKA = 10, MAGNES = 24, KROK = 48, RUCH_PASKA = { duration: 240, easing: 'cubic-bezier(0.2, 0, 0, 1)' };
+  const pasek = { id: null, x: 0, y: 0, zegar: 0, strzalki: 0, niesie: false, start: 0, max: 0, teraz: null, bylRuch: false };
+  let wysokosc = 0;
+  // Siedem strzałek zapala się po kolei, a krok między nimi jest taki, żeby ostatnia skończyła się zapalać (200 ms) dokładnie wtedy,
+  // gdy blok się unosi.
+  const strzalki = el('div', { class: 'strzalki', 'aria-hidden': 'true' });
+  for (let i = 0; i < 7; i++) strzalki.append(el('i', { style: `--i:${i}` }));
+  strzalki.style.setProperty('--krok', Math.round((PRZENIES_MS - STRZALKI_MS - 200) / 6) + 'ms');
+  dol.append(strzalki);
+  // Najwyżej tyle, żeby blok stał 8 px pod nagłówkiem. Liczone bez przesunięcia z ręki (transform), czyli poza przenoszeniem.
+  const najwyzej = () => Math.max(0, Math.floor(dol.getBoundingClientRect().top + wysokosc - naglowek.getBoundingClientRect().bottom - 8));
+  // Nowa wysokość nad zwykłym miejscem. p0 to górny brzeg bloku na ekranie przed zmianą: blok dojeżdża stamtąd (240 ms).
+  function ustawWysokosc(w, zapisz, ruch, p0 = dol.getBoundingClientRect().top) {
+    const nowa = Math.max(0, Math.min(Math.round(Number(w) || 0), najwyzej()));
+    if (zapisz) pamiec.zapisz('pasek-wysokosc', nowa);
+    const byla = wysokosc;
+    wysokosc = nowa;
+    document.documentElement.style.setProperty('--km-nav-y', nowa + 'px');
+    document.body.classList.toggle('pasek-uniesiony', nowa > 0);
+    const p1 = dol.getBoundingClientRect().top;
+    if (ruch && !malyRuch.matches && dol.animate && Math.abs(p0 - p1) > 1) dol.animate([{ transform: `translateY(${p0 - p1}px)` }, { transform: 'none' }], RUCH_PASKA);
+    ustawDol();
+    return nowa !== byla;
+  }
+  const RZAD_PASKA = { cofnij: 'Cofnij przeniesienie nawigacji', ustaw: (k) => ustawWysokosc(k[0], true, true) };
+  function zmianaPaska(przed, po) {
+    PRZESTAWIENIA.wstecz.push({ rzad: RZAD_PASKA, przed: [przed], po: [po] });
+    if (PRZESTAWIENIA.wstecz.length > 50) PRZESTAWIENIA.wstecz.shift();
+    PRZESTAWIENIA.naprzod.length = 0;
+    pokazCofnij(RZAD_PASKA);
+    powiedz(po ? 'Nawigacja wyżej' : 'Nawigacja na dole');
+  }
+  // Przytrzymanie przerwane (ruch, puszczenie, przestawianie zakładki albo pigułki): strzałki gasną, nawigacja zostaje na miejscu.
+  function przerwijPasek() {
+    clearTimeout(pasek.zegar);
+    clearTimeout(pasek.strzalki);
+    dol.classList.remove('trzyma');
+    if (!pasek.niesie) pasek.id = null;
+  }
+  function podniesPasek() {
+    clearTimeout(pasek.strzalki);
+    dol.classList.remove('trzyma');
+    ZAKLADKI.przerwij();
+    for (const r of Object.values(RZEDY_PIGULEK)) r.przerwij();
+    for (const d of document.querySelectorAll('.czat-dymek')) d.remove();
+    Object.assign(pasek, { niesie: true, start: wysokosc, max: najwyzej(), teraz: wysokosc });
+    // Blok bierze wskaźnik od zakładki albo pigułki: dalszy ruch i puszczenie należą do niego, a przycisk nie dostaje stuknięcia.
+    try { dol.setPointerCapture(pasek.id); } catch { /* wskaźnik z testu */ }
+    dol.classList.add('przenoszony');
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch { /* bez wibracji */ } }
+    powiedz('Nawigacja podniesiona. Przesuń ją wyżej albo niżej.');
+  }
+  function niesPasek(y) {
+    pasek.teraz = Math.max(0, Math.min(pasek.start + pasek.y - y, pasek.max));
+    dol.style.transform = `translateY(${Math.round(pasek.start - pasek.teraz)}px)`;
+  }
+  function puscPasek(e) {
+    if (e.pointerId !== pasek.id || (e.type === 'lostpointercapture' && e.target !== dol)) return;
+    clearTimeout(pasek.zegar);
+    clearTimeout(pasek.strzalki);
+    dol.classList.remove('trzyma');
+    pasek.id = null;
+    if (!pasek.niesie) return;
+    pasek.niesie = false;
+    pasek.bylRuch = true;
+    setTimeout(() => { pasek.bylRuch = false; }, 400);
+    const przerwane = e.type === 'pointercancel';
+    let cel = przerwane ? pasek.start : pasek.teraz;
+    if (cel < MAGNES) cel = 0;
+    // Blok dojeżdża spod palca na swoje nowe miejsce.
+    const p0 = dol.getBoundingClientRect().top;
+    dol.style.transform = '';
+    dol.classList.remove('przenoszony');
+    ustawWysokosc(cel, true, true, p0);
+    if (!przerwane && wysokosc !== pasek.start) zmianaPaska(pasek.start, wysokosc);
+  }
+  dol.addEventListener('pointerdown', (e) => {
+    if (!waski.matches || pasek.id !== null || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('.cofnij-zakladki')) return;
+    Object.assign(pasek, { id: e.pointerId, x: e.clientX, y: e.clientY, niesie: false });
+    // Zakładkę i pigułkę trzyma jej rząd (przestawianie), resztę bloku bierze sam blok.
+    if (!e.target.closest('[role="tab"], [role="radio"]')) { try { dol.setPointerCapture(e.pointerId); } catch { /* wskaźnik z testu */ } }
+    pasek.strzalki = setTimeout(() => dol.classList.add('trzyma'), STRZALKI_MS);
+    pasek.zegar = setTimeout(podniesPasek, PRZENIES_MS);
+  });
+  dol.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== pasek.id) return;
+    if (pasek.niesie) { e.preventDefault(); niesPasek(e.clientY); return; }
+    if (Math.abs(e.clientX - pasek.x) > PROG_PASKA || Math.abs(e.clientY - pasek.y) > PROG_PASKA) przerwijPasek();
+  });
+  for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) dol.addEventListener(t, puscPasek);
+  // Puszczenie po przeniesieniu nie jest stuknięciem, a przytrzymanie nie otwiera menu.
+  dol.addEventListener('click', (e) => { if (!pasek.bylRuch) return; pasek.bylRuch = false; e.preventDefault(); e.stopImmediatePropagation(); }, true);
+  dol.addEventListener('contextmenu', (e) => { if (waski.matches) e.preventDefault(); });
+  for (const b of [...segmenty, ...Object.values(grupyPigulek).flatMap((g) => [...g.querySelectorAll('[role="radio"]')])]) {
+    b.addEventListener('keydown', (e) => {
+      if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') || !waski.matches) return;
+      e.preventDefault();
+      const przed = wysokosc;
+      if (!ustawWysokosc(wysokosc + (e.key === 'ArrowUp' ? KROK : -KROK), true, true)) return;
+      b.focus();
+      zmianaPaska(przed, wysokosc);
+    });
+  }
+  waski.addEventListener('change', () => { ustawWysokosc(pamiec.czytaj('pasek-wysokosc', 0), false, false); ustawDol(); });
+
   // ---------------------------------------------------------------- start
   const naStarcie = Promise.all([schowek.czytaj('katalog'), schowek.czytaj('kalkulator'), schowek.czytaj('historia'), schowek.czytaj('modele')])
     .then(([k, c, h, md]) => ({ katalog: Boolean(k), kalkulator: Boolean(c), historia: Boolean(h), modele: Boolean(md) }));
-  // Ostatnia zakładka nazwą. Dawne „Nowe” (do 19.10.2026) i brak zapisu dają Ogłoszenia.
-  pokazWidok(Math.max(0, WIDOKI.indexOf(pamiec.czytaj('zakladka', null))), false);
+  // Ostatnia zakładka i pigułki nazwą. Dawne „Nowe” (do 19.10.2026) i brak zapisu dają Ogłoszenia, a dawna zakładka „Historia”
+  // (do 24.10.2026) Ogłoszenia z pigułką Historia.
+  const zapisana = pamiec.czytaj('zakladka', null);
+  if (zapisana === 'Historia' && pamiec.czytaj('pigulka-katalog', null) === null && pamiec.czytaj('pigulka-0', null) === null) { wybrane.katalog = 'historia'; pamiec.zapisz('pigulka-katalog', 'historia'); }
+  // Podium, Historia i Finanse zaczynają każde otwarcie aplikacji od skrótu (reguła skrot-i-wersja-pelna), jak Poradnik.
+  try {
+    localStorage.setItem('modele:widok', '"skrot"');
+    localStorage.setItem('historia:widok', '"skrot"');
+    localStorage.setItem('kredyt-na-auto-widok', 'skrot');
+  } catch { /* bez pamięci */ }
+  Object.keys(PIGULKI).forEach((id) => oznaczPigulke(id, wybrane[id]));
+  ustawWysokosc(pamiec.czytaj('pasek-wysokosc', 0), false, false);
+  pokazWidok(Math.max(0, WIDOKI.indexOf(zapisana)), false);
   const pierwsze = KANAL ? naStarcie.then(() => odswiez()) : Promise.resolve({ blad: 'brak kanału' });
 
   window.Auta = {
     naStarcie, pierwsze, odswiez, pokazWidok, wstecz, czat,
+    pokazPigulke: (z, p) => ustawPigulke(typeof z === 'number' ? ID_ZAKLADEK[z] : z, p, true, false),
+    pasek: (w) => (w === undefined ? wysokosc : ustawWysokosc(w, true, true)),
     czekanie: () => czekanie,
     stan: () => ({
       katalogCzas: KATALOG.czas(), kalkulatorCzas: KALKULATOR.czas(), historiaCzas: HISTORIA.czas(), modeleCzas: MODELE.czas(), poradnikCzas: PORADNIK.czas(),
-      schowek: schowek.rodzaj, ramkaKatalogu: STRONY[0].ramka.sposob, ramkaModeli: STRONY[1].ramka.sposob,
-      ramkaKredytu: STRONY[2].ramka.sposob, ramkaHistorii: STRONY[3].ramka.sposob, ramkaPoradnika: ramkaPoradnika.sposob, widok, nazwa: NAZWY[widok],
-      wiedza: wybranaWiedza, atlas: atlasGotowy ? 'gotowy' : ramkaAtlasu.getAttribute('src') ? 'wczytuje się' : 'nie ma',
+      schowek: schowek.rodzaj, ramkaKatalogu: STRONY.katalog.ramka.sposob, ramkaModeli: STRONY.modele.ramka.sposob,
+      ramkaKredytu: STRONY.kredyt.ramka.sposob, ramkaHistorii: STRONY.historia.ramka.sposob, ramkaPoradnika: STRONY.poradnik.ramka.sposob,
+      widok, nazwa: NAZWY[widok], wersja: WERSJA, zakladki: ID_ZAKLADEK.join(','), pasek: wysokosc,
+      pigulki: Object.entries(wybrane).map(([z, p]) => z + ':' + p).join(','),
+      atlas: atlasGotowy ? 'gotowy' : ramkaAtlasu.getAttribute('src') ? 'wczytuje się' : 'nie ma',
     }),
   };
   if (/[?&]test=\d/.test(location.search)) document.head.append(el('script', { src: 'test.js' }));
