@@ -703,8 +703,9 @@ body.bez-pigulek .podkarty { display: none; }
   const SERWER = 'https://ntfy.sh', SONIOX = 'wss://stt-rt.soniox.com/transcribe-websocket';
   const CZEKAJ_MS = 90000, KLUCZ_MS = 20000, NAJWIECEJ = 40, NOWA_ROZMOWA_MS = 6 * 3600 * 1000;
   // Nazwy zakładek w bierniku, do przycisku „Pokaż …” pod odpowiedzią. Od 19.10.2026 „katalog” to Ogłoszenia (razem z dawnym
-  // „Nowe”, które zostaje dla starych odpowiedzi w pamięci), a „modele” to Katalag.
-  const BIERNIK = { katalog: 'Ogłoszenia', nowe: 'Ogłoszenia', modele: 'Katalag', kredyt: 'Kredyt', historia: 'Historię' };
+  // „Nowe”, które zostaje dla starych odpowiedzi w pamięci), a „modele” to Katalag. Od 25.10.2026 „kredyt” to Finanse, „historia”
+  // pigułka Historia w Ogłoszeniach, a „poradnik” zakładka Poradnik.
+  const BIERNIK = { katalog: 'Ogłoszenia', nowe: 'Ogłoszenia', modele: 'Katalag', kredyt: 'Finanse', historia: 'Historię', poradnik: 'Poradnik' };
   const PODPOWIEDZI = ['Najbezpieczniejsze auto do 75 tys. zł?', 'Co nowego dziś na Otomoto?', 'Czy Corolla kombi zmieści psa?', 'Ile wyjdzie rata za 60 tys. zł?'];
   const ZDANIA = {
     pusto: 'Zapytaj o auta, raty albo ogłoszenia. Odpowiada komputer w domu, zwykle w kilkanaście sekund.',
