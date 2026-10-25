@@ -65,13 +65,13 @@
   /* Wcięcie u góry ekranu (wycięcie aparatu albo czujników): na iPhonie i w przeglądarce z env(), a na Androidzie, gdzie strona
      sięga pod pas przy aparacie, wpisuje je MainActivity.java (podajGore). Nagłówek stoi na środku tego pasa razem ze swoim rzędem. */
   --km-gora: env(safe-area-inset-top, 0px);
-  /* Siatka nawigacji (od 25.10.2026): jedna rynna między zakładkami i pigułkami i jeden promień rogów (Jacek: „wszystko musi być
-     równane do gridu … Kątki wszystkie też powinny być fajne”). Na wąskim telefonie rynna 8 px, żeby „Ogłoszenia” mieściły się
-     w zakładce. */
-  --km-rynna: 12px;
+  /* Siatka na telefonie (od 25.10.2026): 12 kolumn między brzegami treści i jedna rynna 8 px, ta sama między zakładkami, pigułkami
+     i ich rzędami, do tego jeden promień rogów (Jacek: „wszystko musi być równane do gridu … Kątki wszystkie też powinny być fajne”;
+     reguła siatka-wszedzie: na telefonie 8 px). Do wieczora 25.10.2026 rynna miała 12 px, a 8 px tylko poniżej 380 px. Szeroki ekran
+     (od 760 px) ma swoje 16 px. */
+  --km-rynna: 8px;
   --km-rog: 18px;
 }
-@media (max-width: 379px) { :root { --km-rynna: 8px; } }
 @media (prefers-color-scheme: dark) {
   :root {
     --tlo: #000000;
@@ -379,9 +379,8 @@ body.bez-pigulek .podkarty { display: none; }
    treścią, jak w iOS 26. Treść sięga dołu ekranu i płynie pod nim, a stuknięcie obok przycisków trafia w treść. Strony w ramkach mają na
    końcu miejsce na blok (--km-dol z app.js), a Atlas z sieci kończy się nad nim. Wszystko stoi na siatce 12 kolumn z jedną rynną
    (--km-rynna): cztery zakładki po 3 kolumny, dwie pigułki po 6 (każda dokładnie nad dwiema zakładkami), trzy po 4, a brzegi bloku
-   to brzegi treści. Wersja 1: pigułki nad zakładkami, jak przełącznik Lata, Miesiące, Dni nad paskiem kart w Zdjęciach na iPhonie, więc
-   zakładki zawsze stoją w tym samym miejscu. Wersja 2: pigułki pod zakładkami, które podjeżdżają w górę (Jacek: „logiczniejsze by było,
-   że te główne linie się przesuwa i pod spodem wyskakuje”). Blok przytrzymany 2 s przesuwa się wyżej i zostaje tam, gdzie go puścić
+   to brzegi treści. Pigułki stoją pod zakładkami, które podjeżdżają w górę, gdy zakładka ma pigułki (Jacek: „logiczniejsze by było,
+   że te główne linie się przesuwa i pod spodem wyskakuje”; wybrane 25.10.2026 z dwóch wersji, druga miała pigułki nad zakładkami). Blok przytrzymany 2 s przesuwa się wyżej i zostaje tam, gdzie go puścić
    (app.js, „przenoszenie”; --km-nav-y to wysokość nad zwykłym miejscem). Kontrast napisów na szkle liczony skryptem nad czarnym i nad
    białym zdjęciem: wszystkie od 4,5:1. */
 @media (max-width: 759px) {
@@ -393,9 +392,8 @@ body.bez-pigulek .podkarty { display: none; }
     touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   }
   .dol > .karty, .dol > .podkarty, .cofnij-zakladki .pigulka { pointer-events: auto; }
-  .podkarty { order: 0; }
   .karty { order: 1; }
-  body[data-wersja="2"] .podkarty { order: 2; }
+  .podkarty { order: 2; }
   .karty [role="tab"], .podwidoki [role="radio"] { -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
     box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .9), 0 0 0 .5px rgba(0, 0, 0, .14), 0 2px 8px rgba(0, 0, 0, .14), 0 8px 24px rgba(0, 0, 0, .10); }
   .karty [role="tab"]:not([aria-selected="true"]), .podwidoki [role="radio"]:not([aria-checked="true"]) { background-color: color-mix(in srgb, var(--pastel) 35%, rgba(236, 236, 240, .72)); }
@@ -1268,8 +1266,8 @@ body.bez-pigulek .podkarty { display: none; }
 <script>
 // Kasiomobile na iPhone'a i w przeglądarce (do 18.10.2026 „Auta”): ten sam ekran co aplikacja na Androidzie.
 // Od 19.10.2026 cztery zakładki na dole, każda z kolorową ikoną (Jacek: „brakuje nam … kolorków na tych menu … oczywiste
-// i eleganckie, typu Apple Store”), a nagłówek to jeden rząd: logo, napis i asystent. Od 25.10.2026 (układ 1 z czterech
-// propozycji) zakładka może mieć u góry jeden rząd pigułek:
+// i eleganckie, typu Apple Store”), a nagłówek to jeden rząd: logo, napis i asystent. Od 25.10.2026 zakładka może mieć
+// jeden rząd pigułek, w nawigacji pod zakładkami:
 //   „Ogłoszenia” – pigułka Teraz: katalog misji ze Skanera Produktów; auto dodane na Otomoto dziś albo wczoraj ma słowo „Nowe”
 //                  (do 19.10.2026 osobne zakładki „Nowe” i „Katalag”), plik z cichego kanału „<kanał>-katalog”. Pigułka Historia:
 //                  historia ogłoszeń ze zdjęciami, kanał „<kanał>-historia” (do 24.10.2026 osobna zakładka).
@@ -1279,10 +1277,9 @@ body.bez-pigulek .podkarty { display: none; }
 //   „Finanse”    – pigułki Leasing i Kredyt nad jednym kalkulatorem z cichego kanału „<kanał>-kalkulator”, każda ze swoim skrótem
 //                  i swoją całością (do 25.10.2026 zakładka „Kredyt”; Jacek: „Finanse powinny być pierw leasing … a drugi kredyt”).
 //   Nawigacja    – na telefonie zakładki i pigułki wybranej zakładki to jeden blok ze szkła nad treścią (Jacek, 25.10.2026 wieczorem:
-//                  „Podoba mi się layout 3”, „żebyśmy nie dzielili nawigacji na dwa góra i dół”). Wersja 1: pigułki nad zakładkami,
-//                  wersja 2: pod nimi. Numer daje window.WERSJA (kanal.js w aplikacji „Wersja 2”) albo ?wersja=N w adresie, bez niego
-//                  wersja 1. Blok przytrzymany 2 s przesuwa się palcem wyżej i zostaje tam, gdzie go puścić. Na szerokim ekranie zakładki
-//                  i pigułki stoją u góry i się nie przenoszą. Do wieczora 25.10.2026 było pięć układów do porównania (aplikacje „Układ 1–5”).
+//                  „Podoba mi się layout 3”, „żebyśmy nie dzielili nawigacji na dwa góra i dół”), pigułki pod zakładkami (Jacek wybrał
+//                  to z dwóch wersji 25.10.2026 wieczorem). Blok przytrzymany 2 s przesuwa się palcem wyżej i zostaje tam, gdzie go puścić.
+//                  Na szerokim ekranie zakładki i pigułki stoją u góry i się nie przenoszą.
 //   „Poradnik”   – cały poradnik o używanych autach, kanał „<kanał>-poradnik” (od 22 do 24.10.2026 pod logo).
 //   Dane w tle   – przycisku Odśwież ani godziny skanu nie ma (od 24.10.2026, Jacek: „no refresh button anywhere … I trust you
 //                  and the process”, a wieczorem: „nie potrzebujemy wiedzieć, kiedy został update'owany”): przy każdym otwarciu
@@ -1508,25 +1505,36 @@ body.bez-pigulek .podkarty { display: none; }
     + 'box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 1px 2px rgba(0,0,0,.14),0 4px 12px rgba(0,0,0,.12)!important}'
     + `${s}::after{content:"";flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:${STRZALKA_W_DOL} center/16px no-repeat;mask:${STRZALKA_W_DOL} center/16px no-repeat}`
     + `${s}:active{transform:scale(.97)}@media (hover:hover){${s}:hover{transform:translateY(-1px)}}`
-    + `@media (prefers-color-scheme:dark){${s}{background:#2997ff!important;color:#000000!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 .5px rgba(255,255,255,.2)!important}}`;
+    + `@media (prefers-color-scheme:dark){${s}{background:#2997ff!important;color:#000000!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 .5px rgba(255,255,255,.2)!important}}`
+    // Na telefonie przycisk ma całą szerokość treści, czyli 12 kolumn siatki (reguła siatka-wszedzie), napis na środku.
+    + `@media (max-width:759px){${s}{box-sizing:border-box!important;width:100%!important;justify-content:center}}`;
   // Pierścień wybranej pigułki w stronach (pigulki-widoku.css w misji) rysowany do środka, jak w nawigacji: brzeg pigułki stoi na linii
   // siatki, a nie 4 px przed nią (Jacek, 25.10.2026: „nie jest to wszystko według kratek, a powinno być poukładane według kratek”).
   const PIERSCIEN = '.pigulki-widoku button[aria-pressed="true"],.pigulki-widoku button[aria-checked="true"]'
     + '{box-shadow:var(--pig-krawedz),inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--bg),var(--pig-cien-wybranej)!important}';
   // Podium: cena i „Tylko Toyota” w tej samej siatce co cztery kategorie pod nimi, „Tylko Toyota” tej samej szerokości co kategoria,
   // liczba na środku pola, a „Cena do … tys. zł” ciaśniej (Jacek: „Te 75 powinno być pośrodkowane … w tej rameczce”, „Tylko Toyota
-  // … przytulone do prawej krawędzi … musi być w tej samej szerokości co bezpieczeństwo i bagażnik pod nią”).
-  const PODIUM = '.podium .podium-rzad{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:12px}'
+  // … przytulone do prawej krawędzi … musi być w tej samej szerokości co bezpieczeństwo i bagażnik pod nią”). Odstęp siatki: na telefonie
+  // 8 px w rzędzie i między rzędami, jak w nawigacji pod spodem, więc kolumny Podium stoją nad kolumnami zakładek; od 680 px bloku 16 px.
+  const PODIUM = '.podium .podium-ustawienia{gap:8px}.podium .podium-chipy{gap:8px}'
+    + '.podium .podium-rzad{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:8px}'
     + '.podium .podium-rzad .budzet{min-width:0;justify-content:center;gap:6px;font-size:15px;white-space:nowrap}'
     + '.podium .podium-rzad .budzet input{width:3.2em;padding:0 4px;text-align:center}.podium #podium-toyota{width:100%;justify-content:center}'
-    + '@container (min-width:680px){.podium .podium-rzad{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}'
-    + '.podium .podium-rzad .budzet{grid-column:span 2;justify-content:flex-start}.podium #podium-toyota{grid-column:4}}';
+    + '@container (min-width:680px){.podium .podium-rzad{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:8px}.podium .podium-chipy{gap:16px}'
+    + '.podium .podium-rzad .budzet{grid-column:span 2;justify-content:flex-start}.podium #podium-toyota{grid-column:4}}'
+    // „Porównaj te trzy” na telefonie na całą szerokość, jak przycisk całości pod nim (12 kolumn siatki).
+    + '@media (max-width:759px){.podium-akcje #podium-porownaj{box-sizing:border-box;width:100%;justify-content:center}}';
   const SIATKA = {
     katalog: `#pasek,.strona>.naglowek{display:none!important}.strona{${KONTENER}}.katalog{column-gap:24px!important}`
       + '.panel-filtrow{top:clamp(16px,2.5vw,32px)!important;max-height:calc(100vh - 2 * clamp(16px,2.5vw,32px))!important}'
       // Karty ogłoszeń (od 25.10.2026, Jacek: „więcej odstępu … pomiędzy listingami, żeby oddychało”): szare tło strony, białe karty,
       // a w ciemnym grafitowe na czerni, jak w App Store; 32 px między rzędami kart i 24 px między kolumnami.
-      + 'html,body{background:light-dark(#f5f5f7,#000000)!important}.produkty{gap:32px 24px!important}.karta-produktu{background:light-dark(#ffffff,#1c1c1e)!important}',
+      + 'html,body{background:light-dark(#f5f5f7,#000000)!important}.produkty{gap:32px 24px!important}.karta-produktu{background:light-dark(#ffffff,#1c1c1e)!important}'
+      // Na telefonie pasek pod polem szukania w siatce nawigacji: Filtry na 4 kolumny, „Kolejność” na 8, rynna 8 px, także pod polem.
+      // Skaner układa ten pasek polami siatki (szukaj, filtry, sort), więc 12 kolumn dostają też pola.
+      + '@media (max-width:759px){.narzedzia{gap:8px!important}.pasek-narzedzi:has(>.mobilne-filtry){grid-template-columns:repeat(12,minmax(0,1fr))!important;gap:8px!important;'
+      + `grid-template-areas:"${'szukaj '.repeat(12).trim()}" "${'filtry '.repeat(4)}${'sort '.repeat(8).trim()}"!important}`
+      + '.pasek-narzedzi>.mobilne-filtry{justify-content:center}}',
     // Podium i Historia bez rzędu „Skrót | Pełny widok” (od 25.10.2026): w zakładce najwyżej jeden rząd pigułek, a całość otwiera
     // przycisk na końcu skrótu (app.js, „Skrót i całość”).
     modele: GAZETA + '.widok-modeli{display:none!important}' + CALOSC('.przycisk-p[data-widok-modeli="pelny"]') + PIERSCIEN + PODIUM,
@@ -1545,7 +1553,8 @@ body.bez-pigulek .podkarty { display: none; }
     // Poradnik w zakładce (od 25.10.2026; wcześniej w oknie pod logo): data nad tytułem bliżej nagłówka, a na telefonie tekst
     // w siatce aplikacji, czyli od tej samej krawędzi co logo (strona z programu 13 ma tam kolumnę 87,5%).
     poradnik: 'main>header.hero{padding-top:16px!important}'
-      + `@media (max-width:734px){main{box-sizing:border-box!important;width:100%!important;padding-left:${L}!important;padding-right:${P}!important}}`,
+      + `@media (max-width:734px){main{box-sizing:border-box!important;width:100%!important;padding-left:${L}!important;padding-right:${P}!important}`
+      + '#czytaj-calosc{box-sizing:border-box!important;width:100%!important;justify-content:center!important}}',
   };
   const cssSiatki = (nazwa) => `html{scrollbar-width:thin;scrollbar-gutter:stable}${SIATKA[nazwa]}`;
   // </siatka>
@@ -1586,12 +1595,8 @@ body.bez-pigulek .podkarty { display: none; }
   // z pigułkami Leasing i Kredyt (Jacek: „wpierw leasing a dopiero po nim kredyt”) i Poradnik. Do 24.10.2026 Historia była czwartą
   // zakładką, a Poradnik i Atlas stały w oknie pod logo. Zakładka ma w kodzie stały identyfikator (ID_ZAKLADEK, ten sam co jej sekcja
   // w index.html), a w pamięci telefonu stoi pod nazwą z WIDOKI, więc dawny zapis działa dalej, a zapisana „Historia” to dziś Ogłoszenia
-  // z pigułką Historia. Pigułki stoją w nawigacji, przy zakładkach (index.html, .podkarty), i widać tylko rząd wybranej zakładki.
-  // Dwie wersje do porównania (Jacek, 25.10.2026 wieczorem: „daj mi … dwie, trzy wersje”): 1 pigułki nad zakładkami, jak przełącznik
-  // Lata, Miesiące, Dni nad paskiem kart w Zdjęciach na iPhonie, 2 pod nimi (Jacek: „logiczniejsze by było, że te główne linie się
-  // przesuwa i pod spodem wyskakuje”). Wersje różnią się tylko stylem (body[data-wersja]).
-  const WERSJA = (() => { const w = Number(window.WERSJA || new URLSearchParams(location.search).get('wersja')); return w === 2 ? 2 : 1; })();
-  document.body.dataset.wersja = String(WERSJA);
+  // z pigułką Historia. Pigułki stoją w nawigacji pod zakładkami (index.html, .podkarty; Jacek: „logiczniejsze by było, że te główne
+  // linie się przesuwa i pod spodem wyskakuje”), i widać tylko rząd wybranej zakładki.
   const ID_ZAKLADEK = ['katalog', 'modele', 'kredyt', 'poradnik'];
   // Nazwy w pamięci (od 18.10.2026) i na ekranie. „Katalag” to żart Jacka (18.10.2026), od 19.10.2026 na katalogu modeli aut.
   const WIDOKI = ['Katalog', 'Modele', 'Kredyt', 'Poradnik'];
@@ -1650,7 +1655,7 @@ body.bez-pigulek .podkarty { display: none; }
         if (!d || !d.documentElement) continue;
         d.documentElement.style.setProperty('--km-lewo', cs.paddingLeft);
         d.documentElement.style.setProperty('--km-prawo', cs.paddingRight);
-        // Pasek ze szkła (układ 3) leży nad stroną: strona dostaje jego wysokość, żeby jej koniec dało się przewinąć nad pasek.
+        // Nawigacja ze szkła leży nad stroną: strona dostaje jej wysokość, żeby jej koniec dało się przewinąć nad nawigację.
         d.documentElement.style.setProperty('--km-dol', document.documentElement.style.getPropertyValue('--km-dol') || '0px');
         // Katalag i Historia od 1100 px: góra strony w lewej kolumnie stoi na wysokości pierwszej rzeczy w prawej.
         const h = d.querySelector('main > header.hero'), n = h && h.nextElementSibling;
@@ -1888,7 +1893,7 @@ body.bez-pigulek .podkarty { display: none; }
         for (const id of k) { const i = ids.indexOf(id); if (i >= 0) rodzic.insertBefore(elementy[i], za); }
         if (zapisz) pamiec.zapisz(o.klucz, rzad.kolejnosc());
       },
-      // Pasek, który ktoś zaczął przenosić (układ 5), przerywa czekające przestawienie: palec należy już do paska.
+      // Nawigacja, którą ktoś zaczął przenosić (przytrzymanie 2 s), przerywa czekające przestawienie: palec należy już do niej.
       przerwij() { clearTimeout(ciag.zegar); if (!ciag.aktywne) ciag.b = null; },
     };
     // Zapisana kolejność. Element, którego nie ma w zapisie (doszedł w nowej wersji), staje za swoim poprzednikiem.
@@ -2154,10 +2159,10 @@ body.bez-pigulek .podkarty { display: none; }
       if (wybrane[Z_ATLASEM] !== d.widok) { wybrane[Z_ATLASEM] = d.widok; pamiec.zapisz('pigulka-' + Z_ATLASEM, d.widok); oznaczPigulke(Z_ATLASEM, d.widok); }
     }
     // Wstecz w Atlasie, w którym nie ma nic do zamknięcia: Atlas odpisuje „zamknij-poradnik”, a Kasiomobile wraca na pierwszą pigułkę
-    // (w układzie 1 Podium). Sam Escape w Atlasie wysyła to samo, ale liczy się tylko zaraz po naszym Wstecz.
+    // (zwykle Podium). Sam Escape w Atlasie wysyła to samo, ale liczy się tylko zaraz po naszym Wstecz.
     if (d.kasiomobile === 'zamknij-poradnik' && Date.now() - atlasWstecz < 2000) { atlasWstecz = 0; zAtlasuWstecz(); }
   });
-  // Wstecz z Atlasu: na pierwszą pigułkę zakładki, a z niej (Atlas w układzie 2) na pierwszą zakładkę.
+  // Wstecz z Atlasu: na pierwszą pigułkę zakładki, a gdy Atlas sam stoi na pierwszej (rząd przestawiony), na pierwszą zakładkę.
   function zAtlasuWstecz() {
     const pierwsza = RZEDY_PIGULEK[Z_ATLASEM].kolejnosc()[0];
     if (wybrane[Z_ATLASEM] !== pierwsza) { ustawPigulke(Z_ATLASEM, pierwsza, true, true); return; }
@@ -2187,7 +2192,7 @@ body.bez-pigulek .podkarty { display: none; }
   // Wstecz (gest od lewej krawędzi w Aplikacja.swift, przycisk Wstecz na Androidzie): najpierw menu i czat, potem okno w stronie
   // (szczegóły auta, filtry, galeria), w Atlasie najpierw to, co otwarte w Atlasie, w całości powrót do skrótu, a na drugiej pigułce
   // powrót do pierwszej (Historia do Teraz, Marki do Podium, Kredyt do Leasingu). Dopiero potem Wstecz wychodzi z aplikacji. Atlas
-  // odpowiada dopiero po chwili, więc z jego pierwszej pigułki w układzie 2 Wstecz idzie na pierwszą zakładkę.
+  // odpowiada dopiero po chwili, więc gdy stoi na pierwszej pigułce rzędu, Wstecz idzie na pierwszą zakładkę.
   function wstecz() {
     if (menuOtomoto) { zamknijMenuOtomoto(true); return true; }
     if (czat && czat.otwarty()) { czat.zamknij(); return true; }
@@ -2421,7 +2426,7 @@ body.bez-pigulek .podkarty { display: none; }
       katalogCzas: KATALOG.czas(), kalkulatorCzas: KALKULATOR.czas(), historiaCzas: HISTORIA.czas(), modeleCzas: MODELE.czas(), poradnikCzas: PORADNIK.czas(),
       schowek: schowek.rodzaj, ramkaKatalogu: STRONY.katalog.ramka.sposob, ramkaModeli: STRONY.modele.ramka.sposob,
       ramkaKredytu: STRONY.kredyt.ramka.sposob, ramkaHistorii: STRONY.historia.ramka.sposob, ramkaPoradnika: STRONY.poradnik.ramka.sposob,
-      widok, nazwa: NAZWY[widok], wersja: WERSJA, zakladki: ID_ZAKLADEK.join(','), pasek: wysokosc,
+      widok, nazwa: NAZWY[widok], zakladki: ID_ZAKLADEK.join(','), pasek: wysokosc,
       pigulki: Object.entries(wybrane).map(([z, p]) => z + ':' + p).join(','),
       atlas: atlasGotowy ? 'gotowy' : ramkaAtlasu.getAttribute('src') ? 'wczytuje się' : 'nie ma',
     }),
