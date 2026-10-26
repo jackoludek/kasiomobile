@@ -493,6 +493,7 @@ body.czat-otwarty .dol { z-index: 43; }
   --cz-c3d: inset 1px 1px 0 rgba(255, 255, 255, .95), inset -1px -1px 0 rgba(0, 0, 0, .07), 0 0 0 .5px rgba(0, 0, 0, .16), 1px 1px 2px rgba(0, 0, 0, .12), 3px 3px 8px rgba(0, 0, 0, .1), 6px 6px 18px rgba(0, 0, 0, .06);
   --cz-c3d-b: inset 1px 1px 0 rgba(255, 255, 255, .38), inset -1px -1px 0 rgba(0, 0, 0, .2), 1px 1px 2px rgba(0, 0, 0, .16), 3px 3px 10px rgba(0, 113, 227, .3), 6px 6px 18px rgba(0, 0, 0, .06);
   --cz-otworz-szklo: rgba(220, 236, 252, .86);
+  --cz-na-wybranej: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
   .czat, .czat-zaslona, .czat-dymek, .czat-otworz {
@@ -505,6 +506,7 @@ body.czat-otwarty .dol { z-index: 43; }
     --cz-c3d: inset 1px 1px 0 rgba(255, 255, 255, .24), inset -1px -1px 0 rgba(0, 0, 0, .45), 0 0 0 .5px rgba(255, 255, 255, .2);
     --cz-c3d-b: inset 1px 1px 0 rgba(255, 255, 255, .42), inset -1px -1px 0 rgba(0, 0, 0, .28), 3px 3px 14px rgba(10, 132, 255, .3);
     --cz-otworz-szklo: rgba(15, 37, 61, .86);
+    --cz-na-wybranej: #000000;
   }
 }
 .czat { display: flex; flex-direction: column; min-height: 0; box-sizing: border-box; background: var(--cz-tlo); color: var(--cz-tekst);
@@ -534,7 +536,32 @@ body.czat-otwarty .dol { z-index: 43; }
 .czat-strona { position: fixed; inset: 0; padding: var(--km-gora, env(safe-area-inset-top, 0px)) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
 @media (prefers-reduced-motion: reduce) { .czat-arkusz, .czat-zaslona { transition: none; } }
 
-.czat-gora { flex: none; position: relative; display: flex; justify-content: flex-end; align-items: center; min-height: 52px; padding: 4px 8px 0; }
+.czat-gora { flex: none; position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 52px; padding: 4px 8px 0 16px; }
+/* Historia i Nowa rozmowa (od 26.10.2026): przyciski z napisem w szkle z 45° światłem, co 8 px, cel 48 px. Historia włączona stoi
+   w akcencie z napisem na barwie (biały 4,7:1, w ciemnym czarny 5,8:1). Bez rozmowy Nowa rozmowa jest przygaszona. */
+.czat-gora-lewo { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.czat-pigulka { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 40px; margin: 4px 0; padding: 0 16px 0 12px; border: 0; border-radius: 20px;
+  background-color: var(--cz-szary); background-image: var(--cz-lico); box-shadow: var(--cz-c3d); color: var(--cz-tekst);
+  font: inherit; font-size: 15px; font-weight: 600; line-height: 1; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1), background-color 120ms ease, box-shadow 120ms ease; }
+.czat-pigulka::before { content: ""; position: absolute; inset: -4px 0; }
+.czat-pigulka > svg { flex: none; }
+.czat-pigulka[aria-pressed="true"] { background-color: var(--cz-przycisk); background-image: var(--cz-lico-b); box-shadow: var(--cz-c3d-b); color: var(--cz-na-wybranej); }
+@media (hover: hover) { .czat-pigulka:not(:disabled):hover { box-shadow: 0 0 0 1px var(--cz-akcent), var(--cz-c3d); } }
+.czat-pigulka:not(:disabled):active { transform: scale(1.03); transition: transform 80ms ease; }
+.czat-pigulka:focus-visible { outline: 2px solid var(--cz-akcent); outline-offset: 2px; }
+.czat-pigulka:disabled { opacity: .45; cursor: default; }
+@media (max-width: 359px) { .czat-pigulka { padding: 0 12px 0 10px; font-size: 14px; } }
+/* Historia: wcześniejsze rozmowy jako karty-przyciski co 12 px, od najnowszej. Pierwsze pytanie w jednej linii, pod nim kiedy i ile pytań. */
+.czat-rozmowy { display: grid; gap: 12px; padding: 4px 0 8px; }
+.czat-rozmowa { position: relative; display: grid; gap: 6px; width: 100%; margin: 0; padding: 14px 16px; border: 0; border-radius: 18px; text-align: left;
+  background-color: var(--cz-pod); background-image: var(--cz-lico); box-shadow: var(--cz-c3d); color: var(--cz-tekst); font: inherit; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1), box-shadow 120ms ease; }
+.czat-rozmowa-tytul { font-size: 16px; font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.czat-rozmowa-kiedy { color: var(--cz-tekst2); font-size: 13px; line-height: 1.3; }
+@media (hover: hover) { .czat-rozmowa:hover { box-shadow: 0 0 0 1px var(--cz-akcent), var(--cz-c3d); } }
+.czat-rozmowa:active { transform: scale(1.03); transition: transform 80ms ease; }
+.czat-rozmowa:focus-visible { outline: 2px solid var(--cz-akcent); outline-offset: 2px; }
 .czat-arkusz .czat-gora { touch-action: none; }
 .czat-uchwyt { position: absolute; top: 6px; left: 50%; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--cz-ramka); }
 
@@ -568,7 +595,12 @@ body.czat-otwarty .dol { z-index: 43; }
 .czat-wyslij:disabled { color: var(--cz-tekst2); cursor: default; }
 .czat-wyslij:disabled::before { background: var(--cz-szary); box-shadow: 0 0 0 .5px var(--cz-wlosek); }
 .czat-mik.nagrywa { color: #ffffff; }
-.czat-mik.nagrywa::before { background-color: var(--cz-czerwony); background-image: var(--cz-lico-b); }
+/* Nagrywający mały mikrofon to też oko HAL-a (od 26.10.2026): czerwony środek w czarnej soczewce i srebrnym brzegu, bez znaku mikrofonu. */
+.czat-mik.nagrywa::before { background-color: var(--cz-czerwony);
+  background-image: radial-gradient(circle at 34% 30%, rgba(255, 255, 255, .75) 0 1px, rgba(255, 255, 255, 0) 4px),
+    radial-gradient(circle, #ffd88a 0 4%, #ff5428 10%, #e10a0a 22%, #8c0000 40%, #2b0202 60%, #0a0a0a 74%);
+  box-shadow: 0 0 0 2px #c7c7cc, 0 0 0 2.5px rgba(0, 0, 0, .3); }
+.czat-mik.nagrywa > svg { opacity: 0; }
 /* Puls wokół nagrywającego mikrofonu to sygnał stanu, więc zostaje także przy ograniczonym ruchu. */
 .czat-mik.nagrywa::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; animation: czat-puls 1.4s ease-out infinite; }
 @keyframes czat-puls { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cz-czerwony) 55%, transparent); } to { box-shadow: 0 0 0 10px transparent; } }
@@ -623,17 +655,27 @@ body.czat-otwarty .dol { z-index: 43; }
 }
 .czat-pusto { margin: auto 0; display: grid; justify-items: center; gap: 24px; padding: 16px 0 24px; text-align: center; color: var(--cz-tekst2); }
 .czat-pusto > p { max-width: 22em; margin: 0; }
-/* Duży mikrofon na pustej rozmowie (od 26.10.2026, Jacek: „Brak dużego mikrofonu”): kółko 72 px w akcencie z głębią, pod nim podpis.
-   Nagrywa: czerwone z pulsem, jak mały mikrofon przy polu. Biały znak na #0071e3 ma 4,7:1. */
-.czat-duzy-mik { display: grid; justify-items: center; gap: 8px; margin: 0; padding: 0; border: 0; background: none; color: var(--cz-tekst);
+/* Duży mikrofon na pustej rozmowie (od 26.10.2026, Jacek: „Brak dużego mikrofonu”), od tego samego dnia oko w stylu HAL 9000
+   z „2001: Odysei kosmicznej” (Jacek: „ever so slightly … reminiscent of HAL”): czarna soczewka z czerwonym środkiem w srebrnym
+   pierścieniu, blask z lewego górnego rogu pod 45° i cień w prawo w dół jak na przyciskach. Gdy słucha, środek jaśnieje i oddycha,
+   a poświata wychodzi na pierścień: to sygnał stanu, więc zostaje także przy ograniczonym ruchu. Pod okiem podpis mówi, co robi. */
+.czat-duzy-mik { display: grid; justify-items: center; gap: 10px; margin: 0; padding: 0; border: 0; background: none; color: var(--cz-tekst);
   font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.czat-duzy-mik > svg { box-sizing: content-box; width: 32px; height: 32px; padding: 20px; border-radius: 50%; background-color: var(--cz-przycisk); background-image: var(--cz-lico-b); color: var(--cz-na-przycisku);
-  box-shadow: var(--cz-c3d-b);
-  transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1), background-color 120ms ease; }
-.czat-duzy-mik:active > svg { transform: scale(1.03); transition: transform 80ms ease; }
-.czat-duzy-mik.nagrywa > svg { background-color: var(--cz-czerwony); animation: czat-puls 1.4s ease-out infinite; }
+.czat-oko { position: relative; display: block; width: 84px; height: 84px; border-radius: 50%;
+  background: linear-gradient(135deg, #fdfdfd, #d1d1d6 34%, #8e8e93 64%, #e5e5ea);
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .28), 1px 1px 2px rgba(0, 0, 0, .2), 3px 3px 10px rgba(0, 0, 0, .16), 6px 6px 20px rgba(0, 0, 0, .1);
+  transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1); }
+.czat-oko::after { content: ""; position: absolute; inset: 7px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, rgba(255, 255, 255, .9) 0 2px, rgba(255, 255, 255, .25) 4px, rgba(255, 255, 255, 0) 8px),
+    radial-gradient(circle, #ffd88a 0 3%, #ff5428 7%, #e10a0a 15%, #8c0000 28%, #2b0202 43%, #0a0a0a 55%, #050505);
+  box-shadow: inset 0 0 0 2px #111111, inset 2px 2px 4px rgba(255, 255, 255, .12), inset -2px -2px 6px rgba(0, 0, 0, .6); }
+.czat-duzy-mik:active .czat-oko { transform: scale(1.03); transition: transform 80ms ease; }
+.czat-duzy-mik.nagrywa .czat-oko::after { animation: czat-hal 2.2s ease-in-out infinite; }
+@keyframes czat-hal {
+  0%, 100% { filter: brightness(1.05) saturate(1.1); box-shadow: inset 0 0 0 2px #111111, 0 0 10px 2px rgba(255, 40, 20, .35); }
+  50% { filter: brightness(1.45) saturate(1.3); box-shadow: inset 0 0 0 2px #111111, 0 0 26px 9px rgba(255, 40, 20, .6); } }
 .czat-duzy-mik:focus-visible { outline: none; }
-.czat-duzy-mik:focus-visible > svg { box-shadow: 0 0 0 2px var(--cz-tlo), 0 0 0 4px var(--cz-akcent); }
+.czat-duzy-mik:focus-visible .czat-oko { box-shadow: 0 0 0 2px var(--cz-tlo), 0 0 0 4px var(--cz-akcent); }
 /* Podpowiedzi (od 26.10.2026, Jacek: pytania „za ciasno, bez koloru i bez oddechu”, „nikt nie wie, że da się je stuknąć”): przyciski
    z głębią w pastelach zakładek, których dotyczą, co 12 px, na całą szerokość. Napis #1d1d1f (w ciemnym biały) ma na nich od 9:1. */
 .czat-podpowiedzi { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: 100%; max-width: 480px; }
@@ -762,6 +804,8 @@ body.czat-otwarty .dol { z-index: 43; }
 //                               mikrofon: true, glosNatywny: { start(klucz, ustawienia), stop(zaraz) }, naZmiane(otwarty),
 //                               dol(): ile pikseli od dołu ekranu ma zostać widać pod arkuszem, na przykład nawigacja aplikacji })
 //   Czat.dymek(przycisk): dymek przy ikonce bez podpisu. Wołaj go przed dodaniem własnego „click”.
+//   czat.wstecz(): Wstecz w telefonie; zamyka Historię, a gdy jej nie ma, rozmowę (true, gdy coś zamknął).
+// Historia (od 26.10.2026): „Nowa rozmowa” odkłada bieżącą do Historii, a „Historia” pokazuje wcześniejsze i wraca do każdej z nich.
 'use strict';
 (() => {
   const SERWER = 'https://ntfy.sh', SONIOX = 'wss://stt-rt.soniox.com/transcribe-websocket';
@@ -805,6 +849,8 @@ body.czat-otwarty .dol { z-index: 43; }
     mikrofon: '<path d="M12 3.5a3.4 3.4 0 0 0-3.4 3.4v5a3.4 3.4 0 0 0 6.8 0v-5A3.4 3.4 0 0 0 12 3.5zM18 11.9h-1.9a4.1 4.1 0 0 1-8.2 0H6a6 6 0 0 0 5.1 5.9v2.7h1.8v-2.7A6 6 0 0 0 18 11.9z"/>',
     zewnatrz: '<path d="M13.5 4H20v6.5h-2V7.4l-7.3 7.3-1.4-1.4L16.6 6h-3.1zM5 6.5h6v2H6v9.5h9.5v-5h2v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1z"/>',
     dalej: '<path d="M9.3 6.3 15 12l-5.7 5.7-1.4-1.4 4.3-4.3-4.3-4.3z"/>',
+    historia: '<path fill-rule="evenodd" d="M12 3.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17zm0 1.9a6.6 6.6 0 1 0 0 13.2 6.6 6.6 0 0 0 0-13.2zM11.05 7.5h1.9v4.45l3.3 1.95-.97 1.64-4.23-2.5z"/>',
+    nowa: '<path d="M11.05 5h1.9v6.05H19v1.9h-6.05V19h-1.9v-6.05H5v-1.9h6.05z"/>',
   };
   const ikona = (n, r = 20) => `<svg width="${r}" height="${r}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${IKONY[n]}</svg>`;
 
@@ -860,7 +906,15 @@ body.czat-otwarty .dol { z-index: 43; }
     const korzen = el('section', { class: `czat czat-${tryb}`, 'aria-label': 'Asystent', tabindex: '-1' });
     if (tryb === 'arkusz') { korzen.setAttribute('role', 'dialog'); korzen.setAttribute('aria-modal', 'true'); korzen.hidden = true; }
     const zamknijB = przycisk('zamknij', 'Zamknij', 'czat-zamknij', 18);
-    const gora = el('div', { class: 'czat-gora' }, tryb === 'arkusz' ? el('span', { class: 'czat-uchwyt', 'aria-hidden': 'true' }) : null, zamknijB);
+    // Historia i nowa rozmowa (od 26.10.2026, Jacek: „nie ma możliwości nawigacji i historii, i wyjścia z tego, i … rozpoczęcia od nowa”):
+    // dwa przyciski z napisem, bo samej ikonki nikt nie brał za przycisk. Historia przełącza widok na listę wcześniejszych rozmów,
+    // a Nowa rozmowa odkłada bieżącą do Historii i zaczyna od pustej. Wyjście to krzyżyk, Escape, Wstecz i zakładki pod rozmową.
+    const pigulka = (n, napis, klasa) => { const b = el('button', { type: 'button', class: 'czat-pigulka ' + klasa, html: ikona(n, 18) }); b.append(el('span', { text: napis })); return b; };
+    const historiaB = pigulka('historia', 'Historia', 'czat-historia');
+    historiaB.setAttribute('aria-pressed', 'false');
+    const nowaB = pigulka('nowa', 'Nowa rozmowa', 'czat-nowa');
+    const gora = el('div', { class: 'czat-gora' }, tryb === 'arkusz' ? el('span', { class: 'czat-uchwyt', 'aria-hidden': 'true' }) : null,
+      el('div', { class: 'czat-gora-lewo' }, historiaB, nowaB), zamknijB);
     const lista = el('div', { class: 'czat-lista', role: 'log', 'aria-live': 'polite', 'aria-label': 'Rozmowa z asystentem' });
     const stanL = el('p', { class: 'czat-stan', role: 'status', hidden: true });
     const pole = el('textarea', { class: 'czat-tekst', rows: '1', maxlength: '600', placeholder: 'Zapytaj o auta…', 'aria-label': 'Pytanie do asystenta', enterkeyhint: 'send', autocomplete: 'off' });
@@ -884,6 +938,8 @@ body.czat-otwarty .dol { z-index: 43; }
       wyslijB.disabled = pracuje || !pole.value.trim();
       wyslijB.setAttribute('aria-label', pracuje ? 'Komputer jeszcze odpowiada' : 'Wyślij');
       mikB.disabled = pracuje;
+      nowaB.disabled = pracuje || !historia.length;
+      historiaB.disabled = pracuje;
     }
     function rosnij() {
       pole.style.height = 'auto';
@@ -912,7 +968,11 @@ body.czat-otwarty .dol { z-index: 43; }
     }
     function napisPokazu(p) {
       if (p.model && p.nazwa) return 'Pokaż model: ' + p.nazwa;
+      if (p.porownaj) return 'Pokaż porównanie';
       if (p.podium) return 'Pokaż Podium';
+      if (p.finanse) return 'Pokaż ratę w Finansach';
+      if (p.szukaj) return 'Szukaj w Ofertach: ' + p.szukaj;
+      if (p.rozdzial && p.nazwa) return 'Otwórz w Poradniku: ' + p.nazwa;
       return 'Pokaż ' + BIERNIK[p.zakladka];
     }
     function wiadomosc(w) {
@@ -956,8 +1016,9 @@ body.czat-otwarty .dol { z-index: 43; }
         b.addEventListener('click', () => wyslij(t));
         rzad.append(b);
       }
-      // Duży mikrofon na pustej rozmowie (od 26.10.2026, Jacek: „Brak dużego mikrofonu”), ten sam co mały przy polu pytania.
-      const duzy = el('button', { type: 'button', class: 'czat-duzy-mik', 'aria-label': 'Powiedz pytanie', html: ikona('mikrofon', 32) + '<span>Powiedz pytanie</span>' });
+      // Duży mikrofon na pustej rozmowie (od 26.10.2026, Jacek: „Brak dużego mikrofonu”), ten sam co mały przy polu pytania. Od tego samego
+      // dnia to oko w stylu HAL 9000 (Jacek: „ever so slightly … reminiscent of HAL z Odysei Kosmicznej 2001”), a podpis mówi, co robi.
+      const duzy = el('button', { type: 'button', class: 'czat-duzy-mik', 'aria-label': 'Powiedz pytanie', html: '<span class="czat-oko" aria-hidden="true"></span><span>Powiedz pytanie</span>' });
       duzy.hidden = !(mozeNagrywac() && pamiec.czytaj('glos', null) !== false);
       duzy.addEventListener('click', () => (glos.stan === 'nic' ? glosStart() : glosStop(true)));
       return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), duzy, rzad);
@@ -965,15 +1026,92 @@ body.czat-otwarty .dol { z-index: 43; }
     function dodaj(w) {
       historia.push(w);
       zapiszHistorie();
+      if (widokHistorii) { rysuj(); return lista.lastElementChild; }
       usunPusto();
       const e = wiadomosc(w);
       lista.insertBefore(e, mysli && mysli.parentNode === lista ? mysli : null);
       return e;
     }
+    // ---------------------------------------------------------------- historia rozmów (od 26.10.2026)
+    // Wcześniejsze rozmowy leżą w pamięci urządzenia (najwyżej 20, każda do 40 wiadomości) razem z identyfikatorem rozmowy dla komputera,
+    // więc po powrocie da się dopytać dalej. Nic nie znika: nowa rozmowa odkłada bieżącą, a powrót do starej odkłada bieżącą też.
+    const ARCHIWUM = 20;
+    let widokHistorii = false;
     function rysuj() {
+      widokHistorii = false;
+      historiaB.setAttribute('aria-pressed', 'false');
+      lista.setAttribute('aria-label', 'Rozmowa z asystentem');
       lista.replaceChildren(...(historia.length ? historia.map(wiadomosc) : [pusto()]));
       if (mysli) lista.append(mysli);
+      forma.hidden = false;
+      przyciski();
       naDol();
+    }
+    const archiwum = () => { const a = pamiec.czytaj('archiwum', []); return Array.isArray(a) ? a.filter((r) => r && Array.isArray(r.wpisy) && r.wpisy.length) : []; };
+    function odloz() {
+      if (!historia.length) return;
+      const a = archiwum();
+      a.unshift({ id: pamiec.czytaj('rozmowa', null) || losowe(), czas: pamiec.czytaj('ostatnio', Date.now()), wpisy: historia });
+      pamiec.zapisz('archiwum', a.slice(0, ARCHIWUM));
+    }
+    function odNowa() {
+      odloz();
+      historia = [];
+      zapiszHistorie();
+      pamiec.zapisz('rozmowa', losowe());
+      pamiec.zapisz('ostatnio', Date.now());
+      rysuj();
+    }
+    function nowaRozmowa() {
+      if (pracuje || !historia.length) return;
+      if (glos.stan !== 'nic') glosStop(false);
+      odNowa();
+      stan('Poprzednia rozmowa jest w Historii.', 5000);
+    }
+    // Po 6 godzinach ciszy rozmowa zaczyna się od nowa, jak dla komputera (rozmowa() niżej), a stara czeka w Historii.
+    function poCzasie() {
+      if (!historia.length || pracuje || czeka.size || (pamiec.czytaj('czeka', []) || []).length) return;
+      if (Date.now() - pamiec.czytaj('ostatnio', 0) > NOWA_ROZMOWA_MS) odNowa();
+    }
+    function wrocDo(i) {
+      if (pracuje) return;
+      const a = archiwum(), r = a[i];
+      if (!r) return;
+      a.splice(i, 1);
+      pamiec.zapisz('archiwum', a);
+      odloz();
+      historia = r.wpisy.slice(-NAJWIECEJ);
+      zapiszHistorie();
+      pamiec.zapisz('rozmowa', r.id);
+      pamiec.zapisz('ostatnio', Date.now());
+      rysuj();
+    }
+    function kiedy(t) {
+      const d = new Date(t), dzis = new Date();
+      const godz = d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+      if (d.toDateString() === dzis.toDateString()) return 'Dziś, ' + godz;
+      if (d.toDateString() === new Date(dzis - 864e5).toDateString()) return 'Wczoraj, ' + godz;
+      return d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' }) + ', ' + godz;
+    }
+    const pytan = (n) => `${n} ${n === 1 ? 'pytanie' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'pytania' : 'pytań'}`;
+    function pokazHistorie() {
+      if (pracuje) return;
+      if (glos.stan !== 'nic') glosStop(false);
+      widokHistorii = true;
+      historiaB.setAttribute('aria-pressed', 'true');
+      lista.setAttribute('aria-label', 'Wcześniejsze rozmowy');
+      const a = archiwum();
+      lista.replaceChildren(a.length ? el('div', { class: 'czat-rozmowy' }, ...a.map((r, i) => {
+        const pierwsze = r.wpisy.find((w) => w.kto === 'ja');
+        const b = el('button', { type: 'button', class: 'czat-rozmowa' },
+          el('span', { class: 'czat-rozmowa-tytul', text: pierwsze ? pierwsze.tekst : 'Rozmowa' }),
+          el('span', { class: 'czat-rozmowa-kiedy', text: `${kiedy(r.czas)} · ${pytan(r.wpisy.filter((w) => w.kto === 'ja').length)}` }));
+        b.addEventListener('click', () => wrocDo(i));
+        return b;
+      })) : el('p', { class: 'czat-pusto', text: 'Wcześniejszych rozmów jeszcze nie ma.' }));
+      forma.hidden = true;
+      stan('');
+      lista.scrollTop = 0;
     }
 
     // ---------------------------------------------------------------- kanał ntfy.sh
@@ -1118,6 +1256,7 @@ body.czat-otwarty .dol { z-index: 43; }
     function otworz() {
       if (tryb === 'strona') return;
       doRozmowy = 0;
+      poCzasie();
       if (!otwarty()) wroc = document.activeElement;
       if (tryb === 'panel') o.miejsce.hidden = false;
       else {
@@ -1149,13 +1288,15 @@ body.czat-otwarty .dol { z-index: 43; }
       if (o.naZmiane) o.naZmiane(false);
     }
     zamknijB.addEventListener('click', zamknij);
+    historiaB.addEventListener('click', () => (widokHistorii ? rysuj() : pokazHistorie()));
+    nowaB.addEventListener('click', nowaRozmowa);
     if (zaslona) zaslona.addEventListener('click', zamknij);
     forma.addEventListener('submit', (e) => { e.preventDefault(); wyslij(pole.value); });
     wyslijB.addEventListener('click', () => wyslij(pole.value));
     pole.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); wyslij(pole.value); } });
     pole.addEventListener('input', () => { rosnij(); przyciski(); });
     korzen.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); if (glos.stan !== 'nic') glosStop(false); else zamknij(); return; }
+      if (e.key === 'Escape') { e.preventDefault(); if (glos.stan !== 'nic') glosStop(false); else if (widokHistorii) rysuj(); else zamknij(); return; }
       if (e.key !== 'Tab' || tryb !== 'arkusz') return;
       const f = [...korzen.querySelectorAll('button, a[href], textarea')].filter((x) => !x.disabled && x.offsetParent !== null);
       if (!f.length) return;
@@ -1326,6 +1467,7 @@ body.czat-otwarty .dol { z-index: 43; }
 
     // ---------------------------------------------------------------- start
     rysuj();
+    poCzasie();
     przyciski();
     pokazMik();
     for (const c of pamiec.czytaj('czeka', []) || []) {
@@ -1345,7 +1487,8 @@ body.czat-otwarty .dol { z-index: 43; }
     }
     zapiszCzekajace();
     const wrocDoRozmowy = () => { if (!doRozmowy || Date.now() - doRozmowy > 600000) return false; doRozmowy = 0; otworz(); return true; };
-    const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy };
+    const wstecz = () => { if (widokHistorii) { rysuj(); return true; } if (!otwarty()) return false; zamknij(); return true; };
+    const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz };
     aktywny = api;
     return api;
   }
@@ -2411,6 +2554,20 @@ body.czat-otwarty .dol { z-index: 43; }
   // po dawnych nazwach: katalog (Ogłoszenia, Teraz), historia, modele (Katalag, Podium), kredyt (Finanse) i poradnik.
   // Mikrofon: Android i strona w sieci nagrywają same (Safari i Chrome pod https). Spod auta:// strona mikrofonu nie dostaje, więc
   // w aplikacji na iPhone'a nagrywa Aplikacja.swift (od 26.10.2026, klasa Glos), a strona daje jej klucz i ustawienia Soniox.
+  // Pole w stronie w ramce ustawione tak, jakby wpisał je człowiek: wartość i zdarzenie input, na które strona już słucha (szukanie
+  // w Ofertach, cena i okres w Finansach). Gdy ramka jeszcze się wczytuje, próbujemy raz po jej wczytaniu.
+  function wpisz(ramka, sel, wartosc) {
+    const zrob = () => {
+      try {
+        const e = ramka.contentDocument && ramka.contentDocument.querySelector(sel);
+        if (!e) return false;
+        e.value = String(wartosc);
+        e.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+      } catch { return false; }
+    };
+    if (!zrob()) ramka.addEventListener('load', () => setTimeout(zrob, 300), { once: true });
+  }
   const mostGlosu = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.glos;
   const czat = window.Czat && KANAL ? Czat.uruchom({
     kanal: KANAL, tryb: 'arkusz', mikrofon: SKAD !== 'iPhone', skad: SKAD,
@@ -2421,15 +2578,30 @@ body.czat-otwarty .dol { z-index: 43; }
     glosNatywny: mostGlosu ? { start: (klucz, konfiguracja) => mostGlosu.postMessage({ co: 'start', klucz, konfiguracja }),
       stop: (zaraz) => mostGlosu.postMessage({ co: 'stop', zaraz: Boolean(zaraz) }) } : null,
     zakladka: () => { const k = klucz(widok); return k === 'atlas' ? 'modele' : k; },
+    // Ręce asystenta (od 26.10.2026 także porównanie, rata w Finansach, szukanie w Ofertach i rozdział poradnika; Jacek: „On musi też być
+    // w stanie obsługiwać tę aplikację. Mieć ręce i nogi”).
     async pokaz(p) {
       const z = p.zakladka === 'nowe' ? 'katalog' : p.zakladka;
-      if (z === 'katalog' || z === 'historia') { await ustawPigulke('katalog', z === 'historia' ? 'historia' : 'teraz', true, false); await pokazWidok(nrZakladki('katalog'), true); }
-      else if (z === 'modele') {
+      if (z === 'katalog' || z === 'historia') {
+        await ustawPigulke('katalog', z === 'historia' ? 'historia' : 'teraz', true, false);
+        await pokazWidok(nrZakladki('katalog'), true);
+        if (p.szukaj && z === 'katalog') wpisz(STRONY.katalog.el, 'input[type="search"]', p.szukaj);
+      } else if (z === 'modele') {
         if (PIGULKI.modele) await ustawPigulke('modele', 'podium', true, false);
         await pokazWidok(nrZakladki('modele'), true);
-        if (p.model || p.podium) STRONY.modele.el.contentWindow.postMessage({ auta: 'pokaz', model: p.model || null, podium: p.podium || null }, '*');
-      } else if (z === 'kredyt') await pokazWidok(nrZakladki('kredyt'), true);
-      else if (z === 'poradnik') await pokazWidok(nrZakladki('poradnik'), true);
+        if (p.model || p.podium || p.porownaj) STRONY.modele.el.contentWindow.postMessage({ auta: 'pokaz', model: p.model || null, podium: p.podium || null, porownaj: p.porownaj || null }, '*');
+      } else if (z === 'kredyt') {
+        if (p.finanse && jestPigulka('kredyt', p.finanse.czesc)) await ustawPigulke('kredyt', p.finanse.czesc, true, false);
+        await pokazWidok(nrZakladki('kredyt'), true);
+        if (p.finanse) { wpisz(STRONY.kredyt.el, '#cena', p.finanse.cena); wpisz(STRONY.kredyt.el, '#okres', p.finanse.okres); }
+      } else if (z === 'poradnik') {
+        if (p.rozdzial) await ustawPigulke('poradnik', 'calosc', true, false);
+        await pokazWidok(nrZakladki('poradnik'), true);
+        if (p.rozdzial) {
+          ustawPoradnik(false);
+          setTimeout(() => { try { const c = STRONY.poradnik.el.contentDocument.getElementById(p.rozdzial); if (c) c.scrollIntoView({ block: 'start' }); } catch { /* strona się wczytuje */ } }, 150);
+        }
+      }
     },
   }) : null;
   const przyciskCzatu = $('#czat-otworz');
@@ -2443,7 +2615,7 @@ body.czat-otwarty .dol { z-index: 43; }
   // odpowiada dopiero po chwili, więc gdy stoi na pierwszej pigułce rzędu, Wstecz idzie na pierwszą zakładkę.
   function wstecz() {
     if (menuOtomoto) { zamknijMenuOtomoto(true); return true; }
-    if (czat && czat.otwarty()) { czat.zamknij(); return true; }
+    if (czat && czat.otwarty()) return czat.wstecz();
     const k = klucz(widok);
     if (k === 'atlas') {
       if (atlasGotowy) { atlasWstecz = Date.now(); ramkaAtlasu.contentWindow.postMessage({ atlas: 'wstecz' }, '*'); }
