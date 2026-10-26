@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <title>Kasiomobile</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -24,11 +24,11 @@
    ciemny to czerń. Kontrast par liczy test.js na kolorach, które naprawdę widać. */
 :root {
   color-scheme: light dark;
-  --tlo: #f5f5f7;
+  --tlo: #ffffff;
   /* Tło ramki z zakładką ma kolor samych stron (biel, w ciemnym czerń), więc przy prawej krawędzi nie stoi szary pasek. */
   --strona: #ffffff;
   --tekst: #1d1d1f;
-  /* Drugi plan #636366 (od 26.10.2026): na odcieniach zakładek #6e6e73 miał od 4,47:1, a #636366 ma od 5,28:1. */
+  /* Drugi plan #636366 (od 26.10.2026): 5,99:1 na bieli, 5,5:1 na #f5f5f7. */
   --tekst2: #636366;
   --akcent: #0071e3;
   /* Napis w akcencie: #0066cc ma 5,6:1 na bieli. */
@@ -348,18 +348,17 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
    do akcentu, pastel z niej do rzeczy dyskretnych). Każda zakładka ma barwę z palety systemowej Apple: zielone Oferty, niebieskie Podium,
    pomarańczowe Finanse i fioletowy Poradnik. --gleboka to ta barwa przyciemniona tak, że biały napis ma na niej od 4,5:1, --zywa-c to
    żywa barwa ciemnego motywu, a --pastel z index.html to 16% barwy na bieli (w ciemnym 28% na #1c1c1e). --barwa to barwa wybranej rzeczy
-   w bieżącym motywie: tło wybranej zakładki i pigułki, pierścień i pasek przenoszenia. W jasnym motywie nagłówek, nawigacja i tło pod nimi
-   stoją na odcieniu 10% barwy wybranej zakładki (Jacek: „cały ekran, tło jego się robiło w odcieniu … buttona, na którym jesteśmy”),
-   a strony w ramkach zostają białe; w ciemnym zostaje czerń. Kontrast każdej pary liczy skrypt. */
-#seg-katalog, .podwidoki[data-z="katalog"], body[data-zakladka="katalog"] { --gleboka: #1e7d36; --zywa-c: #30d158; --odcien-jasny: #ebf9ee; }
-#seg-modele, .podwidoki[data-z="modele"], body[data-zakladka="modele"] { --gleboka: #0071e3; --zywa-c: #0a84ff; --odcien-jasny: #e6f2ff; }
-#seg-kredyt, .podwidoki[data-z="kredyt"], body[data-zakladka="kredyt"] { --gleboka: #bc5500; --zywa-c: #ff9f0a; --odcien-jasny: #fff4e6; }
-#seg-poradnik, .podwidoki[data-z="poradnik"], body[data-zakladka="poradnik"] { --gleboka: #9a4fcf; --zywa-c: #bf5af2; --odcien-jasny: #f7eefc; }
+   w bieżącym motywie: tło wybranej zakładki i pigułki, pierścień i pasek przenoszenia. Tło nagłówka, nawigacji i stron jest we wszystkich
+   czterech zakładkach takie samo: biel, w ciemnym czerń (Jacek, 26.10.2026, po próbie z odcieniami barw zakładek na całym ekranie:
+   „ten eksperyment z kolorem … się nie udało, wracamy do bieli wszystkich czterech takiej samej”). Kontrast każdej pary liczy skrypt. */
+#seg-katalog, .podwidoki[data-z="katalog"], body[data-zakladka="katalog"] { --gleboka: #1e7d36; --zywa-c: #30d158; }
+#seg-modele, .podwidoki[data-z="modele"], body[data-zakladka="modele"] { --gleboka: #0071e3; --zywa-c: #0a84ff; }
+#seg-kredyt, .podwidoki[data-z="kredyt"], body[data-zakladka="kredyt"] { --gleboka: #bc5500; --zywa-c: #ff9f0a; }
+#seg-poradnik, .podwidoki[data-z="poradnik"], body[data-zakladka="poradnik"] { --gleboka: #9a4fcf; --zywa-c: #bf5af2; }
 body, .karty [role="tab"], .podwidoki { --barwa: var(--gleboka, var(--akcent)); }
-body { --tlo-pasa: var(--odcien-jasny, var(--tlo)); background-color: var(--tlo-pasa); }
+body { --tlo-pasa: var(--tlo); background-color: var(--tlo-pasa); }
 @media (prefers-color-scheme: dark) {
   body, .karty [role="tab"], .podwidoki { --barwa: var(--zywa-c, var(--akcent)); }
-  body { --tlo-pasa: var(--tlo); }
   .karty [role="tab"]:not([aria-selected="true"]) { background-color: var(--pastel-c); }
 }
 .glowa { background-color: var(--tlo-pasa); transition: background-color 200ms ease; }
@@ -1587,7 +1586,7 @@ body.okno .glowa { background-color: var(--strona); }
       + '.panel-filtrow{top:clamp(16px,2.5vw,32px)!important;max-height:calc(100vh - 2 * clamp(16px,2.5vw,32px))!important}'
       // Karty ogłoszeń (od 25.10.2026, Jacek: „więcej odstępu … pomiędzy listingami, żeby oddychało”): szare tło strony, białe karty,
       // a w ciemnym grafitowe na czerni, jak w App Store; 32 px między rzędami kart i 24 px między kolumnami.
-      + 'html,body{background:light-dark(#f5f5f7,#000000)!important}.produkty{gap:32px 24px!important}.karta-produktu{background:light-dark(#ffffff,#1c1c1e)!important}'
+      + 'html,body{background:light-dark(#ffffff,#000000)!important}.produkty{gap:32px 24px!important}.karta-produktu{background:light-dark(#ffffff,#1c1c1e)!important}'
       // Na telefonie pasek pod polem szukania w siatce nawigacji: Filtry na 4 kolumny, „Kolejność” na 8, rynna 8 px, także pod polem.
       // Skaner układa ten pasek polami siatki (szukaj, filtry, sort), więc 12 kolumn dostają też pola.
       + '@media (max-width:759px){.narzedzia{gap:8px!important}.pasek-narzedzi:has(>.mobilne-filtry){grid-template-columns:repeat(12,minmax(0,1fr))!important;gap:8px!important;'
@@ -1611,10 +1610,7 @@ body.okno .glowa { background-color: var(--strona); }
         '.pole:has(#nadplata)', '.kwota', '.reszta', '#h-leasing-tab'].map((s) => `html[data-czesc="leasing"] ${s}`).join(',') + '{display:none!important}'
       + 'html[data-czesc="leasing"] .blok-leasing{margin-top:0!important}'
       + 'html[data-czesc="kredyt"] section[aria-labelledby="sk-leasing"],html[data-czesc="kredyt"] .blok-leasing{display:none!important}'
-      + CALOSC('html[data-czesc] #skrot>.przycisk') + PIERSCIEN
-      // Bloki na odcieniu zakładki są białe (w ciemnym grafitowe), a ramkę mają z kalkulatora (od 26.10.2026).
-      + 'html[data-km-odcien] :is(.karta-skrot,.panel,.ustawienia-leasingu,.karta){background:#ffffff!important}'
-      + '@media (prefers-color-scheme:dark){html[data-km-odcien] :is(.karta-skrot,.panel,.ustawienia-leasingu,.karta){background:#1c1c1e!important}}',
+      + CALOSC('html[data-czesc] #skrot>.przycisk') + PIERSCIEN,
     historia: GAZETA + '.widok-strony{display:none!important}' + CALOSC('.przycisk-p[data-widok-strony="pelny"]') + PIERSCIEN,
     // Poradnik w zakładce (od 25.10.2026; wcześniej w oknie pod logo): data nad tytułem bliżej nagłówka, a na telefonie tekst
     // w siatce aplikacji, czyli od tej samej krawędzi co logo (strona z programu 13 ma tam kolumnę 87,5%).
@@ -1622,9 +1618,9 @@ body.okno .glowa { background-color: var(--strona); }
       + `@media (max-width:734px){main{box-sizing:border-box!important;width:100%!important;padding-left:${L}!important;padding-right:${P}!important}`
       + '#czytaj-calosc{box-sizing:border-box!important;width:100%!important;justify-content:center!important}}' + SZKLANY('#czytaj-calosc'),
   };
-  // Tło strony w odcieniu wybranej zakładki, jak nagłówek i nawigacja (od 26.10.2026, Jacek: „jakbyś miał w Paincie, robisz fill …
-  // wszystkie przestrzenie, które … nie są zamknięte w żadne balony … się wypełniają”); w ciemnym czerń. Odcień i znacznik data-km-odcien
-  // wpisuje ustawSiatke, więc okno na komputerze, które ich nie wpisuje, zostaje przy swoich tłach. Bloki zostają białe z ramką.
+  // Tło strony takie samo jak nagłówek i nawigacja: we wszystkich czterech zakładkach biel, w ciemnym czerń (od 26.10.2026; Jacek po próbie
+  // z odcieniami barw zakładek: „wracamy do bieli wszystkich czterech takiej samej”). Kolor i znacznik data-km-odcien wpisuje ustawSiatke,
+  // więc okno na komputerze, które ich nie wpisuje, zostaje przy tłach z SIATKA.
   const cssSiatki = (nazwa) => `html{scrollbar-width:thin;scrollbar-gutter:stable}html[data-km-odcien],html[data-km-odcien] body{background:var(--km-odcien)!important}${SIATKA[nazwa]}`;
   // </siatka>
   // Pod stroną miejsce na nawigację ze szkła, która na telefonie leży nad nią (wysokość --km-dol wpisuje ustawSiatke; na szerokim ekranie 0).
@@ -1772,7 +1768,6 @@ body.okno .glowa { background-color: var(--strona); }
     const s = STRONY[k];
     return s.ramka.pokaz(s.plik, s.pusty);
   }
-  const kolorPaska = document.querySelector('meta[name="theme-color"][media*="light"]');
   function pokazWidok(nr, zapisz) {
     widok = nr >= 0 && nr < WIDOKI.length ? nr : 0;
     segmenty.forEach((s, i) => {
@@ -1780,13 +1775,10 @@ body.okno .glowa { background-color: var(--strona); }
       s.tabIndex = i === widok ? 0 : -1;
     });
     PANELE.forEach((p, i) => { p.hidden = i !== widok; });
-    // W nawigacji widać rząd pigułek wybranej zakładki. Nagłówek i nawigacja stoją w odcieniu barwy wybranej zakładki (styl.css,
-    // „Barwy zakładek”), a pasek stanu przeglądarki w jasnym motywie razem z nimi.
+    // W nawigacji widać rząd pigułek wybranej zakładki.
     const id = ID_ZAKLADEK[widok];
     for (const [z, g] of Object.entries(grupyPigulek)) g.hidden = z !== id;
     document.body.dataset.zakladka = id;
-    ustawSiatke();
-    if (kolorPaska) kolorPaska.content = getComputedStyle(document.body).getPropertyValue('--odcien-jasny').trim() || '#f5f5f7';
     pokazOkno();
     // Zakładka zapisana nazwą (od 18.10.2026), bo numery przesuwają się, gdy zakładka dochodzi albo znika.
     if (zapisz) pamiec.zapisz('zakladka', WIDOKI[widok]);
