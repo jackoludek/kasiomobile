@@ -145,7 +145,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
    przycisk: od 25.10.2026 stuknięcie otwiera to samo menu Otomoto co napis (app.js, „napis”), a do 24.10.2026 otwierało poradnik. Wygląda dalej jak logo; pole dotyku ma 48 px,
    a ujemny margines trzyma układ nagłówka taki, jak przy samym obrazku 40 px. */
 .logo { position: relative; flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin: -4px; padding: 0; border: 0; border-radius: 14px; background: none; }
-.logo img { display: block; width: 40px; height: 40px; transition: transform 120ms ease; }
+.logo img { display: block; width: 40px; height: 40px; transition: transform 120ms ease, filter 400ms ease; }
+/* Niespodzianka (od 26.10.2026, Jacek: „kolory trochę zmieni … w obu przypadkach … efekt dźwiękowy, ale może subtelne”): w kolorowym trybie
+   barwy logo przesuwają się o 28°, a przy każdym przełączeniu logo podskakuje raz (app.js, „Niespodzianka”, razem z cichym dźwiękiem). */
+body.kolorowo .logo img { filter: hue-rotate(28deg) saturate(1.3); }
+.logo.niespodzianka img { animation: niespodzianka 420ms cubic-bezier(.3, 1.7, .5, 1); }
+@keyframes niespodzianka { 40% { transform: scale(1.14) rotate(-6deg); } }
 .logo:active img { transform: scale(.94); }
 h1 { flex: 1; min-width: 0; display: flex; align-items: center; margin: 0 0 0 2px; }
 /* Napis to krzywe w wielkości --napis; kolory ma w sobie, za motywem systemu. */
@@ -357,6 +362,15 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 #seg-poradnik, .podwidoki[data-z="poradnik"], body[data-zakladka="poradnik"] { --gleboka: #9a4fcf; --zywa-c: #bf5af2; }
 body, .karty [role="tab"], .podwidoki { --barwa: var(--gleboka, var(--akcent)); }
 body { --tlo-pasa: var(--tlo); background-color: var(--tlo-pasa); }
+/* Kolorowe tło jako niespodzianka (od 26.10.2026; Jacek: „ten kolorowy … jest Easter … przełącznik … pod samym” logo): przytrzymanie logo
+   przez 0,6 s włącza i wyłącza odcień 10% barwy wybranej zakładki na całym ekranie, także pod stronami (app.js, „Niespodzianka”).
+   Domyślnie biel, w ciemnym motywie zawsze czerń. */
+@media (prefers-color-scheme: light) {
+  body.kolorowo[data-zakladka="katalog"] { --tlo-pasa: #ebf9ee; }
+  body.kolorowo[data-zakladka="modele"] { --tlo-pasa: #e6f2ff; }
+  body.kolorowo[data-zakladka="kredyt"] { --tlo-pasa: #fff4e6; }
+  body.kolorowo[data-zakladka="poradnik"] { --tlo-pasa: #f7eefc; }
+}
 @media (prefers-color-scheme: dark) {
   body, .karty [role="tab"], .podwidoki { --barwa: var(--zywa-c, var(--akcent)); }
   .karty [role="tab"]:not([aria-selected="true"]) { background-color: var(--pastel-c); }
@@ -1737,6 +1751,8 @@ body.okno .glowa { background-color: var(--strona); }
   }
   addEventListener('resize', ustawSiatke);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => requestAnimationFrame(ustawSiatke));
+  // Kolorowe tło (niespodzianka pod logo, niżej) zostaje zapamiętane.
+  document.body.classList.toggle('kolorowo', pamiec.czytaj('kolorowo', false) === true);
   LISTA_STRON.forEach(([, s]) => s.el.addEventListener('load', ustawSiatke));
 
   // Otwarte okno w stronie (filtry, szczegóły auta, galeria) dostaje cały ekran: nagłówek, pigułki i zakładki chowają się,
@@ -1779,6 +1795,7 @@ body.okno .glowa { background-color: var(--strona); }
     const id = ID_ZAKLADEK[widok];
     for (const [z, g] of Object.entries(grupyPigulek)) g.hidden = z !== id;
     document.body.dataset.zakladka = id;
+    ustawSiatke();
     pokazOkno();
     // Zakładka zapisana nazwą (od 18.10.2026), bo numery przesuwają się, gdy zakładka dochodzi albo znika.
     if (zapisz) pamiec.zapisz('zakladka', WIDOKI[widok]);
@@ -2138,6 +2155,52 @@ body.okno .glowa { background-color: var(--strona); }
   // wstecz zamykają menu.
   const napis = $('#napis'), logo = $('#logo');
   let menuOtomoto = null, zrodloMenu = napis;
+  // Niespodzianka (od 26.10.2026, Jacek: kolorowe tło jako „Easter … przełącznik … pod samym” logo): przytrzymanie logo przez 0,6 s
+  // włącza i wyłącza odcień barwy wybranej zakładki na całym ekranie, z krótkim drgnięciem. Stuknięcie dalej otwiera menu Otomoto,
+  // a klik po przytrzymaniu niczego nie otwiera (słuchacz w fazie przechwytywania stoi przed tym od menu).
+  // Do tego cichy dźwięk: dwie krótkie nuty (C6 i E6, sinus, głośność 5%), w górę przy włączeniu i w dół przy wyłączeniu. Kontekst dźwięku
+  // rusza już przy dotknięciu, bo przeglądarki grają dopiero po geście; na iPhonie z wyciszonym dzwonkiem dźwięku nie ma.
+  {
+    let zegar = 0, przytrzymane = false, dzwiek = null;
+    const stop = () => clearTimeout(zegar);
+    const graj = (wl) => {
+      try {
+        const t = dzwiek.currentTime + 0.02;
+        (wl ? [1046.5, 1318.5] : [1318.5, 1046.5]).forEach((f, i) => {
+          const o = dzwiek.createOscillator(), g = dzwiek.createGain(), od = t + i * 0.09;
+          o.type = 'sine';
+          o.frequency.value = f;
+          g.gain.setValueAtTime(0.0001, od);
+          g.gain.exponentialRampToValueAtTime(0.05, od + 0.012);
+          g.gain.exponentialRampToValueAtTime(0.0001, od + 0.16);
+          o.connect(g).connect(dzwiek.destination);
+          o.start(od);
+          o.stop(od + 0.18);
+        });
+      } catch { /* bez dźwięku */ }
+    };
+    logo.addEventListener('pointerdown', () => {
+      przytrzymane = false;
+      clearTimeout(zegar);
+      try { dzwiek = dzwiek || new (window.AudioContext || window.webkitAudioContext)(); if (dzwiek.state === 'suspended') dzwiek.resume(); } catch { dzwiek = null; }
+      zegar = setTimeout(() => {
+        przytrzymane = true;
+        const wl = !document.body.classList.contains('kolorowo');
+        document.body.classList.toggle('kolorowo', wl);
+        pamiec.zapisz('kolorowo', wl);
+        ustawSiatke();
+        logo.classList.remove('niespodzianka');
+        void logo.offsetWidth;
+        logo.classList.add('niespodzianka');
+        if (dzwiek) graj(wl);
+        if (navigator.vibrate) navigator.vibrate(12);
+      }, 600);
+    });
+    logo.addEventListener('animationend', () => logo.classList.remove('niespodzianka'));
+    for (const t of ['pointerup', 'pointercancel', 'pointerleave']) logo.addEventListener(t, stop);
+    logo.addEventListener('click', (e) => { if (przytrzymane) { przytrzymane = false; e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+    logo.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
   const ZNAK_ZEWN = '<svg class="menu-otomoto-znak" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-8 8M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4"/></svg>';
   function zamknijMenuOtomoto(fokus) {
     if (!menuOtomoto) return;
