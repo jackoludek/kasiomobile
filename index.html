@@ -32,8 +32,6 @@
   --akcent: #0071e3;
   /* Napis w akcencie: #0066cc ma 5,6:1 na bieli. */
   --akcent-tekst: #0066cc;
-  /* Zakładka: osobna szara pigułka; wybrana stoi na pastelu swojej ikony (index.html). Kontrast napisów liczy test.js. */
-  --zakladka: #e8e8ed;
   /* Białe kółka i pigułki: włosek, jasna krawędź u góry i miękki cień w dwóch warstwach (wzorzec THIS IS THE WAY, „Głębia”). */
   --przycisk: #ffffff;
   --wlos: rgba(0, 0, 0, .12);
@@ -71,6 +69,17 @@
      (od 760 px) ma swoje 16 px. */
   --km-rynna: 8px;
   --km-rog: 18px;
+  /* Przyciski 3D (od 25.10.2026 wieczorem, Jacek: „Butony muszą być butonami … 3D … drop shadow … reaktywność”): jaśniejsza krawędź
+     u góry, ciemniejsza u dołu, włosek i cień w dwóch warstwach, a wciśnięty przycisk zapada się w cień. Napis na barwie wybranej
+     zakładki jest biały w jasnym motywie i czarny w ciemnym. */
+  --g3d: linear-gradient(180deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 55%);
+  --g3d-barwa: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 55%);
+  --c3d: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(0, 0, 0, .07), 0 0 0 .5px rgba(0, 0, 0, .16), 0 1px 2px rgba(0, 0, 0, .14), 0 3px 8px rgba(0, 0, 0, .1);
+  --c3d-wcisniety: inset 0 1px 3px rgba(0, 0, 0, .16), 0 0 0 .5px rgba(0, 0, 0, .18);
+  --na-barwie: #ffffff;
+  /* Odstęp pod nawigacją na telefonie: zwykły (jak logo od góry ekranu) i najmniejszy, do którego da się ją przenieść (app.js). */
+  --km-dol-baza: max(calc(var(--km-gora) / 2 + 12px), calc(env(safe-area-inset-bottom) - 10px));
+  --km-dol-min: max(4px, calc(env(safe-area-inset-bottom) - 10px));
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -80,13 +89,16 @@
     --tekst2: #c0bfbc;
     --akcent: #409cff;
     --akcent-tekst: #409cff;
-    /* Zakładka w szarości Apple. Na czerni cienia nie widać, zostaje włosek. */
-    --zakladka: #2c2c2e;
     --przycisk: #2c2c2e;
     --wlos: rgba(255, 255, 255, .16);
     --blysk: rgba(255, 255, 255, 0);
     --cien: rgba(0, 0, 0, 0);
     --cien-mocny: rgba(0, 0, 0, 0);
+    --g3d: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, 0) 55%);
+    --g3d-barwa: linear-gradient(180deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, 0) 55%);
+    --c3d: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -1px 0 rgba(0, 0, 0, .35), 0 0 0 .5px rgba(255, 255, 255, .18);
+    --c3d-wcisniety: inset 0 1px 3px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .18);
+    --na-barwie: #000000;
   }
 }
 /* Krój Inter 4.1, ten sam co w stronach z komputera, więc cała aplikacja ma jeden krój. Copyright (c) 2016 The Inter Project
@@ -116,13 +128,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
    mniej: kółko 40 px stoi w polu 48 px (czat.css, .czat-ikonka i .czat-otworz). Godziny skanu i ściągi nie ma (Jacek, 24.10.2026,
    wieczorem: „nie potrzebujemy wiedzieć, kiedy został update'owany”, „tak prosto, że nie będzie potrzeba ściągi”). Rząd stoi na
    środku szarego pola razem z pasem przy wycięciu ekranu (Jacek: „On jest niżej trochę. Ja bym wolał, żeby na środku”): połowa
-   wcięcia nad nim, połowa pod nim, więc nagłówek ma tę samą wysokość co wcześniej. */
+   wcięcia nad nim. Pod nim od 26.10.2026 tylko 8 px (Jacek: nagłówek „niepotrzebnie jest takie długie … Amatorsko to wygląda”): razem
+   z odstępem strony logo stoi na środku między górą ekranu a pierwszą rzeczą w treści, a całe to pole ma jeden odcień. */
 .glowa {
   flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: calc(var(--km-gora) / 2 + 8px) calc(var(--km-x1) - 4px) calc(var(--km-gora) / 2 + 8px) var(--km-x0);
+  padding: calc(var(--km-gora) / 2 + 8px) calc(var(--km-x1) - 4px) 8px var(--km-x0);
 }
 /* Miarki siatki dla app.js: szerokość cienkiego paska przewijania i marginesy w pikselach, razem z wcięciami ekranu. */
 .siatka-pasek { position: absolute; visibility: hidden; width: 100px; height: 40px; overflow: scroll; scrollbar-width: thin; }
@@ -180,23 +193,20 @@ main { flex: 1; min-height: 0; position: relative; }
 }
 .pigulka:active { transform: scale(.96); }
 
-/* Pasek zakładek na dole (od 19.10.2026). Od 22.10.2026 cztery osobne przyciski zamiast szarego toru z białym suwakiem
-   (Jacek przez Czytadło: „Też należy rozdzielić … Rozdzielić, poproszę”; reguła przyciski-zawsze-jak-przyciski, „Rząd przycisków”).
-   Zakładka to szara pigułka z włoskiem, jasną krawędzią u góry i cieniem w dwóch warstwach, ikona nad nazwą. Wybrana: pastel
-   w barwie swojej ikony (22% barwy na bieli, w ciemnym 30% na czerni, wpisane w index.html), pierścień 2 px w kolorze tła i 2 px
-   w akcencie, pogrubiona nazwa i co 6 s przebłysk światła w barwie losowanej z puli dalekiej od pastelu (app.js, BLYSKI).
-   Przebłysk mówi, co jest wybrane, więc zostaje też przy ograniczonym ruchu. Pod kursorem jasna plama szkła idzie za myszą,
-   a nic się nie przesuwa (Jacek, 20.10.2026: „literki się trochę przesuwają”). Każda zakładka jest co najmniej tak szeroka
-   jak jej pogrubiona nazwa, więc wybór niczego nie przesuwa. Od dolnej krawędzi ekranu pasek stoi tak
-   daleko, jak logo od górnej (Jacek, 24.10.2026: „przynajmniej tak od krawędzi ekranu, tak bufor jest u góry”): połowa górnego
-   wcięcia i 12 px. Na iPhonie to więcej niż wskaźnik ekranu głównego, a bez wcięć (przeglądarka) zostaje 12 px. */
+/* Pasek zakładek (od 19.10.2026): cztery osobne przyciski, ikona nad nazwą (Jacek przez Czytadło: „Rozdzielić, poproszę”; reguła
+   przyciski-zawsze-jak-przyciski, „Rząd przycisków”), od 25.10.2026 wieczorem przyciski 3D w barwach zakładek (część „Barwy zakładek”
+   niżej). Każda zakładka jest co najmniej tak szeroka jak jej pogrubiona nazwa, więc wybór niczego nie przesuwa, a pod kursorem jasna
+   plama szkła idzie za myszą i nic się nie rusza (Jacek, 20.10.2026: „literki się trochę przesuwają”). Od dolnej krawędzi ekranu pas
+   stoi tak daleko, jak logo od górnej (Jacek, 24.10.2026: „przynajmniej tak od krawędzi ekranu, tak bufor jest u góry”): połowa górnego
+   wcięcia i 12 px (--km-dol-baza). Na iPhonie to więcej niż wskaźnik ekranu głównego, a bez wcięć (przeglądarka) zostaje 12 px. */
 .dol {
   flex: none;
   position: relative;
   z-index: 2;
-  padding: 8px var(--km-x1) max(calc(var(--km-gora) / 2 + 12px), calc(env(safe-area-inset-bottom) - 10px)) var(--km-x0);
-  background: var(--tlo);
+  padding: 8px var(--km-x1) var(--km-dol-baza) var(--km-x0);
+  background-color: var(--tlo-pasa);
   box-shadow: inset 0 .5px 0 var(--wlos);
+  transition: background-color 200ms ease;
 }
 .karty { position: relative; display: flex; gap: var(--km-rynna); }
 .karty [role="tab"] {
@@ -214,12 +224,13 @@ main { flex: 1; min-height: 0; position: relative; }
   padding: 0 4px;
   border: 0;
   border-radius: var(--km-rog);
-  background-color: var(--zakladka);
+  background-color: var(--pastel);
+  background-image: var(--g3d);
   color: var(--tekst);
   font-size: clamp(12px, 3.4vw, 13px);
   font-weight: 500;
   white-space: nowrap;
-  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
+  box-shadow: var(--c3d);
   /* Przestawianie: zakładkę ciągnie się palcem albo myszą (app.js). Bez touch-action: none przeglądarka wzięłaby ruch palca
      za przewijanie i przerwała ciągnięcie. Bez zaznaczania tekstu i menu iOS. */
   touch-action: none;
@@ -232,21 +243,6 @@ main { flex: 1; min-height: 0; position: relative; }
 .karty .nazwa { display: inline-grid; }
 .karty .nazwa > span, .karty .nazwa::after { grid-area: 1 / 1; white-space: nowrap; text-box: trim-both cap alphabetic; }
 .karty .nazwa::after { content: attr(data-nazwa); font-weight: 600; visibility: hidden; }
-.karty [aria-selected="true"] {
-  font-weight: 600;
-  background-color: var(--pastel, #ffffff);
-  background-image: linear-gradient(105deg, transparent 38%, var(--blysk-j, rgba(255, 255, 255, .85)) 50%, transparent 62%);
-  background-size: 260% 100%;
-  background-repeat: no-repeat;
-  background-position: 0 0;
-  box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px var(--strona), 0 4px 12px var(--cien-mocny);
-  animation: kartaBlysk 6s ease-in-out infinite;
-}
-@keyframes kartaBlysk { 0% { background-position: 100% 0; } 20%, 100% { background-position: 0 0; } }
-@media (prefers-color-scheme: dark) {
-  .karty [aria-selected="true"] { background-color: var(--pastel-c, #3a3a3c);
-    background-image: linear-gradient(105deg, transparent 38%, var(--blysk-c, rgba(255, 255, 255, .45)) 50%, transparent 62%); }
-}
 .karty [role="tab"]:focus-visible { outline: 2px solid var(--akcent); outline-offset: 6px; }
 .znak { flex: none; display: block; width: 28px; height: 28px; }
 /* Szkło pod kursorem: jasna plama idzie za myszą, między tłem zakładki a ikoną z nazwą (app.js podaje --mx i --my). */
@@ -258,13 +254,12 @@ main { flex: 1; min-height: 0; position: relative; }
 @media (prefers-color-scheme: dark) {
   .karty [role="tab"]::after { background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .16), transparent 72%); }
 }
-.karty [role="tab"]:active { transform: scale(.97); }
 /* Ciągnięta zakładka unosi się nad resztą i jedzie pod palcem (przesunięcie i powiększenie o 6% daje app.js), a reszta robi jej miejsce. */
-.karty [role="tab"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
+.karty [role="tab"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--barwa), 0 6px 16px var(--cien-mocny); }
 /* „Cofnij” stoi 6 sekund nad paskiem po przestawieniu zakładek (reguła cofnij-i-ponow: na telefonie nie ma Ctrl+Z). */
 .cofnij-zakladki { position: absolute; left: 0; right: 0; bottom: 100%; display: flex; justify-content: center; padding-bottom: 12px; pointer-events: none; }
 .cofnij-zakladki .pigulka { pointer-events: auto; box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 2px 6px var(--cien), 0 8px 24px var(--cien-mocny); }
-/* Pigułka pod kursorem dostaje obwódkę w akcencie, jak przyciski w Ogłoszeniach. Napis stoi w miejscu (do 20.10.2026 unosiła się o 1 px). */
+/* Pigułka pod kursorem dostaje obwódkę w akcencie, jak przyciski w Ofertach. Napis stoi w miejscu (do 20.10.2026 unosiła się o 1 px). */
 @media (hover: hover) {
   .pigulka:hover { box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 1px var(--akcent), 0 1px 2px var(--cien), 0 2px 6px var(--cien); }
   .cofnij-zakladki .pigulka:hover { box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 1px var(--akcent), 0 2px 6px var(--cien), 0 8px 24px var(--cien-mocny); }
@@ -292,7 +287,6 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
   body { position: relative; }
   /* Zakładki stoją w nagłówku, a pigułki zostają w nawigacji pod nim, nad treścią. */
   .dol { padding: 0 var(--km-x1) 12px calc(var(--km-x0) + var(--km-kolumna)); }
-  body.bez-pigulek .dol { padding-bottom: 0; }
   .karty { position: fixed; z-index: 3; top: calc(var(--km-gora) / 2 + 12px); left: calc(var(--km-x0) + var(--km-kolumna)); }
   /* Zakładki i pigułki po 176 px, co 16 px: dwie pigułki stoją dokładnie pod dwiema zakładkami, trzy pod trzema. */
   .karty [role="tab"] { flex: 0 0 176px; }
@@ -315,48 +309,28 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 .menu-otomoto-nazwa { text-box: trim-both cap alphabetic; }
 .menu-otomoto-znak { flex: none; color: var(--akcent-tekst); }
 @media (prefers-color-scheme: dark) { .menu-otomoto { background: #1c1c1e; box-shadow: 0 0 0 1px #48484a; } }
-/* Pigułki w nawigacji (od 25.10.2026): w Ogłoszeniach Teraz i Historia, w Katalagu Podium Otomoto, Modele Otomoto i Wszystkie marki,
-   w Finansach Leasing i Kredyt. Rano stały u góry treści, a od wieczora są w nawigacji, przy zakładkach (Jacek: „żebyśmy nie dzielili
-   nawigacji na dwa, góra i dół”, „Powinny być … w nawigacji powyżej nieco tej dolnej. Żeby też łatwo kciukiem można było dostać”).
-   Widać rząd wybranej zakładki (app.js). Pigułka ma ten sam promień co zakładka i lekki pastel barwy ikony swojej zakładki, a wybrana
-   pełny pastel, pierścień rysowany do środka i połysk co 6 s, 3 s po zakładce (Jacek: „połyskowość dać tym, które są aktywne, a te,
-   które nie są aktywne, jakieś kolorki”). Pierścień do środka trzyma brzeg na linii siatki, tak jak brzeg pola szukania i kart (Jacek:
-   „Teraz jest przesunięte do lewej krawędzi, potem jest search box, który jest bardziej wysunięty do prawa”). Pigułka w Katalagu ma
-   dwie linie: co to jest i skąd (Jacek: „Czym są modele? … czy to są z Otomoto, czy nie”). Pole dotyku 48 px. */
+/* Pigułki w nawigacji (od 25.10.2026): w Ofertach Teraz i Historia, na Podium Podium Otomoto, Modele Otomoto i Wszystkie marki,
+   w Finansach Leasing i Kredyt, a od wieczora w Poradniku Skrót i Całość. Stoją w nawigacji pod zakładkami (Jacek: „żebyśmy nie dzielili
+   nawigacji na dwa, góra i dół”, „Te dolne są zależne od górnych”), a widać rząd wybranej zakładki (app.js). Każda zakładka ma swój rząd,
+   więc nawigacja ma zawsze tę samą wysokość i nic nie skacze przy zmianie zakładki (Jacek: „nie ma przeskakiwania z menu”). Pigułka ma
+   ten sam promień co zakładka, a brzegi rzędu stoją na liniach siatki. Pigułka na Podium ma dwie linie: co to jest i skąd (Jacek: „Czym
+   są modele? … czy to są z Otomoto, czy nie”). Pole dotyku 48 px. */
 .podkarty { position: relative; }
-body.bez-pigulek .podkarty { display: none; }
 .podwidoki { display: flex; gap: var(--km-rynna); min-width: 0; }
 .podwidoki [role="radio"] {
   position: relative; isolation: isolate; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 5px; height: 44px; padding: 0 8px; border: 0; border-radius: var(--km-rog); background-color: var(--zakladka); color: var(--tekst);
-  font-size: 15px; font-weight: 500; white-space: nowrap;
-  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
+  gap: 5px; height: 44px; padding: 0 8px; border: 0; border-radius: var(--km-rog); background-color: var(--przycisk); background-image: var(--g3d);
+  color: var(--tekst); font-size: 15px; font-weight: 500; white-space: nowrap; box-shadow: var(--c3d);
   touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   transition: transform 120ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 .podwidoki .nazwa { display: inline-grid; }
 .podwidoki .nazwa > span, .podwidoki .nazwa::after { grid-area: 1 / 1; white-space: nowrap; text-box: trim-both cap alphabetic; }
 .podwidoki .nazwa::after { content: attr(data-nazwa); font-weight: 600; visibility: hidden; }
-/* Podpis „Otomoto”, „wszystkie” drugim planem przez mniejszy krój, a barwą ciemniejszą niż zwykły drugi plan: #6e6e73 na szkle nad
-   ciemnym zdjęciem miało 2,7:1, a #3a3a3c ma od 5,8:1 (w ciemnym #e5e5ea od 6,4:1, liczone skryptem nad czarnym i nad białym). */
+/* Podpis „Otomoto” i „marki” drugim planem: mniejszy krój i barwa #3a3a3c (w ciemnym #e5e5ea). Na wybranej pigułce ma barwę napisu. */
 .podwidoki .skad { color: #3a3a3c; font-size: 13px; font-weight: 500; text-box: trim-both cap alphabetic; }
 @media (prefers-color-scheme: dark) { .podwidoki .skad { color: #e5e5ea; } }
-.podwidoki [aria-checked="true"] {
-  font-weight: 600; background-color: var(--pastel, #ffffff);
-  background-image: linear-gradient(105deg, transparent 38%, var(--blysk-j, rgba(255, 255, 255, .85)) 50%, transparent 62%);
-  background-size: 260% 100%; background-repeat: no-repeat; background-position: 0 0;
-  box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px var(--strona), 0 4px 12px var(--cien-mocny);
-  animation: kartaBlysk 6s ease-in-out 3s infinite;
-}
-.podwidoki [aria-checked="true"] .skad { color: var(--tekst); }
-/* Smuga przechodzi też od razu przy wyborze, a potem co 6 s. */
-.podwidoki [aria-checked="true"].blysk { animation: podwidokBlysk 1.2s ease-in-out 1, kartaBlysk 6s ease-in-out 4s infinite; }
-@keyframes podwidokBlysk { from { background-position: 100% 0; } to { background-position: 0 0; } }
-@media (prefers-color-scheme: dark) {
-  .podwidoki [aria-checked="true"] { background-color: var(--pastel-c, #3a3a3c);
-    background-image: linear-gradient(105deg, transparent 38%, var(--blysk-c, rgba(255, 255, 255, .45)) 50%, transparent 62%);
-    box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px var(--strona); }
-}
+.podwidoki [aria-checked="true"] .skad { color: inherit; }
 .podwidoki [role="radio"]:focus-visible { outline: 2px solid var(--akcent); outline-offset: 2px; }
 .podwidoki [role="radio"]::after {
   content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 200ms ease;
@@ -367,89 +341,107 @@ body.bez-pigulek .podkarty { display: none; }
   .podwidoki [role="radio"]::after { background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .16), transparent 72%); }
 }
 .podwidoki [role="radio"]::before { content: ""; position: absolute; inset: -2px 0; }
-.podwidoki [role="radio"]:active { transform: scale(.97); }
-.podwidoki [role="radio"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--akcent), 0 6px 16px var(--cien-mocny); }
-/* Niewybrane zakładki i pigułki: 35% pastelu swojej barwy na szarym, więc od razu widać, co do czego należy. */
-.karty [role="tab"]:not([aria-selected="true"]), .podwidoki [role="radio"]:not([aria-checked="true"]) { background-color: color-mix(in srgb, var(--pastel) 35%, var(--zakladka)); }
-@media (prefers-color-scheme: dark) {
-  .karty [role="tab"]:not([aria-selected="true"]), .podwidoki [role="radio"]:not([aria-checked="true"]) { background-color: color-mix(in srgb, var(--pastel-c) 35%, var(--zakladka)); }
-}
+.podwidoki [role="radio"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--barwa), 0 6px 16px var(--cien-mocny); }
 
-/* Nawigacja na telefonie (od 25.10.2026 wieczorem; Jacek: „Podoba mi się layout 3”): zakładki i pigułki to jeden blok ze szkła nad
-   treścią, jak w iOS 26. Treść sięga dołu ekranu i płynie pod nim, a stuknięcie obok przycisków trafia w treść. Strony w ramkach mają na
-   końcu miejsce na blok (--km-dol z app.js), a Atlas z sieci kończy się nad nim. Wszystko stoi na siatce 12 kolumn z jedną rynną
-   (--km-rynna): cztery zakładki po 3 kolumny, dwie pigułki po 6 (każda dokładnie nad dwiema zakładkami), trzy po 4, a brzegi bloku
-   to brzegi treści. Pigułki stoją pod zakładkami, które podjeżdżają w górę, gdy zakładka ma pigułki (Jacek: „logiczniejsze by było,
-   że te główne linie się przesuwa i pod spodem wyskakuje”; wybrane 25.10.2026 z dwóch wersji, druga miała pigułki nad zakładkami). Blok przytrzymany 2 s przesuwa się wyżej i zostaje tam, gdzie go puścić
-   (app.js, „przenoszenie”; --km-nav-y to wysokość nad zwykłym miejscem). Kontrast napisów na szkle liczony skryptem nad czarnym i nad
-   białym zdjęciem: wszystkie od 4,5:1. */
+/* Barwy zakładek (od 25.10.2026 wieczorem; Jacek: „Zdechły niebieski … zdechłego zielonego … pseudo fiolet”, a paleta Apple: żywa barwa
+   do akcentu, pastel z niej do rzeczy dyskretnych). Każda zakładka ma barwę z palety systemowej Apple: zielone Oferty, niebieskie Podium,
+   pomarańczowe Finanse i fioletowy Poradnik. --gleboka to ta barwa przyciemniona tak, że biały napis ma na niej od 4,5:1, --zywa-c to
+   żywa barwa ciemnego motywu, a --pastel z index.html to 16% barwy na bieli (w ciemnym 28% na #1c1c1e). --barwa to barwa wybranej rzeczy
+   w bieżącym motywie: tło wybranej zakładki i pigułki, pierścień i pasek przenoszenia. W jasnym motywie nagłówek, nawigacja i tło pod nimi
+   stoją na odcieniu 10% barwy wybranej zakładki (Jacek: „cały ekran, tło jego się robiło w odcieniu … buttona, na którym jesteśmy”),
+   a strony w ramkach zostają białe; w ciemnym zostaje czerń. Kontrast każdej pary liczy skrypt. */
+#seg-katalog, .podwidoki[data-z="katalog"], body[data-zakladka="katalog"] { --gleboka: #1e7d36; --zywa-c: #30d158; --odcien-jasny: #ebf9ee; }
+#seg-modele, .podwidoki[data-z="modele"], body[data-zakladka="modele"] { --gleboka: #0071e3; --zywa-c: #0a84ff; --odcien-jasny: #e6f2ff; }
+#seg-kredyt, .podwidoki[data-z="kredyt"], body[data-zakladka="kredyt"] { --gleboka: #bc5500; --zywa-c: #ff9f0a; --odcien-jasny: #fff4e6; }
+#seg-poradnik, .podwidoki[data-z="poradnik"], body[data-zakladka="poradnik"] { --gleboka: #9a4fcf; --zywa-c: #bf5af2; --odcien-jasny: #f7eefc; }
+body, .karty [role="tab"], .podwidoki { --barwa: var(--gleboka, var(--akcent)); }
+body { --tlo-pasa: var(--odcien-jasny, var(--tlo)); background-color: var(--tlo-pasa); }
+@media (prefers-color-scheme: dark) {
+  body, .karty [role="tab"], .podwidoki { --barwa: var(--zywa-c, var(--akcent)); }
+  body { --tlo-pasa: var(--tlo); }
+  .karty [role="tab"]:not([aria-selected="true"]) { background-color: var(--pastel-c); }
+}
+.glowa { background-color: var(--tlo-pasa); transition: background-color 200ms ease; }
+body.okno .glowa { background-color: var(--strona); }
+/* Wybrana zakładka i pigułka (Jacek: „Butony muszą być butonami, a nie kawałkiem mięsa czy naklejki”, „wybrane ikony fizycznie jest
+   mniejsza niż te, co są niewybrane. To jest oczywisty błąd designerski”, „nie jestem fanem tej niebieskiej ramki”, „ładne były
+   rameczki … z dystansem … Nie tylko przylegające”): cała w barwie, z napisem na barwie, w pierścieniu 2 px z 2 px odstępu, który leży
+   w rynnie siatki. Ikona wybranej zakładki ma tę samą wielkość co na niewybranej, a kafelek w barwie napisu. Co 12 s przez wybraną
+   przechodzi smuga światła („Mogą nawet troszkę rzadziej pobłyskiwać”), przez pigułkę 6 s po zakładce i raz przy wyborze, a po pierścieniu
+   zakładki co 7 s okrąża ją jasny ślad (ciuchcia, jak w Sesjach Kiro: „Coś subtelnego”). Ruch mówi, co jest wybrane, więc zostaje też
+   przy ograniczonym ruchu. */
+.karty [aria-selected="true"], .podwidoki [aria-checked="true"] {
+  font-weight: 600;
+  color: var(--na-barwie);
+  background-color: var(--barwa);
+  background-image: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .38) 50%, transparent 62%), var(--g3d-barwa);
+  background-size: 260% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 0 0, 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), inset 0 -1px 0 rgba(0, 0, 0, .2), 0 1px 2px rgba(0, 0, 0, .16), 0 4px 12px color-mix(in srgb, var(--barwa) 40%, transparent);
+  animation: polysk 12s ease-in-out infinite;
+}
+.podwidoki [aria-checked="true"] { outline: 2px solid var(--barwa); outline-offset: 2px; animation-delay: 6s; }
+.podwidoki [aria-checked="true"].blysk { animation: polyskRaz 1.2s ease-in-out 1, polysk 12s ease-in-out 6s infinite; }
+@keyframes polysk { 0% { background-position: 100% 0, 0 0; } 10%, 100% { background-position: 0 0, 0 0; } }
+@keyframes polyskRaz { from { background-position: 100% 0, 0 0; } to { background-position: 0 0, 0 0; } }
+.karty [aria-selected="true"] .znak use { fill: var(--na-barwie); }
+.karty [aria-selected="true"] .znak path { fill: var(--barwa); }
+.karty [aria-selected="true"]::before {
+  content: ""; position: absolute; inset: -4px; z-index: 1; padding: 2px; border-radius: calc(var(--km-rog) + 4px); pointer-events: none;
+  background: conic-gradient(from var(--ciuchcia), var(--barwa) 0 72%, #ffffff 84%, var(--barwa) 96%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: ciuchcia 7s linear infinite;
+}
+@property --ciuchcia { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes ciuchcia { to { --ciuchcia: 360deg; } }
+@media (prefers-color-scheme: dark) {
+  .karty [aria-selected="true"], .podwidoki [aria-checked="true"] {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 -1px 0 rgba(0, 0, 0, .25), 0 0 14px color-mix(in srgb, var(--barwa) 35%, transparent);
+  }
+}
+/* Wciśnięty przycisk zapada się o piksel i o 2%, a cień przechodzi do środka. */
+.karty [role="tab"]:active, .podwidoki [role="radio"]:active { transform: translateY(1px) scale(.98); box-shadow: var(--c3d-wcisniety); }
+
+/* Nawigacja na telefonie (od 25.10.2026 wieczorem, druga wersja tego dnia): zwykły pas na dole, w układzie, bez szkła (Jacek: „nasze
+   liquid glass podróbka chińska … bardziej dla nowości niż dla użytkowości … musimy jednak przejść do prostoty”, „dajemy tam tło. Nie,
+   odcięcie”). Treść kończy się nad pasem, pas ma tło nagłówka i włosek u góry, a zakładki stoją nad pigułkami. Wszystko stoi na siatce
+   12 kolumn z jedną rynną (--km-rynna): cztery zakładki po 3 kolumny, dwie pigułki po 6, trzy po 4. Przeniesiony pas zmienia odstęp pod
+   sobą co do piksela (--km-nav-y z app.js, „przenoszenie”), najmniej do 4 px nad krawędzią ekranu albo nad wskaźnikiem ekranu głównego
+   iPhone'a (--km-dol-min). Podczas przenoszenia pas jedzie za palcem przesunięciem, a pod nim widać tło strony w tym samym odcieniu. */
+.miarka-dolu { position: absolute; visibility: hidden; height: 0; padding: var(--km-dol-baza) 0 var(--km-dol-min); }
 @media (max-width: 759px) {
   .dol {
-    position: absolute; left: 0; right: 0; z-index: 2;
-    bottom: calc(max(calc(var(--km-gora) / 2 + 12px), calc(env(safe-area-inset-bottom) - 10px)) + var(--km-nav-y, 0px));
-    display: flex; flex-direction: column; gap: var(--km-rynna); padding: 8px var(--km-x1) 0 var(--km-x0);
-    background: none; box-shadow: none; pointer-events: none;
+    display: flex; flex-direction: column; gap: 16px; padding-top: 12px;
+    padding-bottom: max(var(--km-dol-min), calc(var(--km-dol-baza) + var(--km-nav-y, 0px)));
     touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   }
-  .dol > .karty, .dol > .podkarty, .cofnij-zakladki .pigulka { pointer-events: auto; }
   .karty { order: 1; }
   .podkarty { order: 2; }
-  .karty [role="tab"], .podwidoki [role="radio"] { -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
-    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .9), 0 0 0 .5px rgba(0, 0, 0, .14), 0 2px 8px rgba(0, 0, 0, .14), 0 8px 24px rgba(0, 0, 0, .10); }
-  .karty [role="tab"]:not([aria-selected="true"]), .podwidoki [role="radio"]:not([aria-checked="true"]) { background-color: color-mix(in srgb, var(--pastel) 35%, rgba(236, 236, 240, .72)); }
-  .karty [aria-selected="true"], .podwidoki [aria-checked="true"] { background-color: color-mix(in srgb, var(--pastel) 86%, transparent);
-    box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px rgba(255, 255, 255, .9), 0 6px 18px rgba(0, 0, 0, .2); }
-  .pusto { padding-bottom: calc(24px + var(--km-dol, 0px)); }
-  .podwidok[data-p="atlas"] { bottom: var(--km-dol, 0px); }
-  /* Przenoszenie: przytrzymany blok pokazuje strzałki (Jacek: „delikatne, animowane strzałeczki, że to będzie szło w górę … I jak już
-     będzie u góry, to też, że na dole”), nad blokiem w górę, gdy stoi na dole, i pod nim w dół, gdy jest wyżej. Siedem szewronów stoi nad
-     środkiem każdej zakładki i każdej przerwy, po 0,25 s blado, potem zapala się po kolei od niebieskiego przez fiolet do różu, i to jest
-     postęp: gdy zapali się ostatni, po 2 s, blok unosi się i jedzie za palcem. Zapalony szewron kołysze się lekko w stronę ruchu.
-     Zapalanie to sygnał, więc zostaje przy ograniczonym ruchu, a fala to ozdoba. Strzałki stoją na pełnym pasie 22 px w kolorze tła
-     z włoskiem na zewnątrz, bo nad zdjęciem pod szkłem nie było ich widać (kontrast od 3,35:1, grafika, próg 3:1). */
-  .strzalki {
-    --od-boku: calc((100% - var(--km-x0) - var(--km-x1) - 3 * var(--km-rynna)) / 8 - 7px);
-    --szewron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 8'%3E%3Cpath d='M1.5 6.6 7 1.4l5.5 5.2' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    position: absolute; z-index: -1; bottom: 100%; left: 0; right: 0; height: 22px;
-    padding: 0 calc(var(--km-x1) + var(--od-boku)) 0 calc(var(--km-x0) + var(--od-boku));
-    display: flex; justify-content: space-between; align-items: center; pointer-events: none; opacity: 0; transition: opacity 150ms ease;
-    background: var(--tlo); box-shadow: inset 0 .5px 0 var(--wlos);
-  }
-  body.pasek-uniesiony .strzalki { bottom: auto; top: 100%; margin-top: 8px; transform: scaleY(-1); }
-  .strzalki i { flex: none; width: 14px; height: 8px; background: var(--c); opacity: .22;
-    -webkit-mask: var(--szewron) center / contain no-repeat; mask: var(--szewron) center / contain no-repeat; }
-  .strzalki i:nth-child(1) { --c: #007aff; }
-  .strzalki i:nth-child(2) { --c: #4268ea; }
-  .strzalki i:nth-child(3) { --c: #5856d6; }
-  .strzalki i:nth-child(4) { --c: #8656da; }
-  .strzalki i:nth-child(5) { --c: #af52de; }
-  .strzalki i:nth-child(6) { --c: #d74e9f; }
-  .strzalki i:nth-child(7) { --c: #ff2d55; }
-  .dol.trzyma .strzalki { opacity: 1; }
-  .dol.trzyma .strzalki i { animation: strzalkaZapal 200ms ease-out calc(var(--i) * var(--krok)) forwards,
-    strzalkaFala 1s ease-in-out calc(var(--i) * var(--krok)) infinite; }
-  /* Podniesiony blok rośnie o 2% i stoi nad wszystkim, póki jedzie za palcem. */
-  .dol.przenoszony { z-index: 30; }
+  /* Od 26.10.2026 zakładki i pigułki stoją co 12 px, a rzędy co 16 px, więc wokół pierścienia wybranej zostaje 8 px wolnego (Jacek:
+     „One się prawie dotykają lub się dotykają … jak one są wybrane”). Brzegi rzędów dalej stoją na brzegach treści. */
+  .karty, .podwidoki { gap: 12px; }
+  .dol.przenoszony { z-index: 30; box-shadow: inset 0 .5px 0 var(--wlos), 0 -8px 24px var(--cien-mocny); }
   .dol.przenoszony > .karty, .dol.przenoszony > .podkarty { transform: scale(1.02); transition: transform 120ms ease; }
+  /* Przenoszenie: od 0,25 s przytrzymania nad pasem stoi pasek postępu, który przez 1,75 s wypełnia się od lewej do prawej, ze strzałką
+     w górę z lewej i w dół z prawej (Jacek: strzałki „muszą być widoczne … w dół i w górę”, a zapalanie po kolei „nie jest oczywiste”).
+     Gdy się wypełni, pas unosi się i jedzie za palcem. Pasek i strzałki mają barwę wybranej zakładki, tor 20% tej barwy. */
+  .postep-paska {
+    --szewron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 8'%3E%3Cpath d='M1.5 6.6 7 1.4l5.5 5.2' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    position: absolute; z-index: -1; bottom: 100%; left: 0; right: 0; height: 28px;
+    display: flex; align-items: center; gap: 12px; padding: 0 var(--km-x1) 0 var(--km-x0);
+    background: inherit; box-shadow: inset 0 .5px 0 var(--wlos); pointer-events: none; opacity: 0; transition: opacity 150ms ease;
+  }
+  .postep-paska i { flex: none; width: 14px; height: 8px; background: var(--barwa);
+    -webkit-mask: var(--szewron) center / contain no-repeat; mask: var(--szewron) center / contain no-repeat; }
+  .postep-paska .w-dol { transform: scaleY(-1); }
+  .postep-paska span { flex: 1; height: 6px; border-radius: 3px; overflow: hidden; background: color-mix(in srgb, var(--barwa) 20%, transparent); }
+  .postep-paska span::after { content: ""; display: block; height: 100%; background: var(--barwa); transform: scaleX(0); transform-origin: left; }
+  .dol.trzyma .postep-paska { opacity: 1; }
+  .dol.trzyma .postep-paska span::after { animation: postepPaska var(--czas, 1750ms) linear forwards; }
 }
-@keyframes strzalkaZapal { to { opacity: 1; } }
-@keyframes strzalkaFala { 50% { transform: translateY(-3px); } }
-@media (max-width: 759px) and (prefers-reduced-motion: reduce) {
-  .dol.trzyma .strzalki i { animation: strzalkaZapal 200ms ease-out calc(var(--i) * var(--krok)) forwards; }
-}
-@media (max-width: 759px) and (prefers-color-scheme: dark) {
-  .karty [role="tab"], .podwidoki [role="radio"] { box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .14), 0 0 0 .5px rgba(255, 255, 255, .2); }
-  .karty [role="tab"]:not([aria-selected="true"]), .podwidoki [role="radio"]:not([aria-checked="true"]) { background-color: color-mix(in srgb, var(--pastel-c) 35%, rgba(30, 30, 32, .66)); }
-  .karty [aria-selected="true"], .podwidoki [aria-checked="true"] { background-color: color-mix(in srgb, var(--pastel-c) 86%, transparent);
-    box-shadow: inset 0 0 0 2px var(--akcent), inset 0 0 0 4px #000000; }
-  .strzalki i:nth-child(1) { --c: #0a84ff; }
-  .strzalki i:nth-child(2) { --c: #4771f2; }
-  .strzalki i:nth-child(3) { --c: #5e5ce6; }
-  .strzalki i:nth-child(4) { --c: #915dec; }
-  .strzalki i:nth-child(5) { --c: #bf5af2; }
-  .strzalki i:nth-child(6) { --c: #df55ad; }
-  .strzalki i:nth-child(7) { --c: #ff375f; }
-}
+@keyframes postepPaska { to { transform: scaleX(1); } }
 /* Szeroki ekran: pigułki stoją w jednym rzędzie pod zakładkami, nad treścią, każda tak szeroka jak zakładka (do 1240 px ćwierć kolumny
    treści, potem 176 px), z tą samą przerwą, drugie słowo w tej samej linii drugim planem. Nawigacja się nie przenosi. */
 @media (min-width: 760px) {
@@ -459,7 +451,8 @@ body.bez-pigulek .podkarty { display: none; }
   .podwidoki [role="radio"] { flex: 0 0 calc((100% - 48px) / 4); flex-direction: row; gap: 6px; height: 40px; padding: 0 16px; border-radius: 20px; font-size: 16px; }
   .podwidoki .skad { font-size: 16px; }
   .podwidoki [role="radio"]::before { inset: -4px 0; }
-  .strzalki { display: none; }
+  .karty [aria-selected="true"]::before { border-radius: 24px; }
+  .postep-paska { display: none; }
 }
 @media (min-width: 1240px) { .podwidoki [role="radio"] { flex: 0 0 176px; } }
 
@@ -527,6 +520,14 @@ body.bez-pigulek .podkarty { display: none; }
 .czat-ikonka:focus-visible::before { box-shadow: 0 0 0 2px var(--cz-tlo), 0 0 0 4px var(--cz-akcent); }
 /* Przycisk asystenta w nagłówku aplikacji: białe kółko na szarym nagłówku (w ciemnym szarość Apple). */
 .czat-otworz::before { background: var(--cz-otworz); }
+/* Od 26.10.2026 kółko ze szkła jak przyciski w stronach (wariant 4 „Szkło z iOS 26”), a w nim iskry asystenta zamiast dymka (Jacek
+   o dymku w kółku: „wygląda jak chmurka w chmurce”). Wciśnięte rośnie o 3%, jak szkło w iOS 26. */
+.czat-otworz::before { background: rgba(255, 255, 255, .55); -webkit-backdrop-filter: blur(14px) saturate(1.8); backdrop-filter: blur(14px) saturate(1.8);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .3), 0 0 0 .5px rgba(0, 0, 0, .12), 0 2px 8px rgba(0, 0, 0, .1); }
+@media (prefers-color-scheme: dark) {
+  .czat-otworz::before { background: rgba(44, 44, 46, .5); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18), inset 0 1px 0 rgba(255, 255, 255, .22), 0 2px 10px rgba(0, 0, 0, .5); }
+}
+.czat-otworz:not(:disabled):active::before { transform: scale(1.03); }
 /* Znak w akcencie (od 19.10.2026): 5,6:1 na bieli, 6,9:1 na szarości w ciemnym motywie. */
 .czat-otworz { color: var(--cz-akcent-tekst); }
 .czat-zamknij { color: var(--cz-tekst2); }
@@ -586,9 +587,37 @@ body.bez-pigulek .podkarty { display: none; }
 @media (prefers-color-scheme: dark) {
   .czat-akcja { background: color-mix(in srgb, var(--cz-akcent) 22%, var(--cz-tlo)) padding-box; box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--cz-akcent) 45%, transparent); }
 }
-.czat-pusto { margin: auto 0; display: grid; justify-items: center; gap: 20px; padding: 16px 0 24px; text-align: center; color: var(--cz-tekst2); }
+.czat-pusto { margin: auto 0; display: grid; justify-items: center; gap: 24px; padding: 16px 0 24px; text-align: center; color: var(--cz-tekst2); }
 .czat-pusto > p { max-width: 22em; margin: 0; }
-.czat-podpowiedzi { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+/* Duży mikrofon na pustej rozmowie (od 26.10.2026, Jacek: „Brak dużego mikrofonu”): kółko 72 px w akcencie z głębią, pod nim podpis.
+   Nagrywa: czerwone z pulsem, jak mały mikrofon przy polu. Biały znak na #0071e3 ma 4,7:1. */
+.czat-duzy-mik { display: grid; justify-items: center; gap: 8px; margin: 0; padding: 0; border: 0; background: none; color: var(--cz-tekst);
+  font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.czat-duzy-mik > svg { box-sizing: content-box; width: 32px; height: 32px; padding: 20px; border-radius: 50%; background: var(--cz-przycisk); color: var(--cz-na-przycisku);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 -1px 0 rgba(0, 0, 0, .2), 0 1px 2px rgba(0, 0, 0, .16), 0 6px 16px color-mix(in srgb, var(--cz-przycisk) 40%, transparent);
+  transition: transform 120ms ease, background-color 120ms ease; }
+.czat-duzy-mik:active > svg { transform: scale(.96); }
+.czat-duzy-mik.nagrywa > svg { background: var(--cz-czerwony); animation: czat-puls 1.4s ease-out infinite; }
+.czat-duzy-mik:focus-visible { outline: none; }
+.czat-duzy-mik:focus-visible > svg { box-shadow: 0 0 0 2px var(--cz-tlo), 0 0 0 4px var(--cz-akcent); }
+/* Podpowiedzi (od 26.10.2026, Jacek: pytania „za ciasno, bez koloru i bez oddechu”, „nikt nie wie, że da się je stuknąć”): przyciski
+   z głębią w pastelach zakładek, których dotyczą, co 12 px, na całą szerokość. Napis #1d1d1f (w ciemnym biały) ma na nich od 9:1. */
+.czat-podpowiedzi { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: 100%; max-width: 480px; }
+.czat .czat-podpowiedz { justify-content: center; min-height: 52px; margin: 0; padding: 12px 20px; border: 0; border-radius: 26px; font-size: 16px; font-weight: 600;
+  color: #1d1d1f; background: var(--cz-pastel, var(--cz-pod));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -1px 0 rgba(0, 0, 0, .06), 0 0 0 .5px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .1), 0 3px 8px rgba(0, 0, 0, .08); }
+.czat-podpowiedz[data-z="katalog"] { --cz-pastel: #dff6e4; }
+.czat-podpowiedz[data-z="modele"] { --cz-pastel: #d6eaff; }
+.czat-podpowiedz[data-z="kredyt"] { --cz-pastel: #ffeed6; }
+.czat-podpowiedz[data-z="poradnik"] { --cz-pastel: #f2e3fa; }
+@media (hover: hover) { .czat .czat-podpowiedz:hover { transform: translateY(-1px); } }
+@media (prefers-color-scheme: dark) {
+  .czat .czat-podpowiedz { color: #ffffff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -1px 0 rgba(0, 0, 0, .35), 0 0 0 .5px rgba(255, 255, 255, .18); }
+  .czat-podpowiedz[data-z="katalog"] { --cz-pastel: #224f2e; }
+  .czat-podpowiedz[data-z="modele"] { --cz-pastel: #17395d; }
+  .czat-podpowiedz[data-z="kredyt"] { --cz-pastel: #5c4118; }
+  .czat-podpowiedz[data-z="poradnik"] { --cz-pastel: #4a2d59; }
+}
 
 /* Pole pytania na dole: tekst, mikrofon (gdy jest) i wysyłanie. Od dolnej krawędzi stoi jak pasek zakładek, czyli tak daleko
    jak logo od górnej (od 24.10.2026); przy klawiaturze i w panelu na komputerze 8 px. */
@@ -618,17 +647,17 @@ body.bez-pigulek .podkarty { display: none; }
 </style>
 </head>
 <body>
-<svg class="wzory" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="kafel" d="M28 14L28 14.73L28 15.47L28 16.22L28 16.98L28 17.75L27.99 18.55L27.98 19.37L27.95 20.21L27.91 21.09L27.83 21.98L27.7 22.9L27.49 23.8L27.19 24.68L26.76 25.49L26.19 26.19L25.49 26.76L24.68 27.19L23.8 27.49L22.9 27.7L21.98 27.83L21.09 27.91L20.21 27.95L19.37 27.98L18.55 27.99L17.75 28L16.98 28L16.22 28L15.47 28L14.73 28L14 28L13.27 28L12.53 28L11.78 28L11.02 28L10.25 28L9.45 27.99L8.63 27.98L7.79 27.95L6.91 27.91L6.02 27.83L5.1 27.7L4.2 27.49L3.32 27.19L2.51 26.76L1.81 26.19L1.24 25.49L0.81 24.68L0.51 23.8L0.3 22.9L0.17 21.98L0.09 21.09L0.05 20.21L0.02 19.37L0.01 18.55L0 17.75L0 16.98L0 16.22L0 15.47L0 14.73L0 14L0 13.27L0 12.53L0 11.78L0 11.02L0 10.25L0.01 9.45L0.02 8.63L0.05 7.79L0.09 6.91L0.17 6.02L0.3 5.1L0.51 4.2L0.81 3.32L1.24 2.51L1.81 1.81L2.51 1.24L3.32 0.81L4.2 0.51L5.1 0.3L6.02 0.17L6.91 0.09L7.79 0.05L8.63 0.02L9.45 0.01L10.25 0L11.02 0L11.78 0L12.53 0L13.27 0L14 0L14.73 0L15.47 0L16.22 0L16.98 0L17.75 0L18.55 0.01L19.37 0.02L20.21 0.05L21.09 0.09L21.98 0.17L22.9 0.3L23.8 0.51L24.68 0.81L25.49 1.24L26.19 1.81L26.76 2.51L27.19 3.32L27.49 4.2L27.7 5.1L27.83 6.02L27.91 6.91L27.95 7.79L27.98 8.63L27.99 9.45L28 10.25L28 11.02L28 11.78L28 12.53L28 13.27Z"/><linearGradient id="g-ogl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#30d158"/><stop offset="1" stop-color="#248a3d"/></linearGradient><linearGradient id="g-kat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient><linearGradient id="g-kre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f0a"/><stop offset="1" stop-color="#e07000"/></linearGradient><linearGradient id="g-por" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5e5ce6"/><stop offset="1" stop-color="#3634a3"/></linearGradient></defs></svg>
+<svg class="wzory" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="kafel" d="M28 14L28 14.73L28 15.47L28 16.22L28 16.98L28 17.75L27.99 18.55L27.98 19.37L27.95 20.21L27.91 21.09L27.83 21.98L27.7 22.9L27.49 23.8L27.19 24.68L26.76 25.49L26.19 26.19L25.49 26.76L24.68 27.19L23.8 27.49L22.9 27.7L21.98 27.83L21.09 27.91L20.21 27.95L19.37 27.98L18.55 27.99L17.75 28L16.98 28L16.22 28L15.47 28L14.73 28L14 28L13.27 28L12.53 28L11.78 28L11.02 28L10.25 28L9.45 27.99L8.63 27.98L7.79 27.95L6.91 27.91L6.02 27.83L5.1 27.7L4.2 27.49L3.32 27.19L2.51 26.76L1.81 26.19L1.24 25.49L0.81 24.68L0.51 23.8L0.3 22.9L0.17 21.98L0.09 21.09L0.05 20.21L0.02 19.37L0.01 18.55L0 17.75L0 16.98L0 16.22L0 15.47L0 14.73L0 14L0 13.27L0 12.53L0 11.78L0 11.02L0 10.25L0.01 9.45L0.02 8.63L0.05 7.79L0.09 6.91L0.17 6.02L0.3 5.1L0.51 4.2L0.81 3.32L1.24 2.51L1.81 1.81L2.51 1.24L3.32 0.81L4.2 0.51L5.1 0.3L6.02 0.17L6.91 0.09L7.79 0.05L8.63 0.02L9.45 0.01L10.25 0L11.02 0L11.78 0L12.53 0L13.27 0L14 0L14.73 0L15.47 0L16.22 0L16.98 0L17.75 0L18.55 0.01L19.37 0.02L20.21 0.05L21.09 0.09L21.98 0.17L22.9 0.3L23.8 0.51L24.68 0.81L25.49 1.24L26.19 1.81L26.76 2.51L27.19 3.32L27.49 4.2L27.7 5.1L27.83 6.02L27.91 6.91L27.95 7.79L27.98 8.63L27.99 9.45L28 10.25L28 11.02L28 11.78L28 12.53L28 13.27Z"/><linearGradient id="g-ogl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#30d158"/><stop offset="1" stop-color="#248a3d"/></linearGradient><linearGradient id="g-kat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient><linearGradient id="g-kre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f0a"/><stop offset="1" stop-color="#e07000"/></linearGradient><linearGradient id="g-por" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bf5af2"/><stop offset="1" stop-color="#8944ab"/></linearGradient></defs></svg>
 <header class="glowa">
   <button type="button" id="logo" class="logo" aria-label="Kasiomobile: te same ogłoszenia na Otomoto" aria-haspopup="menu" aria-expanded="false"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjwhLS0gWnJvYmlvbmUgcHJ6ZXogenJvYi1sb2dvLXctYXBsaWthY2ppLmpzOiBsb2dvIG5yIDkg4oCeWiBrbG9ja8Ozd+KAnSB3IGthZmVsa3UsIHRlbiBzYW0gY28gdyBuYWfFgsOzd2t1IG5hIEFuZHJvaWR6aWUuIC0tPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFRUYwRjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHBhdGggZD0iTTEwMjQuMCw1MTIuMCAxMDIzLjgsNjUyLjIgMTAyMy40LDY5Ny4wIDEwMjIuNiw3MjkuNCAxMDIxLjUsNzU1LjggMTAyMC4wLDc3OC4zIDEwMTguMyw3OTguMSAxMDE2LjIsODE1LjkgMTAxMy44LDgzMi4xIDEwMTEuMSw4NDYuOSAxMDA4LjAsODYwLjcgMTAwNC42LDg3My40IDEwMDAuOSw4ODUuMyA5OTYuOCw4OTYuNSA5OTIuNCw5MDYuOSA5ODcuNiw5MTYuNyA5ODIuNCw5MjYuMCA5NzYuOCw5MzQuNiA5NzAuOSw5NDIuOCA5NjQuNSw5NTAuNSA5NTcuNyw5NTcuNyA5NTAuNSw5NjQuNSA5NDIuOCw5NzAuOSA5MzQuNiw5NzYuOCA5MjYuMCw5ODIuNCA5MTYuNyw5ODcuNiA5MDYuOSw5OTIuNCA4OTYuNSw5OTYuOCA4ODUuMywxMDAwLjkgODczLjQsMTAwNC42IDg2MC43LDEwMDguMCA4NDYuOSwxMDExLjEgODMyLjEsMTAxMy44IDgxNS45LDEwMTYuMiA3OTguMSwxMDE4LjMgNzc4LjMsMTAyMC4wIDc1NS44LDEwMjEuNSA3MjkuNCwxMDIyLjYgNjk3LjAsMTAyMy40IDY1Mi4yLDEwMjMuOCA1MTIuMCwxMDI0LjAgMzcxLjgsMTAyMy44IDMyNy4wLDEwMjMuNCAyOTQuNiwxMDIyLjYgMjY4LjIsMTAyMS41IDI0NS43LDEwMjAuMCAyMjUuOSwxMDE4LjMgMjA4LjEsMTAxNi4yIDE5MS45LDEwMTMuOCAxNzcuMSwxMDExLjEgMTYzLjMsMTAwOC4wIDE1MC42LDEwMDQuNiAxMzguNywxMDAwLjkgMTI3LjUsOTk2LjggMTE3LjEsOTkyLjQgMTA3LjMsOTg3LjYgOTguMCw5ODIuNCA4OS40LDk3Ni44IDgxLjIsOTcwLjkgNzMuNSw5NjQuNSA2Ni4zLDk1Ny43IDU5LjUsOTUwLjUgNTMuMSw5NDIuOCA0Ny4yLDkzNC42IDQxLjYsOTI2LjAgMzYuNCw5MTYuNyAzMS42LDkwNi45IDI3LjIsODk2LjUgMjMuMSw4ODUuMyAxOS40LDg3My40IDE2LjAsODYwLjcgMTIuOSw4NDYuOSAxMC4yLDgzMi4xIDcuOCw4MTUuOSA1LjcsNzk4LjEgNC4wLDc3OC4zIDIuNSw3NTUuOCAxLjQsNzI5LjQgMC42LDY5Ny4wIDAuMiw2NTIuMiAwLjAsNTEyLjAgMC4yLDM3MS44IDAuNiwzMjcuMCAxLjQsMjk0LjYgMi41LDI2OC4yIDQuMCwyNDUuNyA1LjcsMjI1LjkgNy44LDIwOC4xIDEwLjIsMTkxLjkgMTIuOSwxNzcuMSAxNi4wLDE2My4zIDE5LjQsMTUwLjYgMjMuMSwxMzguNyAyNy4yLDEyNy41IDMxLjYsMTE3LjEgMzYuNCwxMDcuMyA0MS42LDk4LjAgNDcuMiw4OS40IDUzLjEsODEuMiA1OS41LDczLjUgNjYuMyw2Ni4zIDczLjUsNTkuNSA4MS4yLDUzLjEgODkuNCw0Ny4yIDk4LjAsNDEuNiAxMDcuMywzNi40IDExNy4xLDMxLjYgMTI3LjUsMjcuMiAxMzguNywyMy4xIDE1MC42LDE5LjQgMTYzLjMsMTYuMCAxNzcuMSwxMi45IDE5MS45LDEwLjIgMjA4LjEsNy44IDIyNS45LDUuNyAyNDUuNyw0LjAgMjY4LjIsMi41IDI5NC42LDEuNCAzMjcuMCwwLjYgMzcxLjgsMC4yIDUxMi4wLDAuMCA2NTIuMiwwLjIgNjk3LjAsMC42IDcyOS40LDEuNCA3NTUuOCwyLjUgNzc4LjMsNC4wIDc5OC4xLDUuNyA4MTUuOSw3LjggODMyLjEsMTAuMiA4NDYuOSwxMi45IDg2MC43LDE2LjAgODczLjQsMTkuNCA4ODUuMywyMy4xIDg5Ni41LDI3LjIgOTA2LjksMzEuNiA5MTYuNywzNi40IDkyNi4wLDQxLjYgOTM0LjYsNDcuMiA5NDIuOCw1My4xIDk1MC41LDU5LjUgOTU3LjcsNjYuMyA5NjQuNSw3My41IDk3MC45LDgxLjIgOTc2LjgsODkuNCA5ODIuNCw5OC4wIDk4Ny42LDEwNy4zIDk5Mi40LDExNy4xIDk5Ni44LDEyNy41IDEwMDAuOSwxMzguNyAxMDA0LjYsMTUwLjYgMTAwOC4wLDE2My4zIDEwMTEuMSwxNzcuMSAxMDEzLjgsMTkxLjkgMTAxNi4yLDIwOC4xIDEwMTguMywyMjUuOSAxMDIwLjAsMjQ1LjcgMTAyMS41LDI2OC4yIDEwMjIuNiwyOTQuNiAxMDIzLjQsMzI3LjAgMTAyMy44LDM3MS44WiIgZmlsbD0idXJsKCN0KSIvPgo8cGF0aCBkPSJNMTAxOC4wLDUxMi4wIDEwMTcuOCw2NTAuNiAxMDE3LjQsNjk0LjggMTAxNi42LDcyNi45IDEwMTUuNSw3NTIuOSAxMDE0LjEsNzc1LjIgMTAxMi40LDc5NC44IDEwMTAuMyw4MTIuMyAxMDA3LjksODI4LjMgMTAwNS4yLDg0My4wIDEwMDIuMiw4NTYuNiA5OTguOSw4NjkuMiA5OTUuMiw4ODEuMCA5OTEuMSw4OTIuMCA5ODYuNyw5MDIuMyA5ODIuMCw5MTIuMCA5NzYuOSw5MjEuMSA5NzEuNCw5MjkuNyA5NjUuNSw5MzcuOCA5NTkuMiw5NDUuNCA5NTIuNSw5NTIuNSA5NDUuNCw5NTkuMiA5MzcuOCw5NjUuNSA5MjkuNyw5NzEuNCA5MjEuMSw5NzYuOSA5MTIuMCw5ODIuMCA5MDIuMyw5ODYuNyA4OTIuMCw5OTEuMSA4ODEuMCw5OTUuMiA4NjkuMiw5OTguOSA4NTYuNiwxMDAyLjIgODQzLjAsMTAwNS4yIDgyOC4zLDEwMDcuOSA4MTIuMywxMDEwLjMgNzk0LjgsMTAxMi40IDc3NS4yLDEwMTQuMSA3NTIuOSwxMDE1LjUgNzI2LjksMTAxNi42IDY5NC44LDEwMTcuNCA2NTAuNiwxMDE3LjggNTEyLjAsMTAxOC4wIDM3My40LDEwMTcuOCAzMjkuMiwxMDE3LjQgMjk3LjEsMTAxNi42IDI3MS4xLDEwMTUuNSAyNDguOCwxMDE0LjEgMjI5LjIsMTAxMi40IDIxMS43LDEwMTAuMyAxOTUuNywxMDA3LjkgMTgxLjAsMTAwNS4yIDE2Ny40LDEwMDIuMiAxNTQuOCw5OTguOSAxNDMuMCw5OTUuMiAxMzIuMCw5OTEuMSAxMjEuNyw5ODYuNyAxMTIuMCw5ODIuMCAxMDIuOSw5NzYuOSA5NC4zLDk3MS40IDg2LjIsOTY1LjUgNzguNiw5NTkuMiA3MS41LDk1Mi41IDY0LjgsOTQ1LjQgNTguNSw5MzcuOCA1Mi42LDkyOS43IDQ3LjEsOTIxLjEgNDIuMCw5MTIuMCAzNy4zLDkwMi4zIDMyLjksODkyLjAgMjguOCw4ODEuMCAyNS4xLDg2OS4yIDIxLjgsODU2LjYgMTguOCw4NDMuMCAxNi4xLDgyOC4zIDEzLjcsODEyLjMgMTEuNiw3OTQuOCA5LjksNzc1LjIgOC41LDc1Mi45IDcuNCw3MjYuOSA2LjYsNjk0LjggNi4yLDY1MC42IDYuMCw1MTIuMCA2LjIsMzczLjQgNi42LDMyOS4yIDcuNCwyOTcuMSA4LjUsMjcxLjEgOS45LDI0OC44IDExLjYsMjI5LjIgMTMuNywyMTEuNyAxNi4xLDE5NS43IDE4LjgsMTgxLjAgMjEuOCwxNjcuNCAyNS4xLDE1NC44IDI4LjgsMTQzLjAgMzIuOSwxMzIuMCAzNy4zLDEyMS43IDQyLjAsMTEyLjAgNDcuMSwxMDIuOSA1Mi42LDk0LjMgNTguNSw4Ni4yIDY0LjgsNzguNiA3MS41LDcxLjUgNzguNiw2NC44IDg2LjIsNTguNSA5NC4zLDUyLjYgMTAyLjksNDcuMSAxMTIuMCw0Mi4wIDEyMS43LDM3LjMgMTMyLjAsMzIuOSAxNDMuMCwyOC44IDE1NC44LDI1LjEgMTY3LjQsMjEuOCAxODEuMCwxOC44IDE5NS43LDE2LjEgMjExLjcsMTMuNyAyMjkuMiwxMS42IDI0OC44LDkuOSAyNzEuMSw4LjUgMjk3LjEsNy40IDMyOS4yLDYuNiAzNzMuNCw2LjIgNTEyLjAsNi4wIDY1MC42LDYuMiA2OTQuOCw2LjYgNzI2LjksNy40IDc1Mi45LDguNSA3NzUuMiw5LjkgNzk0LjgsMTEuNiA4MTIuMywxMy43IDgyOC4zLDE2LjEgODQzLjAsMTguOCA4NTYuNiwyMS44IDg2OS4yLDI1LjEgODgxLjAsMjguOCA4OTIuMCwzMi45IDkwMi4zLDM3LjMgOTEyLjAsNDIuMCA5MjEuMSw0Ny4xIDkyOS43LDUyLjYgOTM3LjgsNTguNSA5NDUuNCw2NC44IDk1Mi41LDcxLjUgOTU5LjIsNzguNiA5NjUuNSw4Ni4yIDk3MS40LDk0LjMgOTc2LjksMTAyLjkgOTgyLjAsMTEyLjAgOTg2LjcsMTIxLjcgOTkxLjEsMTMyLjAgOTk1LjIsMTQzLjAgOTk4LjksMTU0LjggMTAwMi4yLDE2Ny40IDEwMDUuMiwxODEuMCAxMDA3LjksMTk1LjcgMTAxMC4zLDIxMS43IDEwMTIuNCwyMjkuMiAxMDE0LjEsMjQ4LjggMTAxNS41LDI3MS4xIDEwMTYuNiwyOTcuMSAxMDE3LjQsMzI5LjIgMTAxNy44LDM3My40WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iLjEyIiBzdHJva2Utd2lkdGg9IjEyIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsLTM3KSI+CjxwYXRoIGQ9Ik0zNzIsNDc2TDQyOCwzNzJRNDM2LDM1NiA0NTQsMzU2TDU3MCwzNTZRNTg4LDM1NiA1OTYsMzcyTDY1Miw0NzZaIiBmaWxsPSIjMkVBNDRGIi8+CjxwYXRoIGQ9Ik0yODAsNDk0SDc0NEE0NCw0NCAwIDAgMSA3ODgsNTM4VjYwMEE0NCw0NCAwIDAgMSA3NDQsNjQ0SDI4MEE0NCw0NCAwIDAgMSAyMzYsNjAwVjUzOEE0NCw0NCAwIDAgMSAyODAsNDk0WiIgZmlsbD0iIzI0NDE4QSIvPgo8Y2lyY2xlIGN4PSIzNzIiIGN5PSI2NzIiIHI9IjYyIiBmaWxsPSIjNzA0Mjg1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTgiLz4KPGNpcmNsZSBjeD0iNjUyIiBjeT0iNjcyIiByPSI2MiIgZmlsbD0iIzcwNDI4NSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjE4Ii8+CjwvZz4KPC9zdmc+Cg==" width="40" height="40" alt=""></button>
   <!--napis--><h1><button type="button" id="napis" class="napis-przycisk" aria-label="Kasiomobile: te same wyszukiwania na Otomoto" aria-haspopup="menu" aria-expanded="false"><svg class="napis" viewBox="0 0 11602 1572" role="img" aria-label="Kasiomobile" style="--szer:5.6650;--wys:0.7676"><style>.napis-l{fill:#24418A}.napis-z{fill:#1C7C36}.napis-f{fill:#704285}@media (prefers-color-scheme: dark){.napis-l{fill:#FFFFFF}.napis-z{fill:#30D158}.napis-f{fill:#C495E8}}</style><path class="napis-l" d="M280 1531L16 1531L16 41L280 41L280 760Q338 692 397 625Q455 558 513 490L513 490L909 41L1235 41L662 686L1245 1531L937 1531L484 864L280 1095L280 1531ZM1675 1548L1675 1548Q1517 1548 1413 1469Q1310 1389 1310 1231L1310 1231Q1310 1111 1368 1046Q1427 980 1521 950Q1616 920 1725 909L1725 909Q1872 892 1930 879Q1988 866 1988 812L1988 812L1988 804Q1988 736 1936 693Q1885 650 1795 650L1795 650Q1703 650 1645 693Q1588 736 1583 803L1583 803L1340 803Q1349 646 1471 550Q1593 454 1800 454L1800 454Q2006 454 2122 550Q2238 646 2238 811L2238 811L2238 1531L1990 1531L1990 1382L1986 1382Q1948 1452 1876 1500Q1804 1548 1675 1548ZM1737 1361L1737 1361Q1861 1361 1925 1297Q1989 1232 1989 1140L1989 1140L1989 1026Q1966 1041 1900 1054Q1834 1066 1756 1078L1756 1078Q1675 1090 1615 1124Q1556 1157 1556 1229L1556 1229Q1556 1291 1605 1326Q1654 1361 1737 1361ZM2854 1556L2854 1556Q2661 1556 2532 1466Q2402 1375 2390 1205L2390 1205L2639 1205Q2647 1282 2701 1325Q2755 1367 2850 1367L2850 1367Q2941 1367 2994 1331Q3046 1295 3046 1239L3046 1239Q3046 1191 3007 1162Q2968 1133 2902 1119L2902 1119L2722 1082Q2414 1018 2414 777L2414 777Q2414 631 2530 542Q2646 452 2839 452L2839 452Q3031 452 3152 547Q3272 641 3276 804L3276 804L3039 804Q3037 733 2984 687Q2931 641 2845 641L2845 641Q2762 641 2714 678Q2666 715 2666 769L2666 769Q2666 816 2703 846Q2740 875 2806 890L2806 890L2996 929Q3153 962 3228 1033Q3302 1104 3302 1220L3302 1220Q3302 1323 3245 1399Q3187 1474 3086 1515Q2985 1556 2854 1556ZM3706 1531L3454 1531L3454 475L3706 475L3706 1531ZM3580 318L3580 318Q3515 318 3472 277Q3429 235 3429 174L3429 174Q3429 113 3472 72Q3515 31 3580 31L3580 31Q3644 31 3687 72Q3730 113 3730 174L3730 174Q3730 235 3687 277Q3644 318 3580 318ZM5308 1531L5056 1531L5056 475L5300 475L5300 658Q5348 556 5433 505Q5518 454 5618 454L5618 454Q5725 454 5807 509Q5889 563 5922 654L5922 654Q5964 563 6053 509Q6142 454 6258 454L6258 454Q6408 454 6510 551Q6612 648 6612 834L6612 834L6612 1531L6359 1531L6359 870Q6359 765 6301 717Q6244 668 6163 668L6163 668Q6067 668 6011 728Q5956 788 5956 883L5956 883L5956 1531L5711 1531L5711 858Q5711 772 5657 720Q5603 668 5519 668L5519 668Q5434 668 5371 728Q5308 787 5308 901L5308 901L5308 1531ZM8531 1552L8531 1552Q8427 1552 8343 1507Q8260 1462 8211 1370L8211 1370L8209 1370L8209 1531L7961 1531L7961 41L8213 41L8213 625L8215 625Q8266 538 8348 496Q8430 454 8532 454L8532 454Q8668 454 8770 524Q8873 593 8930 717Q8988 840 8988 1002L8988 1002Q8988 1167 8931 1291Q8875 1414 8772 1483Q8669 1552 8531 1552ZM8472 1341L8472 1341Q8589 1341 8661 1254Q8733 1166 8733 1002L8733 1002Q8733 839 8661 751Q8589 663 8472 663L8472 663Q8348 663 8273 756Q8199 848 8199 1002L8199 1002Q8199 1156 8273 1249Q8348 1341 8472 1341ZM9394 1531L9142 1531L9142 475L9394 475L9394 1531ZM9268 318L9268 318Q9203 318 9160 277Q9117 235 9117 174L9117 174Q9117 113 9160 72Q9203 31 9268 31L9268 31Q9332 31 9375 72Q9418 113 9418 174L9418 174Q9418 235 9375 277Q9332 318 9268 318ZM9598 41L9850 41L9850 1531L9598 1531L9598 41ZM10519 1555L10519 1555Q10361 1555 10245 1484Q10129 1413 10067 1289Q10004 1164 10004 1004L10004 1004Q10004 843 10069 719Q10133 594 10247 523Q10361 451 10509 451L10509 451Q10661 451 10775 521Q10889 591 10952 715Q11015 838 11015 1000L11015 1000L11015 1069L10251 1069Q10256 1198 10327 1277Q10398 1356 10525 1356L10525 1356Q10620 1356 10682 1315Q10744 1273 10766 1205L10766 1205L11002 1205Q10982 1308 10915 1387Q10847 1466 10745 1511Q10643 1555 10519 1555ZM10253 895L10253 895L10773 895Q10761 782 10692 717Q10622 651 10513 651L10513 651Q10403 651 10335 717Q10266 782 10253 895ZM11388 437L11388 437Q11347 437 11311 421Q11275 406 11248 379Q11221 351 11206 316Q11190 280 11190 239L11190 239Q11190 198 11206 162Q11221 126 11248 99Q11275 72 11311 56Q11347 41 11388 41L11388 41Q11429 41 11465 56Q11501 72 11528 99Q11555 126 11571 162Q11586 198 11586 239L11586 239Q11586 280 11571 316Q11555 351 11528 379Q11501 406 11465 421Q11429 437 11388 437ZM11388 389L11388 389Q11430 389 11464 369Q11498 348 11518 314Q11538 280 11538 239L11538 239Q11538 197 11518 163Q11498 129 11464 109Q11430 89 11388 89L11388 89Q11347 89 11313 109Q11279 129 11258 163Q11238 197 11238 239L11238 239Q11238 280 11258 314Q11279 348 11313 369Q11347 389 11388 389ZM11475 330L11430 330L11398 268L11359 268L11359 330L11318 330L11318 147L11411 147Q11422 147 11436 154Q11449 160 11458 173Q11468 186 11468 205L11468 205Q11468 224 11459 238Q11450 251 11438 259L11438 259L11475 330ZM11359 177L11359 238L11396 238Q11404 238 11414 230Q11423 222 11423 205L11423 205Q11423 189 11414 183Q11404 177 11397 177L11397 177L11359 177Z"/><path class="napis-z" fill-rule="evenodd" d="M4902.1,1003C4902.1,1290.7,4668.8,1524,4381.1,1524C4093.3,1524,3860.1,1290.7,3860.1,1003C3860.1,715.3,4093.3,482,4381.1,482C4668.8,482,4902.1,715.3,4902.1,1003ZM4695.4,1003C4695.4,829.4,4554.7,688.6,4381.1,688.6C4207.4,688.6,4066.7,829.4,4066.7,1003C4066.7,1176.6,4207.4,1317.4,4381.1,1317.4C4554.7,1317.4,4695.4,1176.6,4695.4,1003ZM4463.7,1003C4463.7,1048.6,4426.7,1085.7,4381.1,1085.7C4335.4,1085.7,4298.4,1048.6,4298.4,1003C4298.4,957.4,4335.4,920.3,4381.1,920.3C4426.7,920.3,4463.7,957.4,4463.7,1003Z"/><path class="napis-f" fill-rule="evenodd" d="M7807.1,1003C7807.1,1290.7,7573.8,1524,7286.1,1524C6998.4,1524,6765.1,1290.7,6765.1,1003C6765.1,715.3,6998.4,482,7286.1,482C7573.8,482,7807.1,715.3,7807.1,1003ZM7600.5,1003C7600.5,829.4,7459.7,688.6,7286.1,688.6C7112.5,688.6,6971.7,829.4,6971.7,1003C6971.7,1176.6,7112.5,1317.4,7286.1,1317.4C7459.7,1317.4,7600.5,1176.6,7600.5,1003ZM7368.7,1003C7368.7,1048.6,7331.7,1085.7,7286.1,1085.7C7240.4,1085.7,7203.4,1048.6,7203.4,1003C7203.4,957.4,7240.4,920.3,7286.1,920.3C7331.7,920.3,7368.7,957.4,7368.7,1003Z"/></svg></button></h1><!--/napis-->
-  <button type="button" id="czat-otworz" class="czat-ikonka czat-otworz" aria-label="Zapytaj asystenta" aria-haspopup="dialog"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.5 4h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7l-4.5 3.4v-3.4h-1.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="10.25" r="1.25"/><circle cx="12" cy="10.25" r="1.25"/><circle cx="15.5" cy="10.25" r="1.25"/></svg></button>
+  <button type="button" id="czat-otworz" class="czat-ikonka czat-otworz" aria-label="Zapytaj asystenta" aria-haspopup="dialog"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.25 2.38Q11.65 8.73 18 10.13Q11.65 11.52 10.25 17.88Q8.86 11.52 2.5 10.13Q8.86 8.73 10.25 2.38ZM18 14.63Q18.63 17.5 21.5 18.13Q18.63 18.76 18 21.63Q17.37 18.76 14.5 18.13Q17.37 17.5 18 14.63ZM18.5 2.8Q18.9 4.6 20.7 5Q18.9 5.4 18.5 7.2Q18.1 5.4 16.3 5Q18.1 4.6 18.5 2.8Z"/></svg></button>
 </header>
 <main>
   <section id="katalog" class="widok" role="tabpanel" aria-labelledby="seg-katalog">
     <div class="ramki">
       <div class="podwidok" data-p="teraz">
-        <iframe id="ramka-katalogu" title="Ogłoszenia z Otomoto" hidden></iframe>
+        <iframe id="ramka-katalogu" title="Oferty z Otomoto" hidden></iframe>
         <div id="pusty-katalog" class="pusto" hidden><p class="pusto-tekst"></p></div>
       </div>
       <div class="podwidok" data-p="historia" hidden>
@@ -664,15 +693,16 @@ body.bez-pigulek .podkarty { display: none; }
 </main>
 <div class="dol">
   <div class="podkarty">
-    <div class="podwidoki" role="radiogroup" aria-label="Ogłoszenia" data-z="katalog" style="--pastel:#d1f5da;--pastel-c:#0e3f1a" data-odcien="135"><button type="button" role="radio" aria-checked="true" data-p="teraz"><span class="nazwa" data-nazwa="Teraz"><span>Teraz</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="historia"><span class="nazwa" data-nazwa="Historia"><span>Historia</span></span></button></div>
-    <div class="podwidoki" role="radiogroup" aria-label="Katalag" data-z="modele" style="--pastel:#c9e4ff;--pastel-c:#03284d" data-odcien="210" hidden><button type="button" role="radio" aria-checked="true" data-p="podium"><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span> <span class="skad">Otomoto</span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="modele"><span class="nazwa" data-nazwa="Modele"><span>Modele</span></span> <span class="skad">Otomoto</span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="marki"><span class="nazwa" data-nazwa="Marki"><span>Marki</span></span> <span class="skad">wszystkie</span></button></div>
-    <div class="podwidoki" role="radiogroup" aria-label="Finanse" data-z="kredyt" style="--pastel:#ffeac9;--pastel-c:#4d3003" data-odcien="36" hidden><button type="button" role="radio" aria-checked="true" data-p="leasing"><span class="nazwa" data-nazwa="Leasing"><span>Leasing</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="kredyt"><span class="nazwa" data-nazwa="Kredyt"><span>Kredyt</span></span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Oferty" data-z="katalog" style="--pastel:#dff6e4;--pastel-c:#224f2e" data-odcien="135"><button type="button" role="radio" aria-checked="true" data-p="teraz"><span class="nazwa" data-nazwa="Teraz"><span>Teraz</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="historia"><span class="nazwa" data-nazwa="Historia"><span>Historia</span></span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Podium" data-z="modele" style="--pastel:#d6eaff;--pastel-c:#17395d" data-odcien="211" hidden><button type="button" role="radio" aria-checked="true" data-p="podium"><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span> <span class="skad">Otomoto</span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="modele"><span class="nazwa" data-nazwa="Modele"><span>Modele</span></span> <span class="skad">Otomoto</span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="marki"><span class="nazwa" data-nazwa="Wszystkie"><span>Wszystkie</span></span> <span class="skad">marki</span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Finanse" data-z="kredyt" style="--pastel:#ffeed6;--pastel-c:#5c4118" data-odcien="35" hidden><button type="button" role="radio" aria-checked="true" data-p="leasing"><span class="nazwa" data-nazwa="Leasing"><span>Leasing</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="kredyt"><span class="nazwa" data-nazwa="Kredyt"><span>Kredyt</span></span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Poradnik" data-z="poradnik" style="--pastel:#f2e3fa;--pastel-c:#4a2d59" data-odcien="282" hidden><button type="button" role="radio" aria-checked="true" data-p="skrot"><span class="nazwa" data-nazwa="Skrót"><span>Skrót</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="calosc"><span class="nazwa" data-nazwa="Całość"><span>Całość</span></span></button></div>
   </div>
   <div class="karty" role="tablist" aria-label="Zakładki">
-    <button type="button" role="tab" id="seg-katalog" aria-controls="katalog" aria-selected="true" style="--pastel:#d1f5da;--pastel-c:#0e3f1a" data-odcien="135"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-ogl)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.44)" d="M8.2 4.5h7.6c.9 0 1.6.5 1.9 1.3L19.2 10H19.6A1.9 1.9 0 0 1 21.5 11.9V16.4a.9.9 0 0 1-.9.9H20v1.6a1.1 1.1 0 0 1-1.1 1.1h-1.3a1.1 1.1 0 0 1-1.1-1.1V17.3H7.5v1.6a1.1 1.1 0 0 1-1.1 1.1H5.1A1.1 1.1 0 0 1 4 18.9V17.3h-.6a.9.9 0 0 1-.9-.9V11.9A1.9 1.9 0 0 1 4.4 10h.4L6.3 5.8c.3-.8 1-1.3 1.9-1.3zM8.4 6.4 7.2 9.6h9.6l-1.2-3.2zM5.3 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0zM16.1 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z"/></svg><span class="nazwa" data-nazwa="Ogłoszenia"><span>Ogłoszenia</span></span></button>
-    <button type="button" role="tab" id="seg-modele" aria-controls="modele" aria-selected="false" tabindex="-1" style="--pastel:#c9e4ff;--pastel-c:#03284d" data-odcien="210"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kat)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M5.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM5.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z"/></svg><span class="nazwa" data-nazwa="Katalag"><span>Katalag</span></span></button>
-    <button type="button" role="tab" id="seg-kredyt" aria-controls="kredyt" aria-selected="false" tabindex="-1" style="--pastel:#ffeac9;--pastel-c:#4d3003" data-odcien="36"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kre)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4.5 6.5h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0zM5.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0zM17.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0z"/></svg><span class="nazwa" data-nazwa="Finanse"><span>Finanse</span></span></button>
-    <button type="button" role="tab" id="seg-poradnik" aria-controls="poradnik" aria-selected="false" tabindex="-1" style="--pastel:#dcdbfa;--pastel-c:#1c1c45" data-odcien="241"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-por)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4 5.5c2.6-.9 5-.6 7 .9v12.1c-2-1.5-4.4-1.8-7-.9zM13 6.4c2-1.5 4.4-1.8 7-.9v12.1c-2.6-.9-5-.6-7 .9z"/></svg><span class="nazwa" data-nazwa="Poradnik"><span>Poradnik</span></span></button>
+    <button type="button" role="tab" id="seg-katalog" aria-controls="katalog" aria-selected="true" style="--pastel:#dff6e4;--pastel-c:#224f2e" data-odcien="135"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-ogl)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.44)" d="M8.2 4.5h7.6c.9 0 1.6.5 1.9 1.3L19.2 10H19.6A1.9 1.9 0 0 1 21.5 11.9V16.4a.9.9 0 0 1-.9.9H20v1.6a1.1 1.1 0 0 1-1.1 1.1h-1.3a1.1 1.1 0 0 1-1.1-1.1V17.3H7.5v1.6a1.1 1.1 0 0 1-1.1 1.1H5.1A1.1 1.1 0 0 1 4 18.9V17.3h-.6a.9.9 0 0 1-.9-.9V11.9A1.9 1.9 0 0 1 4.4 10h.4L6.3 5.8c.3-.8 1-1.3 1.9-1.3zM8.4 6.4 7.2 9.6h9.6l-1.2-3.2zM5.3 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0zM16.1 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z"/></svg><span class="nazwa" data-nazwa="Oferty"><span>Oferty</span></span></button>
+    <button type="button" role="tab" id="seg-modele" aria-controls="modele" aria-selected="false" tabindex="-1" style="--pastel:#d6eaff;--pastel-c:#17395d" data-odcien="211"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kat)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M5.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 3.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM5.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zM15.5 13.5h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z"/></svg><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span></button>
+    <button type="button" role="tab" id="seg-kredyt" aria-controls="kredyt" aria-selected="false" tabindex="-1" style="--pastel:#ffeed6;--pastel-c:#5c4118" data-odcien="35"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kre)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4.5 6.5h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0zM5.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0zM17.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0z"/></svg><span class="nazwa" data-nazwa="Finanse"><span>Finanse</span></span></button>
+    <button type="button" role="tab" id="seg-poradnik" aria-controls="poradnik" aria-selected="false" tabindex="-1" style="--pastel:#f2e3fa;--pastel-c:#4a2d59" data-odcien="282"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-por)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4 5.5c2.6-.9 5-.6 7 .9v12.1c-2-1.5-4.4-1.8-7-.9zM13 6.4c2-1.5 4.4-1.8 7-.9v12.1c-2.6-.9-5-.6-7 .9z"/></svg><span class="nazwa" data-nazwa="Poradnik"><span>Poradnik</span></span></button>
   </div>
   <div class="cofnij-zakladki" hidden><button type="button" id="cofnij-zakladki" class="pigulka" aria-label="Cofnij przestawienie zakładek">Cofnij</button></div>
 </div>
@@ -686,27 +716,29 @@ body.bez-pigulek .podkarty { display: none; }
 // „<kanał>-odpowiedz”, zwykle po 8–15 sekundach. Odpowiedź może pokazać zakładkę, model albo Podium („ręce”, opcje.pokaz)
 // i polecić do trzech odnośników. Rozmowa zostaje w pamięci urządzenia (ostatnie 40 wiadomości), a pytanie bez odpowiedzi
 // czeka dalej także po zamknięciu aplikacji, do 90 sekund od wysłania.
-// Mikrofon (Soniox, rozpoznawanie mowy na żywo) stoi tylko wtedy, gdy komputer ma klucz Soniox (pole „glos” w każdej
+// Mikrofon (Soniox, rozpoznawanie mowy na żywo; od 26.10.2026 także duży na pustej rozmowie) stoi od razu, póki komputer nie powie, że klucza nie da (pole „glos” w każdej
 // odpowiedzi), a przeglądarka umie nagrywać: Android i strona w sieci w Safari albo Chrome. Telefon dostaje od komputera
-// klucz tymczasowy na godzinę i nagrywa w stronie (getUserMedia i MediaRecorder, tak samo jak Web SDK Soniox). Aplikacja
-// na iPhone'a (auta://) mikrofonu nie ma: app.js go nie włącza, a glosNatywny i Czat.zGlosu czekają na nagrywanie w Swift.
+// krótki, jednorazowy klucz z Bramy Opusa i nagrywa w stronie (getUserMedia i MediaRecorder, tak samo jak Web SDK Soniox). Aplikacja
+// na iPhone'a (auta://) nagrywa w Swift (od 26.10.2026, Aplikacja.swift, klasa Glos): dostaje glosNatywny.start(klucz, ustawienia),
+// sama łączy się z Soniox i oddaje jego wiadomości przez Czat.zGlosu, a tekst z nich liczy ta sama funkcja co w stronie (zSoniox).
 // Gdy rozpoznawanie uzna, że pytanie się skończyło, pytanie idzie samo. W oknie na komputerze mikrofonu nie ma, bo tam
 // dyktuje Dyktowanie (kółko myszy wkleja tekst w pole pytania i daje Enter). Test bez prawdziwego Soniox: testy/mikrofon.mjs.
 //
 //   const czat = Czat.uruchom({ kanal, tryb: 'arkusz' | 'panel' | 'strona', skad, miejsce, zakladka(), pokaz(p, reka), zamknij(),
-//                               mikrofon: true, glosNatywny: { start(klucz), stop() }, naZmiane(otwarty) })
+//                               mikrofon: true, glosNatywny: { start(klucz, ustawienia), stop(zaraz) }, naZmiane(otwarty) })
 //   Czat.dymek(przycisk): dymek przy ikonce bez podpisu. Wołaj go przed dodaniem własnego „click”.
 'use strict';
 (() => {
   const SERWER = 'https://ntfy.sh', SONIOX = 'wss://stt-rt.soniox.com/transcribe-websocket';
   const CZEKAJ_MS = 90000, KLUCZ_MS = 20000, NAJWIECEJ = 40, NOWA_ROZMOWA_MS = 6 * 3600 * 1000;
-  // Nazwy zakładek w bierniku, do przycisku „Pokaż …” pod odpowiedzią. Od 19.10.2026 „katalog” to Ogłoszenia (razem z dawnym
-  // „Nowe”, które zostaje dla starych odpowiedzi w pamięci), a „modele” to Katalag. Od 25.10.2026 „kredyt” to Finanse, „historia”
+  // Nazwy zakładek w bierniku, do przycisku „Pokaż …” pod odpowiedzią. Od 19.10.2026 „katalog” to Oferty (do 25.10.2026 Ogłoszenia, razem z dawnym
+  // „Nowe”, które zostaje dla starych odpowiedzi w pamięci), a „modele” to Podium (do 25.10.2026 Katalag). Od 25.10.2026 „kredyt” to Finanse, „historia”
   // pigułka Historia w Ogłoszeniach, a „poradnik” zakładka Poradnik.
-  const BIERNIK = { katalog: 'Ogłoszenia', nowe: 'Ogłoszenia', modele: 'Katalag', kredyt: 'Finanse', historia: 'Historię', poradnik: 'Poradnik' };
-  const PODPOWIEDZI = ['Najbezpieczniejsze auto do 75 tys. zł?', 'Co nowego dziś na Otomoto?', 'Czy Corolla kombi zmieści psa?', 'Ile wyjdzie rata za 60 tys. zł?'];
+  const BIERNIK = { katalog: 'Oferty', nowe: 'Oferty', modele: 'Podium', kredyt: 'Finanse', historia: 'Historię', poradnik: 'Poradnik' };
+  // Podpowiedzi w barwach zakładek, których dotyczą (od 26.10.2026): Podium niebieskie, Oferty zielone, Poradnik fioletowy, Finanse pomarańczowe.
+  const PODPOWIEDZI = [['Najbezpieczniejsze auto do 75 tys. zł?', 'modele'], ['Co nowego dziś na Otomoto?', 'katalog'], ['Czy Corolla kombi zmieści psa?', 'poradnik'], ['Ile wyjdzie rata za 60 tys. zł?', 'kredyt']];
   const ZDANIA = {
-    pusto: 'Zapytaj o auta, raty albo ogłoszenia. Odpowiada komputer w domu, zwykle w kilkanaście sekund.',
+    pusto: 'Zapytaj o auta, raty albo oferty. Odpowiada komputer w domu, zwykle w kilka sekund.',
     brak: 'Komputer nie odpowiedział. Może jest wyłączony albo śpi.',
     siec: 'Brak połączenia z internetem. Pytanie nie poszło.',
     klucz: 'Komputer nie dał klucza do mikrofonu. Może jest wyłączony.',
@@ -844,7 +876,7 @@ body.bez-pigulek .podkarty { display: none; }
       return wynik.length ? wynik : [el('p', { text: '…' })];
     }
     function napisPokazu(p) {
-      if (p.model && p.nazwa) return 'Pokaż w Katalagu: ' + p.nazwa;
+      if (p.model && p.nazwa) return 'Pokaż model: ' + p.nazwa;
       if (p.podium) return 'Pokaż Podium';
       return 'Pokaż ' + BIERNIK[p.zakladka];
     }
@@ -884,12 +916,16 @@ body.bez-pigulek .podkarty { display: none; }
     }
     function pusto() {
       const rzad = el('div', { class: 'czat-podpowiedzi' });
-      for (const t of PODPOWIEDZI) {
-        const b = el('button', { type: 'button', class: 'czat-podpowiedz', text: t });
+      for (const [t, z] of PODPOWIEDZI) {
+        const b = el('button', { type: 'button', class: 'czat-podpowiedz', 'data-z': z, text: t });
         b.addEventListener('click', () => wyslij(t));
         rzad.append(b);
       }
-      return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), rzad);
+      // Duży mikrofon na pustej rozmowie (od 26.10.2026, Jacek: „Brak dużego mikrofonu”), ten sam co mały przy polu pytania.
+      const duzy = el('button', { type: 'button', class: 'czat-duzy-mik', 'aria-label': 'Powiedz pytanie', html: ikona('mikrofon', 32) + '<span>Powiedz pytanie</span>' });
+      duzy.hidden = !(mozeNagrywac() && pamiec.czytaj('glos', null) !== false);
+      duzy.addEventListener('click', () => (glos.stan === 'nic' ? glosStart() : glosStop(true)));
+      return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), duzy, rzad);
     }
     function dodaj(w) {
       historia.push(w);
@@ -1022,13 +1058,15 @@ body.bez-pigulek .podkarty { display: none; }
     }
     // „Ręce”: zakładka, model albo Podium. Na telefonie stuknięcie w „Pokaż …” zamyka czat, żeby było widać, co pokazał.
     function pokazTeraz(p, reka) {
-      if (reka && tryb === 'arkusz') zamknij();
+      if (reka && tryb === 'arkusz') { zamknij(); doRozmowy = Date.now(); }
       if (o.pokaz) Promise.resolve().then(() => o.pokaz(p, reka)).catch(() => { /* aplikacja pokaże, co umie */ });
     }
 
     // ---------------------------------------------------------------- otwieranie i zamykanie
     const otwarty = () => (tryb === 'strona' ? true : tryb === 'panel' ? !o.miejsce.hidden : korzen.classList.contains('widac'));
-    let wroc = null, zegarZamkniecia = 0;
+    // doRozmowy: chwila przejścia z rozmowy do zakładki („Pokaż …”). Wstecz w ciągu 10 minut wraca do rozmowy (od 26.10.2026,
+    // Jacek: „Do tyłu nie działa”), app.js pyta o to przez wrocDoRozmowy.
+    let wroc = null, zegarZamkniecia = 0, doRozmowy = 0;
     function dopasuj() {
       // Arkusz na telefonie stoi w widocznej części ekranu, więc klawiatura nie zasłania pola.
       const v = window.visualViewport;
@@ -1040,6 +1078,7 @@ body.bez-pigulek .podkarty { display: none; }
     }
     function otworz() {
       if (tryb === 'strona') return;
+      doRozmowy = 0;
       if (!otwarty()) wroc = document.activeElement;
       if (tryb === 'panel') o.miejsce.hidden = false;
       else {
@@ -1120,10 +1159,14 @@ body.bez-pigulek .podkarty { display: none; }
 
     // ---------------------------------------------------------------- mikrofon (Soniox)
     const natywny = o.glosNatywny || null;
+    const KONF_SONIOX = { model: 'stt-rt-v5', audio_format: 'auto', language_hints: ['pl'], enable_endpoint_detection: true };
     const glos = { stan: 'nic', ws: null, rec: null, media: null, gotowe: '', tym: '', wyslij: true, zegar: 0 };
     const mozeNagrywac = () => Boolean(natywny)
       || Boolean(o.mikrofon && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder && window.WebSocket);
-    function pokazMik() { mikB.hidden = !(mozeNagrywac() && pamiec.czytaj('glos', false) === true); }
+    function pokazMik() {
+      mikB.hidden = !(mozeNagrywac() && pamiec.czytaj('glos', null) !== false);
+      for (const b of lista.querySelectorAll('.czat-duzy-mik')) b.hidden = mikB.hidden;
+    }
     function pokazGlos() {
       const n = glos.stan !== 'nic';
       mikB.classList.toggle('nagrywa', n);
@@ -1133,12 +1176,17 @@ body.bez-pigulek .podkarty { display: none; }
       if (glos.stan === 'start') stan('Włączam mikrofon…');
       else if (glos.stan === 'nagrywa') stan('Słucham. Gdy skończysz, pytanie pójdzie samo.');
       else if (!n && /^(Włączam|Słucham)/.test(stanL.textContent)) stan('');
+      for (const b of lista.querySelectorAll('.czat-duzy-mik')) {
+        b.classList.toggle('nagrywa', n);
+        b.setAttribute('aria-label', n ? 'Zakończ i wyślij' : 'Powiedz pytanie');
+        b.lastChild.textContent = n ? 'Słucham…' : 'Powiedz pytanie';
+      }
     }
     async function klucz() {
       const k = pamiec.czytaj('klucz', null);
       if (k && k.klucz && Date.parse(k.do) - Date.now() > 120000) return k.klucz;
       const d = await zapytaj({ co: 'klucz' }, KLUCZ_MS);
-      if (d && d.klucz) { pamiec.zapisz('klucz', { klucz: d.klucz, do: d.do }); return d.klucz; }
+      if (d && d.klucz) { pamiec.zapisz('klucz', d.jednorazowy ? null : { klucz: d.klucz, do: d.do }); glos.konf = d.konfiguracja || null; return d.klucz; }
       if (d && d.glos === false) { pamiec.zapisz('glos', false); pokazMik(); }
       throw new Error(d && d.blad ? d.blad : ZDANIA.klucz);
     }
@@ -1149,7 +1197,8 @@ body.bez-pigulek .podkarty { display: none; }
       let k;
       try { k = await klucz(); } catch (e) { glosKoniec(e.message); return; }
       if (glos.stan !== 'start') return;
-      if (natywny) { natywny.start(k); return; } // iPhone: stan „nagrywa” przyjdzie przez Czat.zGlosu
+      // iPhone: Aplikacja.swift nagrywa PCM 16 kHz mono i sama łączy się z Soniox; „nagrywa” i słowa przyjdą przez Czat.zGlosu.
+      if (natywny) { natywny.start(k, JSON.stringify(Object.assign({}, KONF_SONIOX, glos.konf || {}, { audio_format: 'pcm_s16le', sample_rate: 16000, num_channels: 1 }))); return; }
       // Ustawienia jak domyślne w Web SDK Soniox (MicrophoneSource): mono, 16 kHz, bez obróbki dźwięku w przeglądarce,
       // kawałki co 60 ms. Do 20.10.2026 z redukcją szumu i echa oraz kawałkami co 250 ms.
       try {
@@ -1159,7 +1208,7 @@ body.bez-pigulek .podkarty { display: none; }
       const ws = new WebSocket(SONIOX, ['soniox-api-key', k]);
       glos.ws = ws;
       ws.onopen = () => {
-        ws.send(JSON.stringify({ model: 'stt-rt-v5', audio_format: 'auto', language_hints: ['pl'], enable_endpoint_detection: true }));
+        ws.send(JSON.stringify(Object.assign({}, KONF_SONIOX, glos.konf || {})));
         const typ = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'].find((t) => MediaRecorder.isTypeSupported(t));
         try {
           const rec = new MediaRecorder(glos.media, typ ? { mimeType: typ } : undefined);
@@ -1171,29 +1220,31 @@ body.bez-pigulek .podkarty { display: none; }
         glos.stan = 'nagrywa';
         pokazGlos();
       };
-      ws.onmessage = (e) => {
-        let d;
-        try { d = JSON.parse(e.data); } catch { return; }
-        if (d.error_code) {
-          if (d.error_code === 401) pamiec.zapisz('klucz', null);
-          glosKoniec(ZDANIA.soniox);
-          return;
-        }
-        let tym = '', koniec = false;
-        for (const t of d.tokens || []) {
-          if (t.text === '<end>') koniec = true;
-          else if (t.is_final) glos.gotowe += t.text;
-          else tym += t.text;
-        }
-        glos.tym = tym;
-        pole.value = (glos.gotowe + glos.tym).replace(/\s+/g, ' ').trim();
-        rosnij();
-        przyciski();
-        if (koniec) glosStop(true);
-        if (d.finished) glosKoniec();
-      };
+      ws.onmessage = (e) => zSoniox(e.data);
       ws.onerror = () => glosKoniec(ZDANIA.soniox);
       ws.onclose = () => glosKoniec();
+    }
+    // Wiadomość od Soniox: z WebSocketu strony albo, na iPhonie, przekazana przez Aplikacja.swift.
+    function zSoniox(tekst) {
+      let d;
+      try { d = JSON.parse(tekst); } catch { return; }
+      if (d.error_code) {
+        if (d.error_code === 401) pamiec.zapisz('klucz', null);
+        glosKoniec(ZDANIA.soniox);
+        return;
+      }
+      let tym = '', koniec = false;
+      for (const t of d.tokens || []) {
+        if (t.text === '<end>') koniec = true;
+        else if (t.is_final) glos.gotowe += t.text;
+        else tym += t.text;
+      }
+      glos.tym = tym;
+      pole.value = (glos.gotowe + glos.tym).replace(/\s+/g, ' ').trim();
+      rosnij();
+      przyciski();
+      if (koniec) glosStop(true);
+      if (d.finished) glosKoniec();
     }
     function glosSprzatnij() {
       try { if (glos.rec && glos.rec.state !== 'inactive') glos.rec.stop(); } catch { /* już stoi */ }
@@ -1216,23 +1267,21 @@ body.bez-pigulek .podkarty { display: none; }
       const ws = glos.ws;
       Object.assign(glos, { stan: 'nic', ws: null });
       clearTimeout(glos.zegar);
+      if (natywny) natywny.stop(true);
       glosSprzatnij();
       if (ws && ws.readyState <= 1) { try { ws.close(); } catch { /* zamknięte */ } }
       pokazGlos();
       if (blad) { stan(blad, 7000); return; }
       if (glos.wyslij && pole.value.trim()) wyslij(pole.value);
     }
-    // iPhone: Aplikacja.swift podaje tekst na bieżąco ({ stan, gotowe, tym, koniec, blad }).
+    // iPhone: Aplikacja.swift podaje { stan: 'nagrywa' } po włączeniu mikrofonu, { wiadomosc } z każdą wiadomością Soniox,
+    // { blad: 'mikrofon' | 'soniox' } i { koniec, bezWysylki } po zamknięciu połączenia (bezWysylki: aplikacja zeszła z ekranu).
     function zGlosu(d) {
       if (!d || glos.stan === 'nic') return;
       if (d.blad) { glosKoniec(d.blad === 'mikrofon' ? ZDANIA.mikrofon : ZDANIA.soniox); return; }
       if (d.stan === 'nagrywa' && glos.stan === 'start') { glos.stan = 'nagrywa'; pokazGlos(); }
-      if (typeof d.gotowe === 'string') glos.gotowe = d.gotowe;
-      if (typeof d.tym === 'string') glos.tym = d.tym;
-      pole.value = (glos.gotowe + glos.tym).replace(/\s+/g, ' ').trim();
-      rosnij();
-      przyciski();
-      if (d.koniec) glosKoniec();
+      if (typeof d.wiadomosc === 'string') zSoniox(d.wiadomosc);
+      if (d.koniec && glos.stan !== 'nic') { if (d.bezWysylki) glos.wyslij = false; glosKoniec(); }
     }
     mikB.addEventListener('click', () => (glos.stan === 'nic' ? glosStart() : glosStop(true)));
 
@@ -1256,7 +1305,8 @@ body.bez-pigulek .podkarty { display: none; }
       }
     }
     zapiszCzekajace();
-    const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje };
+    const wrocDoRozmowy = () => { if (!doRozmowy || Date.now() - doRozmowy > 600000) return false; doRozmowy = 0; otworz(); return true; };
+    const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy };
     aktywny = api;
     return api;
   }
@@ -1499,13 +1549,20 @@ body.bez-pigulek .podkarty { display: none; }
   // w Poradniku: 48 px, akcent, głębia i strzałka w dół. Napis biały w jasnym (4,7:1), czarny w ciemnym (7,0:1). W Finansach widać go
   // na każdej szerokości, bo rzędu „Skrót | Pełny widok” w aplikacji nie ma (kalkulator chował go od 721 px).
   const STRZALKA_W_DOL = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 5.75 8 10.25l4.5-4.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`;
+  // Przyciski ze szkła (od 26.10.2026; Jacek o „Porównaj te 3” i „Ranking i wszystkie modele”: „to są naklejki … ja wybrałem Apple wygląd
+  // szkła”, wariant 4 ze strony „Przyciski jak przyciski - propozycje”): półprzezroczysta biel z rozmyciem tła, jasna krawędź i miękki
+  // cień, a wciśnięty rośnie o 3% i jaśnieje, jak szkło w iOS 26. Napis #1d1d1f (w ciemnym biały) ma na nim od 12:1.
+  const SZKLANY = (s) => `${s}{background:rgba(255,255,255,.55)!important;-webkit-backdrop-filter:blur(14px) saturate(1.8);backdrop-filter:blur(14px) saturate(1.8);`
+    + 'color:#1d1d1f!important;border:0!important;transition:transform .32s cubic-bezier(.3,1.7,.5,1),background-color .2s ease!important;'
+    + 'box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.3),0 0 0 .5px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.1)!important}'
+    + `${s}:active{transform:scale(1.03);background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.45),transparent 70%),rgba(255,255,255,.7)!important}`
+    + `@media (prefers-color-scheme:dark){${s}{background:rgba(44,44,46,.5)!important;color:#ffffff!important;`
+    + 'box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),inset 0 1px 0 rgba(255,255,255,.22),0 2px 10px rgba(0,0,0,.5)!important}'
+    + `${s}:active{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.26),transparent 70%),rgba(44,44,46,.6)!important}}`;
   const CALOSC = (s) => `${s}{display:inline-flex!important;align-items:center;gap:8px;height:48px!important;min-height:48px;margin-top:24px!important;padding:0 21px 0 24px!important;`
-    + 'border:0!important;border-radius:24px!important;background:#0071e3!important;color:#ffffff!important;font:inherit;font-size:17px!important;font-weight:600!important;'
-    + 'line-height:1!important;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,box-shadow .15s ease;'
-    + 'box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 1px 2px rgba(0,0,0,.14),0 4px 12px rgba(0,0,0,.12)!important}'
+    + 'border-radius:24px!important;font:inherit;font-size:17px!important;font-weight:600!important;line-height:1!important;cursor:pointer;-webkit-tap-highlight-color:transparent}'
     + `${s}::after{content:"";flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:${STRZALKA_W_DOL} center/16px no-repeat;mask:${STRZALKA_W_DOL} center/16px no-repeat}`
-    + `${s}:active{transform:scale(.97)}@media (hover:hover){${s}:hover{transform:translateY(-1px)}}`
-    + `@media (prefers-color-scheme:dark){${s}{background:#2997ff!important;color:#000000!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 .5px rgba(255,255,255,.2)!important}}`
+    + SZKLANY(s)
     // Na telefonie przycisk ma całą szerokość treści, czyli 12 kolumn siatki (reguła siatka-wszedzie), napis na środku.
     + `@media (max-width:759px){${s}{box-sizing:border-box!important;width:100%!important;justify-content:center}}`;
   // Pierścień wybranej pigułki w stronach (pigulki-widoku.css w misji) rysowany do środka, jak w nawigacji: brzeg pigułki stoi na linii
@@ -1523,7 +1580,7 @@ body.bez-pigulek .podkarty { display: none; }
     + '@container (min-width:680px){.podium .podium-rzad{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:8px}.podium .podium-chipy{gap:16px}'
     + '.podium .podium-rzad .budzet{grid-column:span 2;justify-content:flex-start}.podium #podium-toyota{grid-column:4}}'
     // „Porównaj te trzy” na telefonie na całą szerokość, jak przycisk całości pod nim (12 kolumn siatki).
-    + '@media (max-width:759px){.podium-akcje #podium-porownaj{box-sizing:border-box;width:100%;justify-content:center}}';
+    + '@media (max-width:759px){.podium-akcje #podium-porownaj{box-sizing:border-box;width:100%;justify-content:center}}' + SZKLANY('#podium-porownaj');
   const SIATKA = {
     katalog: `#pasek,.strona>.naglowek{display:none!important}.strona{${KONTENER}}.katalog{column-gap:24px!important}`
       + '.panel-filtrow{top:clamp(16px,2.5vw,32px)!important;max-height:calc(100vh - 2 * clamp(16px,2.5vw,32px))!important}'
@@ -1534,7 +1591,12 @@ body.bez-pigulek .podkarty { display: none; }
       // Skaner układa ten pasek polami siatki (szukaj, filtry, sort), więc 12 kolumn dostają też pola.
       + '@media (max-width:759px){.narzedzia{gap:8px!important}.pasek-narzedzi:has(>.mobilne-filtry){grid-template-columns:repeat(12,minmax(0,1fr))!important;gap:8px!important;'
       + `grid-template-areas:"${'szukaj '.repeat(12).trim()}" "${'filtry '.repeat(4)}${'sort '.repeat(8).trim()}"!important}`
-      + '.pasek-narzedzi>.mobilne-filtry{justify-content:center}}',
+      + '.pasek-narzedzi>.mobilne-filtry{justify-content:center}}'
+      // Numery miejsc z sortowania „Najlepsze dopasowanie” znikają (od 26.10.2026, Jacek: „Jeżeli nie mają sensu, to nie dawaj ich
+      // w ofertach”): powtarzały tylko kolejność listy.
+      + '.karta-produktu .miejsce{display:none!important}'
+      // Okno auta: serce, oko i krzyżyk co 16 px, znaki 24 px (od 26.10.2026; wcześniej co 8 px ze znakami 18 px).
+      + 'dialog[open] .wybor-serce~.przycisk.cichy{margin-left:8px!important}dialog[open] :is(.wybor-serce,.wybor-serce~.przycisk.cichy) svg{width:24px!important;height:24px!important}',
     // Podium i Historia bez rzędu „Skrót | Pełny widok” (od 25.10.2026): w zakładce najwyżej jeden rząd pigułek, a całość otwiera
     // przycisk na końcu skrótu (app.js, „Skrót i całość”).
     modele: GAZETA + '.widok-modeli{display:none!important}' + CALOSC('.przycisk-p[data-widok-modeli="pelny"]') + PIERSCIEN + PODIUM,
@@ -1548,15 +1610,21 @@ body.bez-pigulek .podkarty { display: none; }
         '.pole:has(#nadplata)', '.kwota', '.reszta', '#h-leasing-tab'].map((s) => `html[data-czesc="leasing"] ${s}`).join(',') + '{display:none!important}'
       + 'html[data-czesc="leasing"] .blok-leasing{margin-top:0!important}'
       + 'html[data-czesc="kredyt"] section[aria-labelledby="sk-leasing"],html[data-czesc="kredyt"] .blok-leasing{display:none!important}'
-      + CALOSC('html[data-czesc] #skrot>.przycisk') + PIERSCIEN,
+      + CALOSC('html[data-czesc] #skrot>.przycisk') + PIERSCIEN
+      // Bloki na odcieniu zakładki są białe (w ciemnym grafitowe), a ramkę mają z kalkulatora (od 26.10.2026).
+      + 'html[data-km-odcien] :is(.karta-skrot,.panel,.ustawienia-leasingu,.karta){background:#ffffff!important}'
+      + '@media (prefers-color-scheme:dark){html[data-km-odcien] :is(.karta-skrot,.panel,.ustawienia-leasingu,.karta){background:#1c1c1e!important}}',
     historia: GAZETA + '.widok-strony{display:none!important}' + CALOSC('.przycisk-p[data-widok-strony="pelny"]') + PIERSCIEN,
     // Poradnik w zakładce (od 25.10.2026; wcześniej w oknie pod logo): data nad tytułem bliżej nagłówka, a na telefonie tekst
     // w siatce aplikacji, czyli od tej samej krawędzi co logo (strona z programu 13 ma tam kolumnę 87,5%).
     poradnik: 'main>header.hero{padding-top:16px!important}'
       + `@media (max-width:734px){main{box-sizing:border-box!important;width:100%!important;padding-left:${L}!important;padding-right:${P}!important}`
-      + '#czytaj-calosc{box-sizing:border-box!important;width:100%!important;justify-content:center!important}}',
+      + '#czytaj-calosc{box-sizing:border-box!important;width:100%!important;justify-content:center!important}}' + SZKLANY('#czytaj-calosc'),
   };
-  const cssSiatki = (nazwa) => `html{scrollbar-width:thin;scrollbar-gutter:stable}${SIATKA[nazwa]}`;
+  // Tło strony w odcieniu wybranej zakładki, jak nagłówek i nawigacja (od 26.10.2026, Jacek: „jakbyś miał w Paincie, robisz fill …
+  // wszystkie przestrzenie, które … nie są zamknięte w żadne balony … się wypełniają”); w ciemnym czerń. Odcień i znacznik data-km-odcien
+  // wpisuje ustawSiatke, więc okno na komputerze, które ich nie wpisuje, zostaje przy swoich tłach. Bloki zostają białe z ramką.
+  const cssSiatki = (nazwa) => `html{scrollbar-width:thin;scrollbar-gutter:stable}html[data-km-odcien],html[data-km-odcien] body{background:var(--km-odcien)!important}${SIATKA[nazwa]}`;
   // </siatka>
   // Pod stroną miejsce na nawigację ze szkła, która na telefonie leży nad nią (wysokość --km-dol wpisuje ustawSiatke; na szerokim ekranie 0).
   const SZKLO = 'body::after{content:"";display:block;height:var(--km-dol,0px)}';
@@ -1598,20 +1666,21 @@ body.bez-pigulek .podkarty { display: none; }
   // z pigułką Historia. Pigułki stoją w nawigacji pod zakładkami (index.html, .podkarty; Jacek: „logiczniejsze by było, że te główne
   // linie się przesuwa i pod spodem wyskakuje”), i widać tylko rząd wybranej zakładki.
   const ID_ZAKLADEK = ['katalog', 'modele', 'kredyt', 'poradnik'];
-  // Nazwy w pamięci (od 18.10.2026) i na ekranie. „Katalag” to żart Jacka (18.10.2026), od 19.10.2026 na katalogu modeli aut.
+  // Nazwy w pamięci (od 18.10.2026) i na ekranie. Od 25.10.2026 wieczorem Oferty i Podium (Jacek: „Katalog można by zmienić na
+  // 'podium'”, „Ogłoszenia się ledwo mieszczą … Albo zakupy … jak uważasz”), do tego dnia Ogłoszenia i Katalag.
   const WIDOKI = ['Katalog', 'Modele', 'Kredyt', 'Poradnik'];
-  const NAZWY = ['Ogłoszenia', 'Katalag', 'Finanse', 'Poradnik'];
+  const NAZWY = ['Oferty', 'Podium', 'Finanse', 'Poradnik'];
   const PANELE = ID_ZAKLADEK.map((id) => $('#' + id));
   const segmenty = ID_ZAKLADEK.map((id) => $('#seg-' + id));
   const nrZakladki = (id) => ID_ZAKLADEK.indexOf(id);
   const strona = (r, puste, p, poprawka, zdania) => ({ el: $(r), plik: p, pusty: pusty(...zdania), ramka: ramka($(r), $(puste), poprawka) });
   const STRONY = {
     katalog: strona('#ramka-katalogu', '#pusty-katalog', KATALOG, wSiatce('katalog'),
-      ['ogłoszenia', 'Ogłoszenia jeszcze nie dotarły. Komputer wysyła je co godzinę, gdy jest włączony.']),
+      ['oferty', 'Oferty jeszcze nie dotarły. Komputer wysyła je co godzinę, gdy jest włączony.']),
     historia: strona('#ramka-historii', '#pusty-historia', HISTORIA, wSiatce('historia'),
       ['historię', 'Historia jeszcze nie dotarła. Komputer wysyła ją co godzinę, gdy jest włączony.']),
     modele: strona('#ramka-modeli', '#pusty-modele', MODELE, wSiatce('modele'),
-      ['katalag', 'Katalag aut jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
+      ['podium', 'Podium jeszcze nie dotarło. Komputer wysyła je co godzinę, gdy jest włączony.']),
     kredyt: strona('#ramka-kredytu', '#pusty-kredyt', KALKULATOR, (html) => czescNaStart(wSiatce('kalkulator')(html)),
       ['kalkulator', 'Kalkulator leasingu i kredytu jeszcze nie dotarł. Komputer wysyła go co godzinę, gdy jest włączony.']),
     poradnik: strona('#ramka-poradnika', '#pusty-poradnik', PORADNIK, wSiatce('poradnik'),
@@ -1624,10 +1693,13 @@ body.bez-pigulek .podkarty { display: none; }
     katalog: { teraz: ['teraz', 'katalog'], historia: ['historia', 'historia'] },
     modele: { podium: ['podium', 'modele'], modele: ['atlas', 'atlas'], marki: ['atlas', 'atlas'] },
     kredyt: { leasing: ['finanse', 'kredyt'], kredyt: ['finanse', 'kredyt'] },
+    // Poradnik (od 25.10.2026 wieczorem, Jacek: „skrót i całość … Każdy jeden ma coś do wyboru pod spodem … nie ma przeskakiwania
+    // z menu”): Skrót i Całość to dwie części tej samej strony (ustawPoradnik niżej). Każda zakładka ma więc rząd pigułek, a nawigacja
+    // stoi w miejscu przy każdej zmianie zakładki.
+    poradnik: { skrot: ['poradnik', 'poradnik'], calosc: ['poradnik', 'poradnik'] },
   };
-  // Zakładka z Atlasem i strona zakładki bez pigułek.
+  // Zakładka z Atlasem.
   const Z_ATLASEM = 'modele';
-  const BEZ_PIGULEK = { poradnik: 'poradnik' };
   const jestPigulka = (id, p) => Boolean(PIGULKI[id]) && typeof p === 'string' && Object.keys(PIGULKI[id]).includes(p);
   // Wybrana pigułka każdej zakładki. Do 25.10.2026 w pamięci pod numerem zakładki (pigulka-0, pigulka-1), od teraz pod identyfikatorem.
   const DAWNY_NUMER = { katalog: 0, modele: 1 };
@@ -1637,7 +1709,7 @@ body.bez-pigulek .podkarty { display: none; }
     if (z === null && id in DAWNY_NUMER) z = pamiec.czytaj('pigulka-' + DAWNY_NUMER[id], null);
     wybrane[id] = jestPigulka(id, z) ? z : Object.keys(PIGULKI[id])[0];
   }
-  const klucz = (nr) => { const id = ID_ZAKLADEK[nr]; return PIGULKI[id] ? PIGULKI[id][wybrane[id]][1] : BEZ_PIGULEK[id]; };
+  const klucz = (nr) => { const id = ID_ZAKLADEK[nr]; return PIGULKI[id][wybrane[id]][1]; };
   let widok = 0;
   // Siatka w ramkach: cienki pasek przewijania (jak w katalogu Skanera) mierzymy tu raz, a marginesy w pikselach, razem z wcięciami
   // ekranu, których ramka nie zna, wpisujemy do każdej ramki przy wczytaniu i przy zmianie okna (styl.css, „Siatka aplikacji”).
@@ -1648,11 +1720,13 @@ body.bez-pigulek .podkarty { display: none; }
   const sonda = el('div', { class: 'siatka-sonda', 'aria-hidden': 'true' });
   document.body.append(sonda);
   function ustawSiatke() {
-    const cs = getComputedStyle(sonda);
+    const cs = getComputedStyle(sonda), odcien = getComputedStyle(document.body).getPropertyValue('--tlo-pasa').trim() || '#ffffff';
     for (const [, s] of LISTA_STRON) {
       try {
         const d = s.el.contentDocument;
         if (!d || !d.documentElement) continue;
+        d.documentElement.style.setProperty('--km-odcien', odcien);
+        d.documentElement.dataset.kmOdcien = '';
         d.documentElement.style.setProperty('--km-lewo', cs.paddingLeft);
         d.documentElement.style.setProperty('--km-prawo', cs.paddingRight);
         // Nawigacja ze szkła leży nad stroną: strona dostaje jej wysokość, żeby jej koniec dało się przewinąć nad nawigację.
@@ -1665,6 +1739,7 @@ body.bez-pigulek .podkarty { display: none; }
     }
   }
   addEventListener('resize', ustawSiatke);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => requestAnimationFrame(ustawSiatke));
   LISTA_STRON.forEach(([, s]) => s.el.addEventListener('load', ustawSiatke));
 
   // Otwarte okno w stronie (filtry, szczegóły auta, galeria) dostaje cały ekran: nagłówek, pigułki i zakładki chowają się,
@@ -1696,6 +1771,7 @@ body.bez-pigulek .podkarty { display: none; }
     const s = STRONY[k];
     return s.ramka.pokaz(s.plik, s.pusty);
   }
+  const kolorPaska = document.querySelector('meta[name="theme-color"][media*="light"]');
   function pokazWidok(nr, zapisz) {
     widok = nr >= 0 && nr < WIDOKI.length ? nr : 0;
     segmenty.forEach((s, i) => {
@@ -1703,10 +1779,13 @@ body.bez-pigulek .podkarty { display: none; }
       s.tabIndex = i === widok ? 0 : -1;
     });
     PANELE.forEach((p, i) => { p.hidden = i !== widok; });
-    // W nawigacji widać rząd pigułek wybranej zakładki; Poradnik pigułek nie ma.
+    // W nawigacji widać rząd pigułek wybranej zakładki. Nagłówek i nawigacja stoją w odcieniu barwy wybranej zakładki (styl.css,
+    // „Barwy zakładek”), a pasek stanu przeglądarki w jasnym motywie razem z nimi.
     const id = ID_ZAKLADEK[widok];
     for (const [z, g] of Object.entries(grupyPigulek)) g.hidden = z !== id;
-    document.body.classList.toggle('bez-pigulek', !PIGULKI[id]);
+    document.body.dataset.zakladka = id;
+    ustawSiatke();
+    if (kolorPaska) kolorPaska.content = getComputedStyle(document.body).getPropertyValue('--odcien-jasny').trim() || '#f5f5f7';
     pokazOkno();
     // Zakładka zapisana nazwą (od 18.10.2026), bo numery przesuwają się, gdy zakładka dochodzi albo znika.
     if (zapisz) pamiec.zapisz('zakladka', WIDOKI[widok]);
@@ -1741,6 +1820,37 @@ body.bez-pigulek .podkarty { display: none; }
     } catch { /* obce pochodzenie */ }
   }
   STRONY.kredyt.el.addEventListener('load', ustawCzesc);
+  // Poradnik: Skrót i Całość to dwie części strony z misji (poradnik.js: skrót przed jedyną linią pliku, całość w #calosc, którą odsłania
+  // window.pokazCalosc albo przycisk „Czytaj całość” na końcu skrótu). Aplikacja pokazuje część z wybranej pigułki: Całość odsłania resztę
+  // i staje na jej początku, a Skrót chowa ją z powrotem razem z przyciskiem i wraca na górę. Przycisk w stronie przełącza pigułkę na Całość.
+  let przyciskPoradnika = null;
+  function ustawPoradnik(ruch) {
+    try {
+      const w = STRONY.poradnik.el.contentWindow, d = w.document, c = d.getElementById('calosc');
+      if (!c) return;
+      const b = d.getElementById('czytaj-calosc');
+      if (b && b.closest('p')) przyciskPoradnika = b.closest('p');
+      if (wybrane.poradnik === 'calosc') {
+        if (!c.hidden) return;
+        if (w.pokazCalosc) w.pokazCalosc(false); else c.hidden = false;
+        if (ruch) c.scrollIntoView({ block: 'start' });
+        return;
+      }
+      if (!c.hidden) {
+        c.hidden = true;
+        try { w.sessionStorage.removeItem('poradnik-calosc'); } catch { /* bez pamięci */ }
+        if (przyciskPoradnika && przyciskPoradnika.ownerDocument === d && !przyciskPoradnika.isConnected) c.before(przyciskPoradnika);
+      }
+      if (ruch) w.scrollTo(0, 0);
+    } catch { /* strona się wczytuje */ }
+  }
+  STRONY.poradnik.el.addEventListener('load', () => {
+    try {
+      const b = STRONY.poradnik.el.contentDocument.getElementById('czytaj-calosc');
+      if (b) b.addEventListener('click', () => { if (wybrane.poradnik !== 'calosc') ustawPigulke('poradnik', 'calosc', true, true); });
+    } catch { /* obce pochodzenie */ }
+    ustawPoradnik(false);
+  });
   // Stuknięcie w wybraną zakładkę albo pigułkę przewija stronę na początek, jak w iPhonie, a w całości wraca do skrótu. W Atlasie ten sam
   // widok jeszcze raz: Atlas zamyka wtedy podstrony i staje na górze.
   function naPoczatek() {
@@ -1750,21 +1860,7 @@ body.bez-pigulek .podkarty { display: none; }
     try { STRONY[k].el.contentWindow.scrollTo({ top: 0, behavior: 'smooth' }); } catch { /* strona się wczytuje */ }
   }
   const pasekZakladek = $('.karty');
-  // Przebłysk wybranej zakładki i pigułki (od 22.10.2026, jak w Czytadle): barwa losowana przy każdym otwarciu, co najmniej 70° od
-  // odcienia pastelu i co najmniej 1,4:1 do niego, żeby nie było żółtego na żółtym ani na białym.
-  const BLYSKI = [['#ffcc00', 48], ['#5ac8fa', 199], ['#ff78be', 329], ['#3cdcb4', 164], ['#af82ff', 262], ['#ff965a', 22]];
-  const roznicaOdcieni = (a, b) => Math.abs(((((a - b) % 360) + 540) % 360) - 180);
-  const jasnoscBarwy = (h) => { const v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
-  const kontrastBarw = (a, b) => { const x = jasnoscBarwy(a), y = jasnoscBarwy(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-  function barwaBlysku(e) {
-    const o = Number(e.dataset.odcien) || 0, tlo = (e.style.getPropertyValue('--pastel') || '#ffffff').trim();
-    const wolne = BLYSKI.filter(([k, x]) => roznicaOdcieni(x, o) >= 70 && kontrastBarw(k, tlo) >= 1.4);
-    const [k] = wolne[Math.floor(Math.random() * wolne.length)] || ['#ffffff'];
-    e.style.setProperty('--blysk-j', k + 'd9');
-    e.style.setProperty('--blysk-c', k + '73');
-    e.dataset.blysk = k;
-  }
-  segmenty.forEach(barwaBlysku);
+  // Połysk wybranej zakładki i pigułki to biała smuga co 12 s (styl.css, „Barwy zakładek”).
   // Szkło pod kursorem: plama światła idzie za myszą (styl ::after zakładki i pigułki czyta --mx i --my).
   function szklo(e) {
     if (e.pointerType !== 'mouse') return;
@@ -1813,11 +1909,11 @@ body.bez-pigulek .podkarty { display: none; }
       ustawCzesc();
       if (!doSkrotu('kredyt')) { try { STRONY.kredyt.el.contentWindow.scrollTo(0, 0); } catch { /* strona się wczytuje */ } }
     }
+    if (id === 'poradnik' && stara !== p) ustawPoradnik(true);
     pokazOkno();
     return id === ID_ZAKLADEK[widok] ? pokazStrone(widok) : Promise.resolve(true);
   }
   for (const [id, g] of Object.entries(grupyPigulek)) {
-    barwaBlysku(g);
     g.addEventListener('pointermove', szklo, { passive: true });
     for (const b of g.querySelectorAll('[role="radio"]')) {
       b.addEventListener('click', () => { if (id === ID_ZAKLADEK[widok] && b.dataset.p === wybrane[id]) naPoczatek(); else ustawPigulke(id, b.dataset.p, true, true); });
@@ -2018,7 +2114,7 @@ body.bez-pigulek .podkarty { display: none; }
     nazwa: (b) => b.textContent.trim(), cofnij: 'Cofnij przestawienie zakładek', przytrzymanie: () => !waski.matches, podniesiony: () => przerwijPasek() });
   // Kolejność pigułek w pamięci pod identyfikatorem zakładki (do 25.10.2026 pod jej numerem, raz przepisana). Katalag ma od wieczora
   // 25.10.2026 nowy klucz, bo zmieniła się kolejność domyślna: Wszystkie marki na końcu.
-  const KLUCZ_PIGULEK = { katalog: 'pigulki-kolejnosc-katalog', modele: 'pigulki-kolejnosc-katalag', kredyt: 'pigulki-kolejnosc-kredyt' };
+  const KLUCZ_PIGULEK = { katalog: 'pigulki-kolejnosc-katalog', modele: 'pigulki-kolejnosc-katalag', kredyt: 'pigulki-kolejnosc-kredyt', poradnik: 'pigulki-kolejnosc-poradnik' };
   const RZEDY_PIGULEK = Object.fromEntries(Object.entries(grupyPigulek).map(([id, g]) => {
     const k = KLUCZ_PIGULEK[id];
     if (id === 'katalog' && pamiec.czytaj(k, null) === null) { const z = pamiec.czytaj('pigulki-kolejnosc-0', null); if (z !== null) pamiec.zapisz(k, z); }
@@ -2171,10 +2267,13 @@ body.bez-pigulek .podkarty { display: none; }
   // ---------------------------------------------------------------- asystent (od 19.10.2026)
   // Czat z komputerem w domu (czat.js). „Ręce”: odpowiedź pokazuje zakładkę, a w Katalagu model albo Podium. Asystent zna zakładki
   // po dawnych nazwach: katalog (Ogłoszenia, Teraz), historia, modele (Katalag, Podium), kredyt (Finanse) i poradnik.
-  // Mikrofon tylko tam, gdzie strona go dostaje (Safari i Chrome pod https); spod auta:// w aplikacji na iPhone'a go nie ma:
-  // Info.plist nie ma zgody na mikrofon (NSMicrophoneUsageDescription), więc nagrywać by nie mogła.
+  // Mikrofon: Android i strona w sieci nagrywają same (Safari i Chrome pod https). Spod auta:// strona mikrofonu nie dostaje, więc
+  // w aplikacji na iPhone'a nagrywa Aplikacja.swift (od 26.10.2026, klasa Glos), a strona daje jej klucz i ustawienia Soniox.
+  const mostGlosu = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.glos;
   const czat = window.Czat && KANAL ? Czat.uruchom({
     kanal: KANAL, tryb: 'arkusz', mikrofon: SKAD !== 'iPhone', skad: SKAD,
+    glosNatywny: mostGlosu ? { start: (klucz, konfiguracja) => mostGlosu.postMessage({ co: 'start', klucz, konfiguracja }),
+      stop: (zaraz) => mostGlosu.postMessage({ co: 'stop', zaraz: Boolean(zaraz) }) } : null,
     zakladka: () => { const k = klucz(widok); return k === 'atlas' ? 'modele' : k; },
     async pokaz(p) {
       const z = p.zakladka === 'nowe' ? 'katalog' : p.zakladka;
@@ -2206,6 +2305,8 @@ body.bez-pigulek .podkarty { display: none; }
       const d = STRONY[k].el.contentDocument.querySelector('dialog[open]');
       if (d) { d.close(); return true; }
     } catch { /* strona się jeszcze wczytuje */ }
+    // Po „Pokaż …” z rozmowy Wstecz wraca do rozmowy (od 26.10.2026, Jacek: „Do tyłu nie działa”), najwyżej 10 minut po przejściu.
+    if (czat && czat.wrocDoRozmowy()) return true;
     if (doSkrotu(k)) return true;
     const id = ID_ZAKLADEK[widok];
     if (PIGULKI[id]) {
@@ -2272,50 +2373,41 @@ body.bez-pigulek .podkarty { display: none; }
     try { if (await KATALOG.sprawdz()) await pokazStrone(widok); } catch { /* następna próba za minutę */ }
   }, 60000);
 
-  // ---------------------------------------------------------------- nawigacja na telefonie: szkło i przenoszenie
-  // Zakładki i pigułki to na telefonie jeden blok ze szkła nad treścią, jak w iOS 26 (styl.css, „Nawigacja na telefonie”). Strony w ramkach
-  // dostają jego wysokość razem z miejscem pod nim (--km-dol), żeby ich koniec dało się przewinąć nad nawigację, a Atlas z sieci, który
-  // naszej siatki nie bierze, kończy się nad nią. Na szerokim ekranie nawigacja stoi u góry, więc --km-dol to 0.
-  const dol = $('.dol'), naglowek = $('.glowa'), waski = matchMedia('(max-width: 759px)');
-  function ustawDol() {
-    if (!dol.getClientRects().length) return; // otwarte okno w stronie chowa nawigację
-    const v = (waski.matches ? Math.max(0, Math.ceil(innerHeight - dol.getBoundingClientRect().top + 8)) : 0) + 'px';
-    if (document.documentElement.style.getPropertyValue('--km-dol') === v) return;
-    document.documentElement.style.setProperty('--km-dol', v);
-    ustawSiatke();
-  }
-  if ('ResizeObserver' in window) new ResizeObserver(ustawDol).observe(dol);
-  addEventListener('resize', ustawDol);
-  // Przenoszenie (Jacek, 25.10.2026: „przytrzymuję przez 4 sekundy … Wtedy ja mogę przenieść, gdzie chcę”, potem „zróbmy 2”, a wieczorem:
-  // „Do góry nie ma sensu, ale jak ktoś chce trochę wyżej, no to okej … nie działa na tej zasadzie, że można tylko góra i dół. Można se
-  // przesunąć i zostawić, gdzie się chce, całą nawigację”): przytrzymanie zakładki albo pigułki przez 2 s podnosi cały blok. Od 0,25 s
-  // strzałki przy bloku mówią, dokąd pójdzie i ile jeszcze: nad blokiem w górę, gdy stoi na dole, pod nim w dół, gdy jest wyżej. Podniesiony
-  // blok jedzie za palcem w pionie, najwyżej do 8 px pod nagłówkiem, i zostaje tam, gdzie go puścić; bliżej niż 24 px od zwykłego miejsca
-  // wraca na nie. Ruch o ponad 10 px przed czasem przerywa przytrzymanie, a ruch w bok przestawia zakładki i pigułki jak zawsze. Miejsce
-  // zostaje w telefonie (pasek-wysokosc, piksele nad zwykłym miejscem), przez 6 s stoi „Cofnij”, a Ctrl+Z i Ctrl+Y cofają i ponawiają.
-  // Z klawiatury Alt+↑ i Alt+↓ na zakładce albo pigułce przesuwają o 48 px.
-  const PRZENIES_MS = 2000, STRZALKI_MS = 250, PROG_PASKA = 10, MAGNES = 24, KROK = 48, RUCH_PASKA = { duration: 240, easing: 'cubic-bezier(0.2, 0, 0, 1)' };
-  const pasek = { id: null, x: 0, y: 0, zegar: 0, strzalki: 0, niesie: false, start: 0, max: 0, teraz: null, bylRuch: false };
+  // ---------------------------------------------------------------- nawigacja na telefonie: pas na dole i przenoszenie
+  // Od 25.10.2026 wieczorem nawigacja na telefonie to zwykły pas na dole, w układzie, bez szkła (styl.css, „Nawigacja na telefonie”), więc
+  // treść kończy się nad nim i strony w ramkach nie potrzebują już miejsca pod sobą (--km-dol zostaje 0). Przenoszenie (Jacek: „przykleja
+  // do standardowej pozycji. Powinniśmy być w stanie przesunąć to o 1 piksel w jedną lub w drugą stronę. Koniecznie”): przytrzymanie
+  // zakładki albo pigułki przez 2 s podnosi pas, który jedzie za palcem w górę albo w dół co do piksela i zostaje tam, gdzie go puścić,
+  // bez przyciągania do zwykłego miejsca. Najniżej 4 px nad krawędzią ekranu (na iPhonie nad wskaźnikiem ekranu głównego), najwyżej
+  // górnym brzegiem w połowie ekranu, bo wyżej treść zrobiłaby się za niska. Od 0,25 s przytrzymania nad pasem wypełnia się od lewej do
+  // prawej pasek postępu ze strzałkami w górę i w dół (Jacek: strzałki „muszą być widoczne … w dół i w górę”, a zapalanie po kolei „nie
+  // jest oczywiste”). Ruch o ponad 10 px przed czasem przerywa przytrzymanie, a ruch w bok przestawia zakładki i pigułki jak zawsze.
+  // Miejsce zostaje w telefonie (pasek-wysokosc: piksele nad zwykłym miejscem, ujemne pod nim), przez 6 s stoi „Cofnij”, a Ctrl+Z
+  // i Ctrl+Y cofają i ponawiają. Z klawiatury Alt+↑ i Alt+↓ na zakładce albo pigułce przesuwają o 1 px.
+  const dol = $('.dol'), waski = matchMedia('(max-width: 759px)');
+  const PRZENIES_MS = 2000, POSTEP_MS = 250, PROG_PASKA = 10, KROK = 1, RUCH_PASKA = { duration: 240, easing: 'cubic-bezier(0.2, 0, 0, 1)' };
+  const pasek = { id: null, x: 0, y: 0, zegar: 0, postep: 0, niesie: false, start: 0, min: 0, max: 0, teraz: null, bylRuch: false };
   let wysokosc = 0;
-  // Siedem strzałek zapala się po kolei, a krok między nimi jest taki, żeby ostatnia skończyła się zapalać (200 ms) dokładnie wtedy,
-  // gdy blok się unosi.
-  const strzalki = el('div', { class: 'strzalki', 'aria-hidden': 'true' });
-  for (let i = 0; i < 7; i++) strzalki.append(el('i', { style: `--i:${i}` }));
-  strzalki.style.setProperty('--krok', Math.round((PRZENIES_MS - STRZALKI_MS - 200) / 6) + 'ms');
-  dol.append(strzalki);
-  // Najwyżej tyle, żeby blok stał 8 px pod nagłówkiem. Liczone bez przesunięcia z ręki (transform), czyli poza przenoszeniem.
-  const najwyzej = () => Math.max(0, Math.floor(dol.getBoundingClientRect().top + wysokosc - naglowek.getBoundingClientRect().bottom - 8));
-  // Nowa wysokość nad zwykłym miejscem. p0 to górny brzeg bloku na ekranie przed zmianą: blok dojeżdża stamtąd (240 ms).
+  // Pasek postępu: strzałka w górę, tor, który wypełnia się od 0,25 do 2 s przytrzymania, i strzałka w dół.
+  const postep = el('div', { class: 'postep-paska', 'aria-hidden': 'true' });
+  postep.append(el('i', { class: 'w-gore' }), el('span'), el('i', { class: 'w-dol' }));
+  postep.style.setProperty('--czas', (PRZENIES_MS - POSTEP_MS) + 'ms');
+  dol.append(postep);
+  // Granice w pikselach względem zwykłego miejsca. Dół z miarki (styl.css: zwykły i najmniejszy odstęp pod pasem), góra z połowy ekranu,
+  // liczona bez przesunięcia z ręki (transform).
+  const miarkaDolu = el('div', { class: 'miarka-dolu', 'aria-hidden': 'true' });
+  document.body.append(miarkaDolu);
+  const najnizej = () => { const s = getComputedStyle(miarkaDolu); return Math.min(0, Math.round(parseFloat(s.paddingBottom) - parseFloat(s.paddingTop))) || 0; };
+  const najwyzej = () => Math.max(0, Math.floor(dol.getBoundingClientRect().top + wysokosc - innerHeight / 2));
+  // Nowe miejsce względem zwykłego. p0 to górny brzeg pasa na ekranie przed zmianą: pas dojeżdża stamtąd (240 ms).
   function ustawWysokosc(w, zapisz, ruch, p0 = dol.getBoundingClientRect().top) {
-    const nowa = Math.max(0, Math.min(Math.round(Number(w) || 0), najwyzej()));
+    const nowa = Math.max(najnizej(), Math.min(Math.round(Number(w) || 0), najwyzej()));
     if (zapisz) pamiec.zapisz('pasek-wysokosc', nowa);
     const byla = wysokosc;
     wysokosc = nowa;
     document.documentElement.style.setProperty('--km-nav-y', nowa + 'px');
-    document.body.classList.toggle('pasek-uniesiony', nowa > 0);
     const p1 = dol.getBoundingClientRect().top;
     if (ruch && !malyRuch.matches && dol.animate && Math.abs(p0 - p1) > 1) dol.animate([{ transform: `translateY(${p0 - p1}px)` }, { transform: 'none' }], RUCH_PASKA);
-    ustawDol();
     return nowa !== byla;
   }
   const RZAD_PASKA = { cofnij: 'Cofnij przeniesienie nawigacji', ustaw: (k) => ustawWysokosc(k[0], true, true) };
@@ -2324,36 +2416,36 @@ body.bez-pigulek .podkarty { display: none; }
     if (PRZESTAWIENIA.wstecz.length > 50) PRZESTAWIENIA.wstecz.shift();
     PRZESTAWIENIA.naprzod.length = 0;
     pokazCofnij(RZAD_PASKA);
-    powiedz(po ? 'Nawigacja wyżej' : 'Nawigacja na dole');
+    powiedz(po > 0 ? 'Nawigacja wyżej' : po < 0 ? 'Nawigacja niżej' : 'Nawigacja na swoim miejscu');
   }
-  // Przytrzymanie przerwane (ruch, puszczenie, przestawianie zakładki albo pigułki): strzałki gasną, nawigacja zostaje na miejscu.
+  // Przytrzymanie przerwane (ruch, puszczenie, przestawianie zakładki albo pigułki): pasek postępu gaśnie, nawigacja zostaje na miejscu.
   function przerwijPasek() {
     clearTimeout(pasek.zegar);
-    clearTimeout(pasek.strzalki);
+    clearTimeout(pasek.postep);
     dol.classList.remove('trzyma');
     if (!pasek.niesie) pasek.id = null;
   }
   function podniesPasek() {
-    clearTimeout(pasek.strzalki);
+    clearTimeout(pasek.postep);
     dol.classList.remove('trzyma');
     ZAKLADKI.przerwij();
     for (const r of Object.values(RZEDY_PIGULEK)) r.przerwij();
     for (const d of document.querySelectorAll('.czat-dymek')) d.remove();
-    Object.assign(pasek, { niesie: true, start: wysokosc, max: najwyzej(), teraz: wysokosc });
-    // Blok bierze wskaźnik od zakładki albo pigułki: dalszy ruch i puszczenie należą do niego, a przycisk nie dostaje stuknięcia.
+    Object.assign(pasek, { niesie: true, start: wysokosc, min: najnizej(), max: najwyzej(), teraz: wysokosc });
+    // Pas bierze wskaźnik od zakładki albo pigułki: dalszy ruch i puszczenie należą do niego, a przycisk nie dostaje stuknięcia.
     try { dol.setPointerCapture(pasek.id); } catch { /* wskaźnik z testu */ }
     dol.classList.add('przenoszony');
     if (navigator.vibrate) { try { navigator.vibrate(12); } catch { /* bez wibracji */ } }
     powiedz('Nawigacja podniesiona. Przesuń ją wyżej albo niżej.');
   }
   function niesPasek(y) {
-    pasek.teraz = Math.max(0, Math.min(pasek.start + pasek.y - y, pasek.max));
+    pasek.teraz = Math.max(pasek.min, Math.min(pasek.start + pasek.y - y, pasek.max));
     dol.style.transform = `translateY(${Math.round(pasek.start - pasek.teraz)}px)`;
   }
   function puscPasek(e) {
     if (e.pointerId !== pasek.id || (e.type === 'lostpointercapture' && e.target !== dol)) return;
     clearTimeout(pasek.zegar);
-    clearTimeout(pasek.strzalki);
+    clearTimeout(pasek.postep);
     dol.classList.remove('trzyma');
     pasek.id = null;
     if (!pasek.niesie) return;
@@ -2361,21 +2453,19 @@ body.bez-pigulek .podkarty { display: none; }
     pasek.bylRuch = true;
     setTimeout(() => { pasek.bylRuch = false; }, 400);
     const przerwane = e.type === 'pointercancel';
-    let cel = przerwane ? pasek.start : pasek.teraz;
-    if (cel < MAGNES) cel = 0;
-    // Blok dojeżdża spod palca na swoje nowe miejsce.
+    // Pas dojeżdża spod palca na swoje nowe miejsce, co do piksela.
     const p0 = dol.getBoundingClientRect().top;
     dol.style.transform = '';
     dol.classList.remove('przenoszony');
-    ustawWysokosc(cel, true, true, p0);
+    ustawWysokosc(przerwane ? pasek.start : pasek.teraz, true, true, p0);
     if (!przerwane && wysokosc !== pasek.start) zmianaPaska(pasek.start, wysokosc);
   }
   dol.addEventListener('pointerdown', (e) => {
     if (!waski.matches || pasek.id !== null || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('.cofnij-zakladki')) return;
     Object.assign(pasek, { id: e.pointerId, x: e.clientX, y: e.clientY, niesie: false });
-    // Zakładkę i pigułkę trzyma jej rząd (przestawianie), resztę bloku bierze sam blok.
+    // Zakładkę i pigułkę trzyma jej rząd (przestawianie), resztę pasa bierze sam pas.
     if (!e.target.closest('[role="tab"], [role="radio"]')) { try { dol.setPointerCapture(e.pointerId); } catch { /* wskaźnik z testu */ } }
-    pasek.strzalki = setTimeout(() => dol.classList.add('trzyma'), STRZALKI_MS);
+    pasek.postep = setTimeout(() => dol.classList.add('trzyma'), POSTEP_MS);
     pasek.zegar = setTimeout(podniesPasek, PRZENIES_MS);
   });
   dol.addEventListener('pointermove', (e) => {
@@ -2397,7 +2487,7 @@ body.bez-pigulek .podkarty { display: none; }
       zmianaPaska(przed, wysokosc);
     });
   }
-  waski.addEventListener('change', () => { ustawWysokosc(pamiec.czytaj('pasek-wysokosc', 0), false, false); ustawDol(); });
+  waski.addEventListener('change', () => ustawWysokosc(pamiec.czytaj('pasek-wysokosc', 0), false, false));
 
   // ---------------------------------------------------------------- start
   const naStarcie = Promise.all([schowek.czytaj('katalog'), schowek.czytaj('kalkulator'), schowek.czytaj('historia'), schowek.czytaj('modele')])
@@ -2406,12 +2496,14 @@ body.bez-pigulek .podkarty { display: none; }
   // (do 24.10.2026) Ogłoszenia z pigułką Historia.
   const zapisana = pamiec.czytaj('zakladka', null);
   if (zapisana === 'Historia' && pamiec.czytaj('pigulka-katalog', null) === null && pamiec.czytaj('pigulka-0', null) === null) { wybrane.katalog = 'historia'; pamiec.zapisz('pigulka-katalog', 'historia'); }
-  // Podium, Historia i Finanse zaczynają każde otwarcie aplikacji od skrótu (reguła skrot-i-wersja-pelna), jak Poradnik.
+  // Podium, Historia, Finanse i Poradnik zaczynają każde otwarcie aplikacji od skrótu (reguła skrot-i-wersja-pelna).
   try {
     localStorage.setItem('modele:widok', '"skrot"');
     localStorage.setItem('historia:widok', '"skrot"');
     localStorage.setItem('kredyt-na-auto-widok', 'skrot');
+    sessionStorage.removeItem('poradnik-calosc');
   } catch { /* bez pamięci */ }
+  wybrane.poradnik = 'skrot';
   Object.keys(PIGULKI).forEach((id) => oznaczPigulke(id, wybrane[id]));
   ustawWysokosc(pamiec.czytaj('pasek-wysokosc', 0), false, false);
   pokazWidok(Math.max(0, WIDOKI.indexOf(zapisana)), false);
