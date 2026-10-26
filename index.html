@@ -70,13 +70,18 @@
      (od 760 px) ma swoje 16 px. */
   --km-rynna: 8px;
   --km-rog: 18px;
-  /* Przyciski 3D (od 25.10.2026 wieczorem, Jacek: „Butony muszą być butonami … 3D … drop shadow … reaktywność”): jaśniejsza krawędź
-     u góry, ciemniejsza u dołu, włosek i cień w dwóch warstwach, a wciśnięty przycisk zapada się w cień. Napis na barwie wybranej
-     zakładki jest biały w jasnym motywie i czarny w ciemnym. */
-  --g3d: linear-gradient(180deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 55%);
-  --g3d-barwa: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 55%);
-  --c3d: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(0, 0, 0, .07), 0 0 0 .5px rgba(0, 0, 0, .16), 0 1px 2px rgba(0, 0, 0, .14), 0 3px 8px rgba(0, 0, 0, .1);
-  --c3d-wcisniety: inset 0 1px 3px rgba(0, 0, 0, .16), 0 0 0 .5px rgba(0, 0, 0, .18);
+  /* Przyciski jak przyciski (od 26.10.2026; Jacek: „wybraliśmy … czwarte … takie mają być wszędzie. Koniec. Kropka”, „Słońce świecące
+     … z lewego górnego narożnika … pod 45 stopni … I takie drop shadow … szkło z iOS 26, reaktywność … Butony to są butony”): wariant 4
+     „Szkło z iOS 26” ze strony „Przyciski jak przyciski - propozycje” (projekt 15), oświetlony z lewego górnego rogu pod 45°: blask
+     i jasny brzeg z lewej u góry, ciemniejszy brzeg z prawej u dołu i cień rzucony w prawo w dół, w trzech warstwach. Wciśnięty rośnie
+     o 3% i rozświetla się od miejsca dotyku, puszczony wraca sprężyście. Te same liczby mają strony w zakładkach (SW w app.js) i okno
+     na komputerze. Do 26.10.2026 światło szło z góry, a wciśnięty przycisk zapadał się w cień. Napis na barwie wybranej zakładki jest
+     biały w jasnym motywie i czarny w ciemnym. */
+  --g3d: linear-gradient(135deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, .045));
+  --g3d-barwa: linear-gradient(135deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 34%, rgba(0, 0, 0, .1));
+  --c3d: inset 1px 1px 0 rgba(255, 255, 255, .95), inset -1px -1px 0 rgba(0, 0, 0, .07), 0 0 0 .5px rgba(0, 0, 0, .16), 1px 1px 2px rgba(0, 0, 0, .12), 3px 3px 8px rgba(0, 0, 0, .1), 6px 6px 18px rgba(0, 0, 0, .06);
+  --blik: rgba(255, 255, 255, .95);
+  --plama-wcisk: rgba(255, 255, 255, .5);
   --na-barwie: #ffffff;
   /* Odstęp pod nawigacją na telefonie: zwykły (jak logo od góry ekranu) i najmniejszy, do którego da się ją przenieść (app.js). */
   --km-dol-baza: max(calc(var(--km-gora) / 2 + 12px), calc(env(safe-area-inset-bottom) - 10px));
@@ -95,10 +100,11 @@
     --blysk: rgba(255, 255, 255, 0);
     --cien: rgba(0, 0, 0, 0);
     --cien-mocny: rgba(0, 0, 0, 0);
-    --g3d: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, 0) 55%);
-    --g3d-barwa: linear-gradient(180deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, 0) 55%);
-    --c3d: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -1px 0 rgba(0, 0, 0, .35), 0 0 0 .5px rgba(255, 255, 255, .18);
-    --c3d-wcisniety: inset 0 1px 3px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .18);
+    --g3d: linear-gradient(135deg, rgba(255, 255, 255, .17), rgba(255, 255, 255, 0) 50%);
+    --g3d-barwa: linear-gradient(135deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 34%, rgba(0, 0, 0, .12));
+    --c3d: inset 1px 1px 0 rgba(255, 255, 255, .24), inset -1px -1px 0 rgba(0, 0, 0, .45), 0 0 0 .5px rgba(255, 255, 255, .2);
+    --blik: rgba(255, 255, 255, .4);
+    --plama-wcisk: rgba(255, 255, 255, .22);
     --na-barwie: #000000;
   }
 }
@@ -251,15 +257,14 @@ main { flex: 1; min-height: 0; position: relative; }
 .karty .nazwa::after { content: attr(data-nazwa); font-weight: 600; visibility: hidden; }
 .karty [role="tab"]:focus-visible { outline: 2px solid var(--akcent); outline-offset: 6px; }
 .znak { flex: none; display: block; width: 28px; height: 28px; }
-/* Szkło pod kursorem: jasna plama idzie za myszą, między tłem zakładki a ikoną z nazwą (app.js podaje --mx i --my). */
+/* Szkło pod kursorem i pod palcem (wariant 4): pod kursorem błysk światła idzie za myszą po górnej krawędzi, a wciśnięta zakładka
+   rozświetla się od miejsca dotyku, między tłem a ikoną z nazwą (app.js podaje --mx i --my). Pigułki mają to samo. */
 .karty [role="tab"]::after {
-  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 200ms ease;
-  background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .75), transparent 72%);
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 160ms ease;
+  background: radial-gradient(56px 14px at var(--mx, 50%) 0, var(--blik), rgba(255, 255, 255, 0));
 }
 @media (hover: hover) { .karty [role="tab"]:hover::after { opacity: 1; } }
-@media (prefers-color-scheme: dark) {
-  .karty [role="tab"]::after { background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .16), transparent 72%); }
-}
+.karty [role="tab"]:active::after { opacity: 1; transition-duration: 50ms; background: radial-gradient(circle 80px at var(--mx, 50%) var(--my, 50%), var(--plama-wcisk), rgba(255, 255, 255, 0) 75%); }
 /* Ciągnięta zakładka unosi się nad resztą i jedzie pod palcem (przesunięcie i powiększenie o 6% daje app.js), a reszta robi jej miejsce. */
 .karty [role="tab"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--barwa), 0 6px 16px var(--cien-mocny); }
 /* „Cofnij” stoi 6 sekund nad paskiem po przestawieniu zakładek (reguła cofnij-i-ponow: na telefonie nie ma Ctrl+Z). */
@@ -306,12 +311,12 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 .menu-otomoto-tytul { margin: 4px 8px 0; color: var(--tekst2); font-size: 13px; font-weight: 600; }
 .menu-otomoto button {
   display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 48px; padding: 0 14px; border: 0; border-radius: 12px;
-  background: var(--przycisk); color: var(--tekst); text-align: left;
-  box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 .5px var(--wlos), 0 1px 2px var(--cien), 0 2px 6px var(--cien);
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  background-color: var(--przycisk); background-image: var(--g3d); color: var(--tekst); text-align: left;
+  box-shadow: var(--c3d);
+  transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1), box-shadow 120ms ease;
 }
-.menu-otomoto button:active { transform: scale(.97); }
-@media (hover: hover) { .menu-otomoto button:hover { box-shadow: inset 0 .5px 0 var(--blysk), 0 0 0 1px var(--akcent), 0 1px 2px var(--cien), 0 2px 6px var(--cien); } }
+.menu-otomoto button:active { transform: scale(1.03); transition: transform 80ms ease, box-shadow 120ms ease; }
+@media (hover: hover) { .menu-otomoto button:hover { box-shadow: 0 0 0 1px var(--akcent), var(--c3d); } }
 .menu-otomoto-nazwa { text-box: trim-both cap alphabetic; }
 .menu-otomoto-znak { flex: none; color: var(--akcent-tekst); }
 @media (prefers-color-scheme: dark) { .menu-otomoto { background: #1c1c1e; box-shadow: 0 0 0 1px #48484a; } }
@@ -333,19 +338,17 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 .podwidoki .nazwa { display: inline-grid; }
 .podwidoki .nazwa > span, .podwidoki .nazwa::after { grid-area: 1 / 1; white-space: nowrap; text-box: trim-both cap alphabetic; }
 .podwidoki .nazwa::after { content: attr(data-nazwa); font-weight: 600; visibility: hidden; }
-/* Podpis „Otomoto” i „marki” drugim planem: mniejszy krój i barwa #3a3a3c (w ciemnym #e5e5ea). Na wybranej pigułce ma barwę napisu. */
-.podwidoki .skad { color: #3a3a3c; font-size: 13px; font-weight: 500; text-box: trim-both cap alphabetic; }
-@media (prefers-color-scheme: dark) { .podwidoki .skad { color: #e5e5ea; } }
-.podwidoki [aria-checked="true"] .skad { color: inherit; }
+/* Druga linia pigułki („Otomoto”, „Marki”) ma ten sam krój, wielkość i barwę co pierwsza (od 26.10.2026, Jacek: „jakby … były mniejszymi
+   literami. Wszystko musi być równe. Marki … z dużej litery”; wcześniej 13 px w #3a3a3c). Jak pierwsza rezerwuje szerokość pogrubionej
+   wersji (klasa nazwa w index.html), więc wybór niczego nie przesuwa. */
+.podwidoki .skad { color: inherit; font-size: inherit; }
 .podwidoki [role="radio"]:focus-visible { outline: 2px solid var(--akcent); outline-offset: 2px; }
 .podwidoki [role="radio"]::after {
-  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 200ms ease;
-  background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .75), transparent 72%);
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 160ms ease;
+  background: radial-gradient(56px 14px at var(--mx, 50%) 0, var(--blik), rgba(255, 255, 255, 0));
 }
 @media (hover: hover) { .podwidoki [role="radio"]:hover::after { opacity: 1; } }
-@media (prefers-color-scheme: dark) {
-  .podwidoki [role="radio"]::after { background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .16), transparent 72%); }
-}
+.podwidoki [role="radio"]:active::after { opacity: 1; transition-duration: 50ms; background: radial-gradient(circle 80px at var(--mx, 50%) var(--my, 50%), var(--plama-wcisk), rgba(255, 255, 255, 0) 75%); }
 .podwidoki [role="radio"]::before { content: ""; position: absolute; inset: -2px 0; }
 .podwidoki [role="radio"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--barwa), 0 6px 16px var(--cien-mocny); }
 
@@ -391,7 +394,7 @@ body.okno .glowa { background-color: var(--strona); }
   background-size: 260% 100%, 100% 100%;
   background-repeat: no-repeat;
   background-position: 0 0, 0 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), inset 0 -1px 0 rgba(0, 0, 0, .2), 0 1px 2px rgba(0, 0, 0, .16), 0 4px 12px color-mix(in srgb, var(--barwa) 40%, transparent);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .38), inset -1px -1px 0 rgba(0, 0, 0, .2), 1px 1px 2px rgba(0, 0, 0, .16), 3px 3px 10px color-mix(in srgb, var(--barwa) 42%, transparent), 6px 6px 18px rgba(0, 0, 0, .06);
 }
 .podwidoki [aria-checked="true"] { outline: 2px solid var(--barwa); outline-offset: 2px; }
 .karty [aria-selected="true"], .podwidoki [aria-checked="true"].blysk { animation: polyskRaz 1.2s ease-in-out 1; }
@@ -406,11 +409,19 @@ body.okno .glowa { background-color: var(--strona); }
 }
 @media (prefers-color-scheme: dark) {
   .karty [aria-selected="true"], .podwidoki [aria-checked="true"] {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 -1px 0 rgba(0, 0, 0, .25), 0 0 14px color-mix(in srgb, var(--barwa) 35%, transparent);
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .42), inset -1px -1px 0 rgba(0, 0, 0, .28), 3px 3px 14px color-mix(in srgb, var(--barwa) 35%, transparent);
   }
 }
-/* Wciśnięty przycisk zapada się o piksel i o 2%, a cień przechodzi do środka. */
-.karty [role="tab"]:active, .podwidoki [role="radio"]:active { transform: translateY(1px) scale(.98); box-shadow: var(--c3d-wcisniety); }
+/* Wciśnięty przycisk rośnie o 3% i rozświetla się od miejsca dotyku, a puszczony wraca sprężyście, jak szkło w iOS 26 (wariant 4;
+   do 26.10.2026 zapadał się o piksel i o 2%). Przy przeciąganiu przejście ustawia app.js. */
+.karty [role="tab"], .podwidoki [role="radio"] { transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1), box-shadow 160ms ease, background-color 160ms ease; }
+.karty [role="tab"]:active, .podwidoki [role="radio"]:active { transform: scale(1.03); transition: transform 80ms ease, box-shadow 160ms ease, background-color 160ms ease; }
+/* Rozmowa z asystentem otwarta (od 26.10.2026, Jacek: „bardzo nie podoba mi się … brak jakiejkolwiek nawigacji po tych czatach”):
+   na telefonie arkusz rozmowy kończy się nad nawigacją, a nawigacja stoi nad zasłoną i nad arkuszem, więc zakładki i pigułki widać
+   i działają. Stuknięcie w którąś zamyka rozmowę i pokazuje stronę (app.js). Na szerokim ekranie panel rozmowy leży nad nawigacją,
+   a nawigacja nad zasłoną. */
+body.czat-otwarty .dol { z-index: 43; }
+@media (min-width: 760px) { body.czat-otwarty .dol { z-index: 41; } }
 
 /* Nawigacja na telefonie (od 25.10.2026 wieczorem, druga wersja tego dnia): zwykły pas na dole, w układzie, bez szkła (Jacek: „nasze
    liquid glass podróbka chińska … bardziej dla nowości niż dla użytkowości … musimy jednak przejść do prostoty”, „dajemy tam tło. Nie,
@@ -475,6 +486,13 @@ body.okno .glowa { background-color: var(--strona); }
   --cz-akcent: #0071e3; --cz-akcent-tekst: #0066cc; --cz-ja: #deecfb; --cz-przycisk: #0071e3; --cz-na-przycisku: #ffffff;
   --cz-szary: #e8e8ed; --cz-czerwony: #d70015; --cz-cien: rgba(0, 0, 0, .12); --cz-blysk: rgba(255, 255, 255, .6);
   --cz-dymek-tlo: #ffffff; --cz-dymek-tekst: #1d1d1f; --cz-otworz: #ffffff;
+  /* Przyciski jak przyciski, wariant 4 z 45° światłem z lewego górnego rogu, te same liczby co --g3d i --c3d w styl.css (od 26.10.2026).
+     -b to wypełniony akcentem (wysyłanie, duży mikrofon, otwarty panel). Szkło kółka asystenta to 14% akcentu na bieli. */
+  --cz-lico: linear-gradient(135deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, .045));
+  --cz-lico-b: linear-gradient(135deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 34%, rgba(0, 0, 0, .1));
+  --cz-c3d: inset 1px 1px 0 rgba(255, 255, 255, .95), inset -1px -1px 0 rgba(0, 0, 0, .07), 0 0 0 .5px rgba(0, 0, 0, .16), 1px 1px 2px rgba(0, 0, 0, .12), 3px 3px 8px rgba(0, 0, 0, .1), 6px 6px 18px rgba(0, 0, 0, .06);
+  --cz-c3d-b: inset 1px 1px 0 rgba(255, 255, 255, .38), inset -1px -1px 0 rgba(0, 0, 0, .2), 1px 1px 2px rgba(0, 0, 0, .16), 3px 3px 10px rgba(0, 113, 227, .3), 6px 6px 18px rgba(0, 0, 0, .06);
+  --cz-otworz-szklo: rgba(220, 236, 252, .86);
 }
 @media (prefers-color-scheme: dark) {
   .czat, .czat-zaslona, .czat-dymek, .czat-otworz {
@@ -482,6 +500,11 @@ body.okno .glowa { background-color: var(--strona); }
     --cz-akcent: #409cff; --cz-akcent-tekst: #78bbff; --cz-ja: #0f253d; --cz-przycisk: #0a84ff; --cz-na-przycisku: #ffffff;
     --cz-szary: #2c2c2e; --cz-czerwony: #ff453a; --cz-cien: rgba(0, 0, 0, 0); --cz-blysk: rgba(255, 255, 255, 0);
     --cz-dymek-tlo: #2c2c2e; --cz-dymek-tekst: #ffffff; --cz-otworz: #2c2c2e;
+    --cz-lico: linear-gradient(135deg, rgba(255, 255, 255, .17), rgba(255, 255, 255, 0) 50%);
+    --cz-lico-b: linear-gradient(135deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 34%, rgba(0, 0, 0, .12));
+    --cz-c3d: inset 1px 1px 0 rgba(255, 255, 255, .24), inset -1px -1px 0 rgba(0, 0, 0, .45), 0 0 0 .5px rgba(255, 255, 255, .2);
+    --cz-c3d-b: inset 1px 1px 0 rgba(255, 255, 255, .42), inset -1px -1px 0 rgba(0, 0, 0, .28), 3px 3px 14px rgba(10, 132, 255, .3);
+    --cz-otworz-szklo: rgba(15, 37, 61, .86);
   }
 }
 .czat { display: flex; flex-direction: column; min-height: 0; box-sizing: border-box; background: var(--cz-tlo); color: var(--cz-tekst);
@@ -490,10 +513,13 @@ body.okno .glowa { background-color: var(--strona); }
 .czat[hidden], .czat-zaslona[hidden], .czat [hidden] { display: none !important; }
 
 /* Telefon: arkusz od dołu, jak w iOS. Stoi w widocznej części ekranu (--czat-y, --czat-h z visualViewport), więc klawiatura go nie zasłania. */
-.czat-arkusz { position: fixed; z-index: 41; left: 0; right: 0; top: calc(var(--czat-y, 0px) + var(--km-gora, env(safe-area-inset-top, 0px)) + 10px);
-  height: calc(var(--czat-h, 100vh) - var(--km-gora, env(safe-area-inset-top, 0px)) - 10px); border-radius: 16px 16px 0 0;
+/* Od 26.10.2026 bez klawiatury kończy się nad nawigacją aplikacji (--czat-dol z czat.js), która zostaje widać i działa (styl.css,
+   body.czat-otwarty). Pole pytania ma wtedy pod sobą zwykłe 12 px zamiast odstępu od krawędzi ekranu. */
+.czat-arkusz { position: fixed; z-index: 42; left: 0; right: 0; top: calc(var(--czat-y, 0px) + var(--km-gora, env(safe-area-inset-top, 0px)) + 10px);
+  height: calc(var(--czat-h, 100vh) - var(--km-gora, env(safe-area-inset-top, 0px)) - 10px - var(--czat-dol, 0px)); border-radius: 16px 16px 0 0;
   box-shadow: 0 0 0 .5px var(--cz-wlosek), 0 -6px 30px var(--cz-cien); transform: translateY(105%); transition: transform 320ms cubic-bezier(.2, 0, 0, 1); }
 .czat-arkusz.widac { transform: none; }
+.czat-arkusz.nad-nawigacja .czat-pole { padding-bottom: 12px; }
 .czat-zaslona { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .32); opacity: 0; transition: opacity 320ms cubic-bezier(.2, 0, 0, 1); }
 .czat-zaslona.widac { opacity: 1; }
 /* Szerokie okno (przeglądarka na komputerze, iPhone w poziomie): panel z prawej, na całą wysokość. */
@@ -516,36 +542,33 @@ body.okno .glowa { background-color: var(--strona); }
 .czat-ikonka { position: relative; flex: none; display: inline-grid; place-items: center; width: 48px; height: 48px; margin: 0; padding: 0; border: 0;
   border-radius: 50%; background: none; color: var(--cz-tekst); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-.czat-ikonka::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--cz-szary);
-  box-shadow: inset 0 .5px 0 var(--cz-blysk), 0 0 0 .5px var(--cz-wlosek), 0 1px 2px var(--cz-cien), 0 2px 6px var(--cz-cien);
-  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease; }
+.czat-ikonka::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background-color: var(--cz-szary); background-image: var(--cz-lico);
+  box-shadow: var(--cz-c3d);
+  transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1), background-color 120ms ease, box-shadow 120ms ease; }
 .czat-ikonka > svg { position: relative; transition: transform 120ms ease; }
 /* Pod kursorem kółko dostaje mocniejszy cień, a w ciemnym motywie, gdzie cienia nie widać, wyraźniejszy włosek. Nic się nie przesuwa
    (Jacek, 20.10.2026: „literki się trochę przesuwają … nie jest celowe ani sensowne”). Do 20.10.2026 kółko i znak unosiły się o 1 px. */
-@media (hover: hover) { .czat-ikonka:not(:disabled):not(:focus-visible):hover::before { box-shadow: inset 0 .5px 0 var(--cz-blysk), 0 0 0 1px var(--cz-wlosek), 0 2px 4px var(--cz-cien), 0 4px 12px var(--cz-cien); } }
-.czat-ikonka:not(:disabled):active::before { transform: scale(.94); }
+@media (hover: hover) { .czat-ikonka:not(:disabled):not(:focus-visible):hover::before { box-shadow: 0 0 0 1px var(--cz-akcent), var(--cz-c3d); } }
+/* Wciśnięte kółko rośnie o 3%, jak szkło w iOS 26 (do 26.10.2026 malało o 6%). */
+.czat-ikonka:not(:disabled):active::before { transform: scale(1.03); transition: transform 80ms ease; }
 .czat-ikonka:focus-visible { outline: none; }
 .czat-ikonka:focus-visible::before { box-shadow: 0 0 0 2px var(--cz-tlo), 0 0 0 4px var(--cz-akcent); }
-/* Przycisk asystenta w nagłówku aplikacji: białe kółko na szarym nagłówku (w ciemnym szarość Apple). */
-.czat-otworz::before { background: var(--cz-otworz); }
-/* Od 26.10.2026 kółko ze szkła jak przyciski w stronach (wariant 4 „Szkło z iOS 26”), a w nim iskry asystenta zamiast dymka (Jacek
-   o dymku w kółku: „wygląda jak chmurka w chmurce”). Wciśnięte rośnie o 3%, jak szkło w iOS 26. */
-.czat-otworz::before { background: rgba(255, 255, 255, .55); -webkit-backdrop-filter: blur(14px) saturate(1.8); backdrop-filter: blur(14px) saturate(1.8);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .3), 0 0 0 .5px rgba(0, 0, 0, .12), 0 2px 8px rgba(0, 0, 0, .1); }
-@media (prefers-color-scheme: dark) {
-  .czat-otworz::before { background: rgba(44, 44, 46, .5); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18), inset 0 1px 0 rgba(255, 255, 255, .22), 0 2px 10px rgba(0, 0, 0, .5); }
-}
-.czat-otworz:not(:disabled):active::before { transform: scale(1.03); }
-/* Znak w akcencie (od 19.10.2026): 5,6:1 na bieli, 6,9:1 na szarości w ciemnym motywie. */
+/* Przycisk asystenta w nagłówku aplikacji (od 26.10.2026, Jacek: „ikonkę u góry, która znowu nie wiadomo, że jest ikonką”): kółko
+   ze szkła w lekkim błękicie akcentu, z blaskiem z lewego górnego rogu i cieniem rzuconym w prawo w dół, a w nim iskry asystenta
+   (Jacek o dymku w kółku: „wygląda jak chmurka w chmurce”). Wciśnięte rośnie o 3%. Na komputerze otwarty panel wypełnia kółko
+   akcentem z białym znakiem (aria-expanded). Znak #0066cc ma na szkle 4,7:1, w ciemnym #78bbff na granacie 8,1:1. */
+.czat-otworz::before { background-color: var(--cz-otworz-szklo); -webkit-backdrop-filter: blur(14px) saturate(1.8); backdrop-filter: blur(14px) saturate(1.8); }
 .czat-otworz { color: var(--cz-akcent-tekst); }
+.czat-otworz[aria-expanded="true"] { color: var(--cz-na-przycisku); }
+.czat-otworz[aria-expanded="true"]::before { background-color: var(--cz-przycisk); background-image: var(--cz-lico-b); box-shadow: var(--cz-c3d-b); }
 .czat-zamknij { color: var(--cz-tekst2); }
 .czat-zamknij::before { inset: 8px; }
 .czat-wyslij { color: var(--cz-na-przycisku); }
-.czat-wyslij::before { background: var(--cz-przycisk); }
+.czat-wyslij::before { background-color: var(--cz-przycisk); background-image: var(--cz-lico-b); box-shadow: var(--cz-c3d-b); }
 .czat-wyslij:disabled { color: var(--cz-tekst2); cursor: default; }
 .czat-wyslij:disabled::before { background: var(--cz-szary); box-shadow: 0 0 0 .5px var(--cz-wlosek); }
 .czat-mik.nagrywa { color: #ffffff; }
-.czat-mik.nagrywa::before { background: var(--cz-czerwony); }
+.czat-mik.nagrywa::before { background-color: var(--cz-czerwony); background-image: var(--cz-lico-b); }
 /* Puls wokół nagrywającego mikrofonu to sygnał stanu, więc zostaje także przy ograniczonym ruchu. */
 .czat-mik.nagrywa::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; animation: czat-puls 1.4s ease-out infinite; }
 @keyframes czat-puls { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cz-czerwony) 55%, transparent); } to { box-shadow: 0 0 0 10px transparent; } }
@@ -575,25 +598,28 @@ body.okno .glowa { background-color: var(--strona); }
 @keyframes czat-kropka { 0%, 60%, 100% { opacity: .35; transform: none; } 30% { opacity: 1; transform: translateY(-3px); } }
 
 /* Pigułki pod odpowiedzią („Pokaż …”, odnośniki) i podpowiedzi: widać 40 px, cel 48 px dzięki przezroczystej obwódce. */
-.czat-akcja, .czat-podpowiedz { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 48px; margin: -4px 0; padding: 6px 14px;
-  border: 4px solid transparent; border-radius: 24px; font: inherit; font-size: 15px; line-height: 1.3; text-align: left; text-decoration: none;
-  cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease; }
-.czat-akcja { background: color-mix(in srgb, var(--cz-akcent) 12%, var(--cz-tlo)) padding-box; color: var(--cz-akcent-tekst); font-weight: 600;
-  box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--cz-akcent) 35%, transparent), inset 0 1px 0 var(--cz-blysk); }
+.czat-akcja, .czat-podpowiedz { position: relative; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 40px; margin: 0; padding: 10px 18px;
+  border: 0; border-radius: 20px; font: inherit; font-size: 15px; line-height: 1.3; text-align: left; text-decoration: none;
+  cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1), background-color 120ms ease, box-shadow 120ms ease; }
+/* Cel dotyku 48 px: przezroczyste pole 4 px nad i pod widoczną pigułką (od 26.10.2026; wcześniej przezroczysta obwódka, przy której
+   cień rzucony w prawo w dół odstawał od pigułki). */
+.czat-akcja::before, .czat-podpowiedz::before { content: ""; position: absolute; inset: -4px 0; }
+.czat-akcja { background-color: color-mix(in srgb, var(--cz-akcent) 12%, var(--cz-tlo)); background-image: var(--cz-lico); color: var(--cz-akcent-tekst); font-weight: 600;
+  box-shadow: var(--cz-c3d); }
 .czat-akcja > span { min-width: 0; }
 .czat-akcja > svg { flex: none; }
-.czat-podpowiedz { background: var(--cz-pod) padding-box; color: var(--cz-tekst); font-weight: 500; text-align: center;
-  box-shadow: inset 0 0 0 .5px var(--cz-ramka), inset 0 1px 0 var(--cz-blysk); }
+.czat-podpowiedz { background-color: var(--cz-pod); background-image: var(--cz-lico); color: var(--cz-tekst); font-weight: 500; text-align: center;
+  box-shadow: var(--cz-c3d); }
 /* Pod kursorem wyraźniejsza obwódka, napis stoi w miejscu. */
 @media (hover: hover) {
-  .czat-akcja:not(:disabled):hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cz-akcent) 70%, transparent), inset 0 1px 0 var(--cz-blysk); }
-  .czat-podpowiedz:hover { box-shadow: inset 0 0 0 1px var(--cz-tekst2), inset 0 1px 0 var(--cz-blysk); }
+  .czat-akcja:not(:disabled):hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cz-akcent) 70%, transparent), var(--cz-c3d); }
+  .czat-podpowiedz:hover, .czat .czat-podpowiedz:hover { box-shadow: inset 0 0 0 1px var(--cz-tekst2), var(--cz-c3d); }
 }
-.czat-akcja:active, .czat-podpowiedz:active { transform: scale(.97); }
+.czat-akcja:active, .czat-podpowiedz:active { transform: scale(1.03); transition: transform 80ms ease; }
 .czat-akcja:focus-visible, .czat-podpowiedz:focus-visible { outline: 2px solid var(--cz-akcent); outline-offset: -2px; }
 .czat-akcja:disabled { opacity: .5; cursor: default; }
 @media (prefers-color-scheme: dark) {
-  .czat-akcja { background: color-mix(in srgb, var(--cz-akcent) 22%, var(--cz-tlo)) padding-box; box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--cz-akcent) 45%, transparent); }
+  .czat-akcja { background-color: color-mix(in srgb, var(--cz-akcent) 22%, var(--cz-tlo)); }
 }
 .czat-pusto { margin: auto 0; display: grid; justify-items: center; gap: 24px; padding: 16px 0 24px; text-align: center; color: var(--cz-tekst2); }
 .czat-pusto > p { max-width: 22em; margin: 0; }
@@ -601,26 +627,26 @@ body.okno .glowa { background-color: var(--strona); }
    Nagrywa: czerwone z pulsem, jak mały mikrofon przy polu. Biały znak na #0071e3 ma 4,7:1. */
 .czat-duzy-mik { display: grid; justify-items: center; gap: 8px; margin: 0; padding: 0; border: 0; background: none; color: var(--cz-tekst);
   font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.czat-duzy-mik > svg { box-sizing: content-box; width: 32px; height: 32px; padding: 20px; border-radius: 50%; background: var(--cz-przycisk); color: var(--cz-na-przycisku);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 -1px 0 rgba(0, 0, 0, .2), 0 1px 2px rgba(0, 0, 0, .16), 0 6px 16px color-mix(in srgb, var(--cz-przycisk) 40%, transparent);
-  transition: transform 120ms ease, background-color 120ms ease; }
-.czat-duzy-mik:active > svg { transform: scale(.96); }
-.czat-duzy-mik.nagrywa > svg { background: var(--cz-czerwony); animation: czat-puls 1.4s ease-out infinite; }
+.czat-duzy-mik > svg { box-sizing: content-box; width: 32px; height: 32px; padding: 20px; border-radius: 50%; background-color: var(--cz-przycisk); background-image: var(--cz-lico-b); color: var(--cz-na-przycisku);
+  box-shadow: var(--cz-c3d-b);
+  transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1), background-color 120ms ease; }
+.czat-duzy-mik:active > svg { transform: scale(1.03); transition: transform 80ms ease; }
+.czat-duzy-mik.nagrywa > svg { background-color: var(--cz-czerwony); animation: czat-puls 1.4s ease-out infinite; }
 .czat-duzy-mik:focus-visible { outline: none; }
 .czat-duzy-mik:focus-visible > svg { box-shadow: 0 0 0 2px var(--cz-tlo), 0 0 0 4px var(--cz-akcent); }
 /* Podpowiedzi (od 26.10.2026, Jacek: pytania „za ciasno, bez koloru i bez oddechu”, „nikt nie wie, że da się je stuknąć”): przyciski
    z głębią w pastelach zakładek, których dotyczą, co 12 px, na całą szerokość. Napis #1d1d1f (w ciemnym biały) ma na nich od 9:1. */
 .czat-podpowiedzi { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: 100%; max-width: 480px; }
 .czat .czat-podpowiedz { justify-content: center; min-height: 52px; margin: 0; padding: 12px 20px; border: 0; border-radius: 26px; font-size: 16px; font-weight: 600;
-  color: #1d1d1f; background: var(--cz-pastel, var(--cz-pod));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -1px 0 rgba(0, 0, 0, .06), 0 0 0 .5px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .1), 0 3px 8px rgba(0, 0, 0, .08); }
+  color: #1d1d1f; background-color: var(--cz-pastel, var(--cz-pod)); background-image: var(--cz-lico);
+  box-shadow: var(--cz-c3d); }
 .czat-podpowiedz[data-z="katalog"] { --cz-pastel: #ffeed6; }
 .czat-podpowiedz[data-z="modele"] { --cz-pastel: #d6eaff; }
 .czat-podpowiedz[data-z="kredyt"] { --cz-pastel: #dff6e4; }
 .czat-podpowiedz[data-z="poradnik"] { --cz-pastel: #f2e3fa; }
-@media (hover: hover) { .czat .czat-podpowiedz:hover { transform: translateY(-1px); } }
+
 @media (prefers-color-scheme: dark) {
-  .czat .czat-podpowiedz { color: #ffffff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -1px 0 rgba(0, 0, 0, .35), 0 0 0 .5px rgba(255, 255, 255, .18); }
+  .czat .czat-podpowiedz { color: #ffffff; }
   .czat-podpowiedz[data-z="katalog"] { --cz-pastel: #5c4118; }
   .czat-podpowiedz[data-z="modele"] { --cz-pastel: #17395d; }
   .czat-podpowiedz[data-z="kredyt"] { --cz-pastel: #224f2e; }
@@ -702,7 +728,7 @@ body.okno .glowa { background-color: var(--strona); }
 <div class="dol">
   <div class="podkarty">
     <div class="podwidoki" role="radiogroup" aria-label="Oferty" data-z="katalog" style="--pastel:#ffeed6;--pastel-c:#5c4118" data-odcien="35"><button type="button" role="radio" aria-checked="true" data-p="teraz"><span class="nazwa" data-nazwa="Teraz"><span>Teraz</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="historia"><span class="nazwa" data-nazwa="Historia"><span>Historia</span></span></button></div>
-    <div class="podwidoki" role="radiogroup" aria-label="Podium" data-z="modele" style="--pastel:#d6eaff;--pastel-c:#17395d" data-odcien="211" hidden><button type="button" role="radio" aria-checked="true" data-p="podium"><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span> <span class="skad">Otomoto</span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="modele"><span class="nazwa" data-nazwa="Modele"><span>Modele</span></span> <span class="skad">Otomoto</span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="marki"><span class="nazwa" data-nazwa="Wszystkie"><span>Wszystkie</span></span> <span class="skad">marki</span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Podium" data-z="modele" style="--pastel:#d6eaff;--pastel-c:#17395d" data-odcien="211" hidden><button type="button" role="radio" aria-checked="true" data-p="podium"><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span> <span class="skad nazwa" data-nazwa="Otomoto"><span>Otomoto</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="modele"><span class="nazwa" data-nazwa="Modele"><span>Modele</span></span> <span class="skad nazwa" data-nazwa="Otomoto"><span>Otomoto</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="marki"><span class="nazwa" data-nazwa="Wszystkie"><span>Wszystkie</span></span> <span class="skad nazwa" data-nazwa="Marki"><span>Marki</span></span></button></div>
     <div class="podwidoki" role="radiogroup" aria-label="Finanse" data-z="kredyt" style="--pastel:#dff6e4;--pastel-c:#224f2e" data-odcien="135" hidden><button type="button" role="radio" aria-checked="true" data-p="leasing"><span class="nazwa" data-nazwa="Leasing"><span>Leasing</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="kredyt"><span class="nazwa" data-nazwa="Kredyt"><span>Kredyt</span></span></button></div>
     <div class="podwidoki" role="radiogroup" aria-label="Poradnik" data-z="poradnik" style="--pastel:#f2e3fa;--pastel-c:#4a2d59" data-odcien="282" hidden><button type="button" role="radio" aria-checked="true" data-p="skrot"><span class="nazwa" data-nazwa="Skrót"><span>Skrót</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="calosc"><span class="nazwa" data-nazwa="Całość"><span>Całość</span></span></button></div>
   </div>
@@ -733,7 +759,8 @@ body.okno .glowa { background-color: var(--strona); }
 // dyktuje Dyktowanie (kółko myszy wkleja tekst w pole pytania i daje Enter). Test bez prawdziwego Soniox: testy/mikrofon.mjs.
 //
 //   const czat = Czat.uruchom({ kanal, tryb: 'arkusz' | 'panel' | 'strona', skad, miejsce, zakladka(), pokaz(p, reka), zamknij(),
-//                               mikrofon: true, glosNatywny: { start(klucz, ustawienia), stop(zaraz) }, naZmiane(otwarty) })
+//                               mikrofon: true, glosNatywny: { start(klucz, ustawienia), stop(zaraz) }, naZmiane(otwarty),
+//                               dol(): ile pikseli od dołu ekranu ma zostać widać pod arkuszem, na przykład nawigacja aplikacji })
 //   Czat.dymek(przycisk): dymek przy ikonce bez podpisu. Wołaj go przed dodaniem własnego „click”.
 'use strict';
 (() => {
@@ -1076,12 +1103,16 @@ body.okno .glowa { background-color: var(--strona); }
     // Jacek: „Do tyłu nie działa”), app.js pyta o to przez wrocDoRozmowy.
     let wroc = null, zegarZamkniecia = 0, doRozmowy = 0;
     function dopasuj() {
-      // Arkusz na telefonie stoi w widocznej części ekranu, więc klawiatura nie zasłania pola.
+      // Arkusz na telefonie stoi w widocznej części ekranu, więc klawiatura nie zasłania pola. Bez klawiatury kończy się nad
+      // nawigacją aplikacji (o.dol), która zostaje widać, a z klawiaturą sięga do niej, bo nawigacja i tak leży pod klawiaturą.
       const v = window.visualViewport;
       if (tryb !== 'arkusz' || !v) return;
+      const klawiatura = innerHeight - v.height > 120, dol = !klawiatura && o.dol ? Math.max(0, Math.round(o.dol() || 0)) : 0;
       korzen.style.setProperty('--czat-y', Math.round(v.offsetTop) + 'px');
       korzen.style.setProperty('--czat-h', Math.round(v.height) + 'px');
-      korzen.classList.toggle('klawiatura', innerHeight - v.height > 120);
+      korzen.style.setProperty('--czat-dol', dol + 'px');
+      korzen.classList.toggle('klawiatura', klawiatura);
+      korzen.classList.toggle('nad-nawigacja', dol > 0);
       if (document.activeElement === pole) naDol();
     }
     function otworz() {
@@ -1557,16 +1588,57 @@ body.okno .glowa { background-color: var(--strona); }
   // w Poradniku: 48 px, akcent, głębia i strzałka w dół. Napis biały w jasnym (4,7:1), czarny w ciemnym (7,0:1). W Finansach widać go
   // na każdej szerokości, bo rzędu „Skrót | Pełny widok” w aplikacji nie ma (kalkulator chował go od 721 px).
   const STRZALKA_W_DOL = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 5.75 8 10.25l4.5-4.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`;
-  // Przyciski ze szkła (od 26.10.2026; Jacek o „Porównaj te 3” i „Ranking i wszystkie modele”: „to są naklejki … ja wybrałem Apple wygląd
-  // szkła”, wariant 4 ze strony „Przyciski jak przyciski - propozycje”): półprzezroczysta biel z rozmyciem tła, jasna krawędź i miękki
-  // cień, a wciśnięty rośnie o 3% i jaśnieje, jak szkło w iOS 26. Napis #1d1d1f (w ciemnym biały) ma na nim od 12:1.
-  const SZKLANY = (s) => `${s}{background:rgba(255,255,255,.55)!important;-webkit-backdrop-filter:blur(14px) saturate(1.8);backdrop-filter:blur(14px) saturate(1.8);`
-    + 'color:#1d1d1f!important;border:0!important;transition:transform .32s cubic-bezier(.3,1.7,.5,1),background-color .2s ease!important;'
-    + 'box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.3),0 0 0 .5px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.1)!important}'
-    + `${s}:active{transform:scale(1.03);background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.45),transparent 70%),rgba(255,255,255,.7)!important}`
-    + `@media (prefers-color-scheme:dark){${s}{background:rgba(44,44,46,.5)!important;color:#ffffff!important;`
-    + 'box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),inset 0 1px 0 rgba(255,255,255,.22),0 2px 10px rgba(0,0,0,.5)!important}'
-    + `${s}:active{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.26),transparent 70%),rgba(44,44,46,.6)!important}}`;
+  // Przyciski jak przyciski (od 26.10.2026; Jacek: „wybraliśmy … czwarte … takie mają być wszędzie. Koniec. Kropka”, „Słońce świecące
+  // … z lewego górnego narożnika … pod 45 stopni … I takie drop shadow … szkło z iOS 26, reaktywność … Butony to są butony”): wariant 4
+  // „Szkło z iOS 26” ze strony „Przyciski jak przyciski - propozycje” (projekt 15) w każdej stronie w zakładkach, oświetlony z lewego
+  // górnego rogu pod 45°: blask i jasny brzeg z lewej u góry, ciemniejszy brzeg z prawej u dołu i cień rzucony w prawo w dół, w trzech
+  // warstwach. Wciśnięty rośnie o 3% i rozświetla się od miejsca dotyku (--mx i --my wpisuje swiatloPrzyciskow), puszczony wraca
+  // sprężyście. W ciemnym cienia na czerni nie widać, więc zostają jasny brzeg i włosek. Te same liczby ma powłoka (--g3d i --c3d
+  // w styl.css, --cz-lico i --cz-c3d w czat.css, krawedz i lico w Komputer\zbuduj-auta.js). Napis #1d1d1f (w ciemnym biały) ma na szkle
+  // od 12:1, a barwa wypełnionego przycisku zostaje ze strony. Wcześniej (od 26.10.2026 rano) szkło miały tylko „Porównaj te trzy”,
+  // przyciski całości i „Czytaj całość”, a na bieli wyglądały jak napis (Jacek: „tu są miejsca, w których nie wiadomo, że to są ikonki”).
+  const SW = {
+    lico: 'linear-gradient(135deg,rgba(255,255,255,.8),rgba(255,255,255,0) 46%,rgba(0,0,0,.045))',
+    licoB: 'linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,0) 34%,rgba(0,0,0,.1))',
+    licoC: 'linear-gradient(135deg,rgba(255,255,255,.17),rgba(255,255,255,0) 50%)',
+    brzeg: 'inset 1px 1px 0 rgba(255,255,255,.95),inset -1px -1px 0 rgba(0,0,0,.07),0 0 0 .5px rgba(0,0,0,.16)',
+    brzegB: 'inset 1px 1px 0 rgba(255,255,255,.38),inset -1px -1px 0 rgba(0,0,0,.2)',
+    brzegC: 'inset 1px 1px 0 rgba(255,255,255,.24),inset -1px -1px 0 rgba(0,0,0,.45),0 0 0 .5px rgba(255,255,255,.2)',
+    cien: '1px 1px 2px rgba(0,0,0,.12),3px 3px 8px rgba(0,0,0,.1),6px 6px 18px rgba(0,0,0,.06)',
+    cienC: '2px 2px 8px rgba(0,0,0,.6)',
+    plama: 'radial-gradient(circle 80px at var(--mx,50%) var(--my,50%),rgba(255,255,255,.5),rgba(255,255,255,0) 75%)',
+    plamaC: 'radial-gradient(circle 80px at var(--mx,50%) var(--my,50%),rgba(255,255,255,.22),rgba(255,255,255,0) 75%)',
+    ruch: 'transition:transform .32s cubic-bezier(.3,1.7,.5,1),background-color .2s ease,box-shadow .2s ease!important',
+    wcisk: 'transform:scale(1.03)!important;transition:transform .08s ease!important',
+  };
+  // Szklany przycisk (jeden selektor): tlo i tloC to szkło w jasnym i w ciemnym, domyślnie bezbarwne. obraz: false zostawia stronie
+  // jej obraz tła (strzałka listy wyboru), a światło niesie wtedy sam brzeg z cieniem.
+  const GUZIK = (s, { tlo = 'rgba(255,255,255,.62)', tloC = 'rgba(44,44,46,.6)', obraz = true } = {}) => {
+    const lico = obraz ? `background-image:${SW.lico}!important;background-size:100% 100%!important;background-repeat:no-repeat!important;` : '';
+    return `${s}{background-color:${tlo}!important;${lico}-webkit-backdrop-filter:blur(14px) saturate(1.8);backdrop-filter:blur(14px) saturate(1.8);`
+      + `border-color:transparent!important;box-shadow:${SW.brzeg},${SW.cien}!important;${SW.ruch}}`
+      + `${s}:active{${SW.wcisk}${obraz ? `;background-image:${SW.plama},${SW.lico}!important` : ''}}`
+      + `@media (prefers-color-scheme:dark){${s}{background-color:${tloC}!important;${obraz ? `background-image:${SW.licoC}!important;` : ''}box-shadow:${SW.brzegC},${SW.cienC}!important}`
+      + (obraz ? `${s}:active{background-image:${SW.plamaC},${SW.licoC}!important}` : '') + '}';
+  };
+  // Wypełniony przycisk (wybrany albo główny, jeden selektor): barwa zostaje ze strony, dochodzą blask, brzeg i cień w tej barwie.
+  const GUZIK_PELNY = (s, barwa) => `${s}{background-image:${SW.licoB}!important;background-size:100% 100%!important;background-repeat:no-repeat!important;animation:none!important;`
+    + `box-shadow:${SW.brzegB},1px 1px 2px rgba(0,0,0,.16),3px 3px 10px color-mix(in srgb,${barwa} 42%,transparent)!important;${SW.ruch}}`
+    + `${s}:active{${SW.wcisk}}@media (prefers-color-scheme:dark){${s}{box-shadow:${SW.brzegB},0 0 0 .5px rgba(255,255,255,.2)!important}}`;
+  // „Porównaj te trzy”, przyciski całości i „Czytaj całość”: szkło z napisem w kolorze tekstu.
+  const SZKLANY = (s) => GUZIK(s) + `${s}{color:#1d1d1f!important;border:0!important}@media (prefers-color-scheme:dark){${s}{color:#ffffff!important}}`;
+  // Miejsce dotyku dla rozświetlenia wciśniętego przycisku w stronie w ramce (GUZIK): --mx i --my na przycisku, raz na dokument.
+  const swiatloPrzyciskow = (d) => {
+    if (!d || d.kmSwiatlo) return;
+    d.kmSwiatlo = true;
+    d.addEventListener('pointerdown', (e) => {
+      const b = e.target && e.target.closest ? e.target.closest('button, .przycisk, select') : null;
+      if (!b) return;
+      const r = b.getBoundingClientRect();
+      b.style.setProperty('--mx', Math.round(e.clientX - r.left) + 'px');
+      b.style.setProperty('--my', Math.round(e.clientY - r.top) + 'px');
+    }, { capture: true, passive: true });
+  };
   const CALOSC = (s) => `${s}{display:inline-flex!important;align-items:center;gap:8px;height:48px!important;min-height:48px;margin-top:24px!important;padding:0 21px 0 24px!important;`
     + 'border-radius:24px!important;font:inherit;font-size:17px!important;font-weight:600!important;line-height:1!important;cursor:pointer;-webkit-tap-highlight-color:transparent}'
     + `${s}::after{content:"";flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:${STRZALKA_W_DOL} center/16px no-repeat;mask:${STRZALKA_W_DOL} center/16px no-repeat}`
@@ -1575,8 +1647,14 @@ body.okno .glowa { background-color: var(--strona); }
     + `@media (max-width:759px){${s}{box-sizing:border-box!important;width:100%!important;justify-content:center}}`;
   // Pierścień wybranej pigułki w stronach (pigulki-widoku.css w misji) rysowany do środka, jak w nawigacji: brzeg pigułki stoi na linii
   // siatki, a nie 4 px przed nią (Jacek, 25.10.2026: „nie jest to wszystko według kratek, a powinno być poukładane według kratek”).
-  const PIERSCIEN = '.pigulki-widoku button[aria-pressed="true"],.pigulki-widoku button[aria-checked="true"]'
-    + '{box-shadow:var(--pig-krawedz),inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--bg),var(--pig-cien-wybranej)!important}';
+  // Od 26.10.2026 pigułki w stronach mają też szkło z 45° światłem (GUZIK), a wybrana pastel swojej zakładki z tym samym blaskiem
+  // i cieniem; smuga przy wyborze w stronach zniknęła (Jacek: „ograniczyć albo wyeliminować połyskiwania do minimum”).
+  const WYBRANA_PIG = '.pigulki-widoku button:is([aria-pressed="true"],[aria-checked="true"]):not(.ciagniety)';
+  const PIERSCIEN = `${WYBRANA_PIG}{background-image:${SW.lico}!important;background-size:100% 100%!important;background-repeat:no-repeat!important;animation:none!important;`
+    + `box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--bg),${SW.cien}!important;${SW.ruch}}`
+    + `${WYBRANA_PIG}:active{${SW.wcisk}}`
+    + `@media (prefers-color-scheme:dark){${WYBRANA_PIG}{background-image:${SW.licoC}!important;box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--bg),0 0 0 .5px rgba(255,255,255,.2)!important}}`
+    + GUZIK('.pigulki-widoku button:not([aria-pressed="true"]):not([aria-checked="true"]):not(.ciagniety)');
   // Podium: cena i „Tylko Toyota” w tej samej siatce co cztery kategorie pod nimi, „Tylko Toyota” tej samej szerokości co kategoria,
   // liczba na środku pola, a „Cena do … tys. zł” ciaśniej (Jacek: „Te 75 powinno być pośrodkowane … w tej rameczce”, „Tylko Toyota
   // … przytulone do prawej krawędzi … musi być w tej samej szerokości co bezpieczeństwo i bagażnik pod nią”). Odstęp siatki: na telefonie
@@ -1588,7 +1666,10 @@ body.okno .glowa { background-color: var(--strona); }
     + '@container (min-width:680px){.podium .podium-rzad{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:8px}.podium .podium-chipy{gap:16px}'
     + '.podium .podium-rzad .budzet{grid-column:span 2;justify-content:flex-start}.podium #podium-toyota{grid-column:4}}'
     // „Porównaj te trzy” na telefonie na całą szerokość, jak przycisk całości pod nim (12 kolumn siatki).
-    + '@media (max-width:759px){.podium-akcje #podium-porownaj{box-sizing:border-box;width:100%;justify-content:center}}' + SZKLANY('#podium-porownaj');
+    + '@media (max-width:759px){.podium-akcje #podium-porownaj{box-sizing:border-box;width:100%;justify-content:center}}' + SZKLANY('#podium-porownaj')
+    // „Porównaj” w karcie modelu (szkło w lekkim błękicie, a dodany do porównania wypełniony akcentem) i pasek z oknem porównania.
+    + GUZIK('button.porownaj:not([aria-pressed="true"])', { tlo: 'color-mix(in srgb,#0071e3 12%,rgba(255,255,255,.72))', tloC: 'color-mix(in srgb,#409cff 22%,rgba(44,44,46,.6))' })
+    + GUZIK_PELNY('button.porownaj[aria-pressed="true"]', '#0071e3') + GUZIK('.pp-wyczysc') + GUZIK_PELNY('.pp-porownaj:not(:disabled)', '#0071e3') + GUZIK('.p-zamknij');
   const SIATKA = {
     katalog: `#pasek,.strona>.naglowek{display:none!important}.strona{${KONTENER}}.katalog{column-gap:24px!important}`
       + '.panel-filtrow{top:clamp(16px,2.5vw,32px)!important;max-height:calc(100vh - 2 * clamp(16px,2.5vw,32px))!important}'
@@ -1604,7 +1685,10 @@ body.okno .glowa { background-color: var(--strona); }
       // w ofertach”): powtarzały tylko kolejność listy.
       + '.karta-produktu .miejsce{display:none!important}'
       // Okno auta: serce, oko i krzyżyk co 16 px, znaki 24 px (od 26.10.2026; wcześniej co 8 px ze znakami 18 px).
-      + 'dialog[open] .wybor-serce~.przycisk.cichy{margin-left:8px!important}dialog[open] :is(.wybor-serce,.wybor-serce~.przycisk.cichy) svg{width:24px!important;height:24px!important}',
+      + 'dialog[open] .wybor-serce~.przycisk.cichy{margin-left:8px!important}dialog[open] :is(.wybor-serce,.wybor-serce~.przycisk.cichy) svg{width:24px!important;height:24px!important}'
+      // Przyciski Ofert ze szkła z 45° światłem: Filtry, Kolejność, przyciski w panelu filtrów i w oknie auta (serce, oko, krzyżyk).
+      + GUZIK('.przycisk:not(.glowny):not(.przycisk-nowe)') + GUZIK('.mobilne-filtry') + GUZIK_PELNY('.przycisk.glowny', 'var(--akcent)')
+      + GUZIK('.pasek-narzedzi select', { obraz: false }) + GUZIK('.aktywne button') + GUZIK('dialog[open] .wybor-serce'),
     // Podium i Historia bez rzędu „Skrót | Pełny widok” (od 25.10.2026): w zakładce najwyżej jeden rząd pigułek, a całość otwiera
     // przycisk na końcu skrótu (app.js, „Skrót i całość”).
     modele: GAZETA + '.widok-modeli{display:none!important}' + CALOSC('.przycisk-p[data-widok-modeli="pelny"]') + PIERSCIEN + PODIUM,
@@ -1618,6 +1702,9 @@ body.okno .glowa { background-color: var(--strona); }
         '.pole:has(#nadplata)', '.kwota', '.reszta', '#h-leasing-tab'].map((s) => `html[data-czesc="leasing"] ${s}`).join(',') + '{display:none!important}'
       + 'html[data-czesc="leasing"] .blok-leasing{margin-top:0!important}'
       + 'html[data-czesc="kredyt"] section[aria-labelledby="sk-leasing"],html[data-czesc="kredyt"] .blok-leasing{display:none!important}'
+      // Okresy, szybkie wybory i przyciski kalkulatora ze szkła; wybrany szybki wybór zostaje wypełniony akcentem strony.
+      + GUZIK('.okresy button') + GUZIK('.chipy button:not([aria-pressed=true])') + GUZIK_PELNY('.chipy button[aria-pressed=true]', 'var(--fill)')
+      + GUZIK('.przycisk') + GUZIK('.cofanie button')
       + CALOSC('html[data-czesc] #skrot>.przycisk') + PIERSCIEN,
     historia: GAZETA + '.widok-strony{display:none!important}' + CALOSC('.przycisk-p[data-widok-strony="pelny"]') + PIERSCIEN,
     // Poradnik w zakładce (od 25.10.2026; wcześniej w oknie pod logo): data nad tytułem bliżej nagłówka, a na telefonie tekst
@@ -1732,6 +1819,7 @@ body.okno .glowa { background-color: var(--strona); }
         if (!d || !d.documentElement) continue;
         d.documentElement.style.setProperty('--km-odcien', odcien);
         d.documentElement.dataset.kmOdcien = '';
+        swiatloPrzyciskow(d);
         d.documentElement.style.setProperty('--km-lewo', cs.paddingLeft);
         d.documentElement.style.setProperty('--km-prawo', cs.paddingRight);
         // Nawigacja ze szkła leży nad stroną: strona dostaje jej wysokość, żeby jej koniec dało się przewinąć nad nawigację.
@@ -1865,9 +1953,10 @@ body.okno .glowa { background-color: var(--strona); }
   }
   const pasekZakladek = $('.karty');
   // Połysk wybranej zakładki i pigułki to biała smuga raz, przy wyborze (styl.css, „Barwy zakładek”).
-  // Szkło pod kursorem: plama światła idzie za myszą (styl ::after zakładki i pigułki czyta --mx i --my).
+  // Szkło pod kursorem: błysk światła idzie za myszą (styl ::after zakładki i pigułki czyta --mx i --my). Palcem liczy się tylko
+  // miejsce wciśnięcia, od którego zakładka się rozświetla (wariant 4), bo ruch palca przestawia zakładki.
   function szklo(e) {
-    if (e.pointerType !== 'mouse') return;
+    if (e.pointerType !== 'mouse' && e.type !== 'pointerdown') return;
     const b = e.target.closest && e.target.closest('[role="tab"], [role="radio"]');
     if (!b) return;
     const r = b.getBoundingClientRect();
@@ -1875,6 +1964,7 @@ body.okno .glowa { background-color: var(--strona); }
     b.style.setProperty('--my', Math.round(e.clientY - r.top) + 'px');
   }
   pasekZakladek.addEventListener('pointermove', szklo, { passive: true });
+  pasekZakladek.addEventListener('pointerdown', szklo, { passive: true });
 
   // ---------------------------------------------------------------- pigułki w nawigacji (od 25.10.2026)
   // Pigułka zmienia stronę pod sobą bez przeładowania, a wybór wraca po ponownym otwarciu aplikacji. Nowa strona wjeżdża z tej
@@ -1920,6 +2010,7 @@ body.okno .glowa { background-color: var(--strona); }
   }
   for (const [id, g] of Object.entries(grupyPigulek)) {
     g.addEventListener('pointermove', szklo, { passive: true });
+    g.addEventListener('pointerdown', szklo, { passive: true });
     for (const b of g.querySelectorAll('[role="radio"]')) {
       b.addEventListener('click', () => { if (id === ID_ZAKLADEK[widok] && b.dataset.p === wybrane[id]) naPoczatek(); else ustawPigulke(id, b.dataset.p, true, true); });
       // Strzałki bez Alt przełączają pigułkę, w kolejności z ekranu (Alt+← → przestawia, niżej).
@@ -2323,6 +2414,10 @@ body.okno .glowa { background-color: var(--strona); }
   const mostGlosu = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.glos;
   const czat = window.Czat && KANAL ? Czat.uruchom({
     kanal: KANAL, tryb: 'arkusz', mikrofon: SKAD !== 'iPhone', skad: SKAD,
+    // Rozmowa na telefonie kończy się nad nawigacją, więc zakładki zostają widać i działają (od 26.10.2026, Jacek: „brak jakiejkolwiek
+    // nawigacji po tych czatach”). Na szerokim ekranie nawigacja stoi u góry, a rozmowa jest panelem z prawej.
+    dol: () => { const d = $('.dol'); return innerWidth >= 760 || !d || !d.offsetHeight ? 0 : innerHeight - d.getBoundingClientRect().top; },
+    naZmiane: (otwarty) => document.body.classList.toggle('czat-otwarty', otwarty),
     glosNatywny: mostGlosu ? { start: (klucz, konfiguracja) => mostGlosu.postMessage({ co: 'start', klucz, konfiguracja }),
       stop: (zaraz) => mostGlosu.postMessage({ co: 'stop', zaraz: Boolean(zaraz) }) } : null,
     zakladka: () => { const k = klucz(widok); return k === 'atlas' ? 'modele' : k; },
@@ -2339,6 +2434,9 @@ body.okno .glowa { background-color: var(--strona); }
   }) : null;
   const przyciskCzatu = $('#czat-otworz');
   if (czat) { Czat.dymek(przyciskCzatu); przyciskCzatu.addEventListener('click', () => czat.otworz()); } else przyciskCzatu.hidden = true;
+  // Zakładka albo pigułka stuknięta przy otwartej rozmowie zamyka rozmowę, a potem jej własne kliknięcie pokazuje stronę
+  // (faza przechwytywania, więc najpierw to).
+  if (czat) $('.dol').addEventListener('click', (e) => { if (czat.otwarty() && e.target.closest('[role="tab"], [role="radio"]')) czat.zamknij(); }, true);
   // Wstecz (gest od lewej krawędzi w Aplikacja.swift, przycisk Wstecz na Androidzie): najpierw menu i czat, potem okno w stronie
   // (szczegóły auta, filtry, galeria), w Atlasie najpierw to, co otwarte w Atlasie, w całości powrót do skrótu, a na drugiej pigułce
   // powrót do pierwszej (Historia do Teraz, Marki do Podium, Kredyt do Leasingu). Dopiero potem Wstecz wychodzi z aplikacji. Atlas
