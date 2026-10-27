@@ -152,9 +152,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
    a ujemny margines trzyma układ nagłówka taki, jak przy samym obrazku 40 px. */
 .logo { position: relative; flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin: -4px; padding: 0; border: 0; border-radius: 14px; background: none; }
 .logo img { display: block; width: 40px; height: 40px; transition: transform 120ms ease, filter 400ms ease; }
-/* Niespodzianka (od 26.10.2026, Jacek: „kolory trochę zmieni … w obu przypadkach … efekt dźwiękowy, ale może subtelne”): w kolorowym trybie
-   barwy logo przesuwają się o 28°, a przy każdym przełączeniu logo podskakuje raz (app.js, „Niespodzianka”, razem z cichym dźwiękiem). */
-body.kolorowo .logo img { filter: hue-rotate(28deg) saturate(1.3); }
+/* Niespodzianka (od 26.10.2026 wieczorem, Jacek: „przytrzymać przez pół sekundy … samą ikonę”): po 0,5 s przytrzymania logo podskakuje raz,
+   a po puszczeniu otwiera się tryb HAL (app.js, „Niespodzianka”; czat.js, „HAL”). Do tego dnia to przytrzymanie włączało kolorowe tło. */
 .logo.niespodzianka img { animation: niespodzianka 420ms cubic-bezier(.3, 1.7, .5, 1); }
 @keyframes niespodzianka { 40% { transform: scale(1.14) rotate(-6deg); } }
 .logo:active img { transform: scale(.94); }
@@ -416,28 +415,20 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 .podwidoki [role="radio"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--barwa), 0 6px 16px var(--cien-mocny); }
 
 /* Barwy zakładek (od 25.10.2026 wieczorem; Jacek: „Zdechły niebieski … zdechłego zielonego … pseudo fiolet”, a paleta Apple: żywa barwa
-   do akcentu, pastel z niej do rzeczy dyskretnych). Każda zakładka ma barwę z palety systemowej Apple: pomarańczowe Oferty, niebieskie Podium,
-   zielone Finanse i fioletowy Poradnik (Oferty i Finanse zamieniły się barwami 26.10.2026, Jacek: „pomarańczowy jest excited”). --gleboka to ta barwa przyciemniona tak, że biały napis ma na niej od 4,5:1, --zywa-c to
+   do akcentu, pastel z niej do rzeczy dyskretnych). Każda zakładka ma barwę z palety systemowej Apple: niebieskie Oferty, pomarańczowe Podium,
+   zielone Finanse i fioletowy Poradnik (Oferty i Finanse zamieniły się barwami 26.10.2026, Jacek: „pomarańczowy jest excited”; wieczorem Oferty i Podium zamieniły się barwami: pierwsza niebieska, druga pomarańczowa). --gleboka to ta barwa przyciemniona tak, że biały napis ma na niej od 4,5:1, --zywa-c to
    żywa barwa ciemnego motywu, a --pastel z index.html to 16% barwy na bieli (w ciemnym 28% na #1c1c1e). --barwa to barwa wybranej rzeczy
    w bieżącym motywie: tło wybranej zakładki i pigułki, pierścień i pasek przenoszenia. Tło nagłówka, nawigacji i stron jest we wszystkich
    czterech zakładkach takie samo: biel, w ciemnym czerń (Jacek, 26.10.2026, po próbie z odcieniami barw zakładek na całym ekranie:
    „ten eksperyment z kolorem … się nie udało, wracamy do bieli wszystkich czterech takiej samej”). Kontrast każdej pary liczy skrypt. */
-#seg-katalog, .podwidoki[data-z="katalog"], body[data-zakladka="katalog"] { --gleboka: #bc5500; --zywa-c: #ff9f0a; }
-#seg-modele, .podwidoki[data-z="modele"], body[data-zakladka="modele"] { --gleboka: #0071e3; --zywa-c: #0a84ff; }
+#seg-katalog, .podwidoki[data-z="katalog"], body[data-zakladka="katalog"] { --gleboka: #0071e3; --zywa-c: #0a84ff; }
+#seg-modele, .podwidoki[data-z="modele"], body[data-zakladka="modele"] { --gleboka: #bc5500; --zywa-c: #ff9f0a; }
 #seg-kredyt, .podwidoki[data-z="kredyt"], body[data-zakladka="kredyt"] { --gleboka: #1e7d36; --zywa-c: #30d158; }
 #seg-poradnik, .podwidoki[data-z="poradnik"], body[data-zakladka="poradnik"] { --gleboka: #9a4fcf; --zywa-c: #bf5af2; }
 body, .karty [role="tab"], .podwidoki { --barwa: var(--gleboka, var(--akcent)); }
 body { --tlo-pasa: var(--tlo); background-color: var(--tlo-pasa); }
-/* Kolorowe tło jako niespodzianka (od 26.10.2026; Jacek: „ten kolorowy … jest Easter … przełącznik … pod samym” logo): przytrzymanie logo
-   przez 0,6 s włącza i wyłącza odcień 10% barwy wybranej zakładki na całym ekranie, także pod stronami (app.js, „Niespodzianka”).
-   Domyślnie biel, w ciemnym motywie zawsze czerń. Odcień trwa do zamknięcia aplikacji, a każdy start jest śnieżnobiały (od 26.10.2026,
-   Jacek: „chodziło o ten biały, żeby to było śnieżnobiałe”). Odcienie idą za barwami zakładek: Oferty pomarańczowe, Finanse zielone. */
-@media (prefers-color-scheme: light) {
-  body.kolorowo[data-zakladka="katalog"] { --tlo-pasa: #fff4e6; }
-  body.kolorowo[data-zakladka="modele"] { --tlo-pasa: #e6f2ff; }
-  body.kolorowo[data-zakladka="kredyt"] { --tlo-pasa: #ebf9ee; }
-  body.kolorowo[data-zakladka="poradnik"] { --tlo-pasa: #f7eefc; }
-}
+/* Tło strony, nagłówka i pasa nawigacji jest śnieżnobiałe (w ciemnym motywie czarne) w każdej zakładce (Jacek, 26.10.2026: „chodziło o ten
+   biały”). Kolorowego tła, które do wieczora 26.10.2026 włączało przytrzymanie logo, już nie ma. */
 @media (prefers-color-scheme: dark) {
   body, .karty [role="tab"], .podwidoki { --barwa: var(--zywa-c, var(--akcent)); }
   .karty [role="tab"]:not([aria-selected="true"]) { background-color: var(--pastel-c); }
@@ -539,6 +530,32 @@ body.czat-otwarty .dol { z-index: 43; }
 }
 @media (min-width: 1240px) { .podwidoki [role="radio"] { flex: 0 0 176px; } }
 
+/* Nawigacja jako chmurka (od 26.10.2026 wieczorem; Jacek: „we need to sacrifice a little bit of real estate … rounded cloud, rather than just
+   flat cutoff … a separate entity … some drop shadow”): na telefonie zakładki i pigułki stoją w zaokrąglonej chmurce z ramką i cieniem, 8 px od
+   brzegów ekranu, a nie na pasie ściętym od dołu. Brzegi zakładek zostają na linii siatki: chmurka wystaje 8 px poza nią, tyle ma wypełnienia
+   (krawędź chmurki 8 px od ekranu, wypełnienie 8 px, przyciski 16 px). Pas jest przezroczysty, a chmurkę rysuje jego ::before. Odstęp pod chmurką
+   to dawny odstęp pod przyciskami minus 8 px wypełnienia, więc przenoszenie nawigacji (--km-nav-y) działa jak przedtem. Ciemny motyw: #1c1c1e
+   z włoskiem (cienia na czerni nie widać). Podczas przenoszenia pasek postępu stoi nad chmurką jako osobna karta. */
+:root {
+  --chmura-tlo: #ffffff;
+  --chmura-cien: 0 0 0 1px rgba(0, 0, 0, .1), 0 2px 6px rgba(0, 0, 0, .08), 0 10px 28px rgba(0, 0, 0, .14), 0 20px 44px rgba(0, 0, 0, .08);
+  --chmura-cien-gora: 0 0 0 1px rgba(0, 0, 0, .1), 0 4px 12px rgba(0, 0, 0, .16), 0 18px 48px rgba(0, 0, 0, .2);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --chmura-tlo: #1c1c1e;
+    --chmura-cien: 0 0 0 1px rgba(255, 255, 255, .16), inset 0 1px 0 rgba(255, 255, 255, .07);
+    --chmura-cien-gora: 0 0 0 1px rgba(255, 255, 255, .24), inset 0 1px 0 rgba(255, 255, 255, .1);
+  }
+}
+@media (max-width: 759px) {
+  .dol { --dol-pb: max(var(--km-dol-min), calc(var(--km-dol-baza) + var(--km-nav-y, 0px))); padding-top: 16px; padding-bottom: var(--dol-pb); background-color: transparent; box-shadow: none; }
+  .dol::before { content: ""; position: absolute; z-index: -1; top: 8px; bottom: max(0px, calc(var(--dol-pb) - 8px)); left: calc(var(--km-x0) - 8px); right: calc(var(--km-x1) - 8px);
+    border-radius: calc(var(--km-rog) + 8px); background: var(--chmura-tlo); box-shadow: var(--chmura-cien); pointer-events: none; transition: box-shadow 160ms ease; }
+  .dol.przenoszony { box-shadow: none; }
+  .dol.przenoszony::before { box-shadow: var(--chmura-cien-gora); }
+  .postep-paska { left: calc(var(--km-x0) - 8px); right: calc(var(--km-x1) - 8px); padding: 0 16px; border-radius: 16px; background: var(--chmura-tlo); box-shadow: var(--chmura-cien); }
+}
 </style>
 <style>
 /* czat.css: wygląd asystenta Kasiomobile (czat.js), ten sam na iPhonie, Androidzie, komputerze i w przeglądarce (od 19.10.2026).
@@ -719,45 +736,25 @@ body.czat-otwarty .dol { z-index: 43; }
 }
 .czat-pusto { margin: auto 0; display: grid; justify-items: center; gap: 24px; padding: 16px 0 24px; text-align: center; color: var(--cz-tekst2); }
 .czat-pusto > p { max-width: 22em; margin: 0; }
-/* Duży mikrofon na pustej rozmowie (od 26.10.2026, Jacek: „Brak dużego mikrofonu”), od tego samego dnia oko w stylu HAL 9000
-   z „2001: Odysei kosmicznej” (Jacek: „ever so slightly … reminiscent of HAL”): czarna soczewka z czerwonym środkiem w srebrnym
-   pierścieniu, blask z lewego górnego rogu pod 45° i cień w prawo w dół jak na przyciskach. Gdy słucha, środek jaśnieje i oddycha,
-   a poświata wychodzi na pierścień: to sygnał stanu, więc zostaje także przy ograniczonym ruchu. Pod okiem podpis mówi, co robi. */
-.czat-duzy-mik { display: grid; justify-items: center; gap: 10px; margin: 0; padding: 0; border: 0; background: none; color: var(--cz-tekst);
-  font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* Oko HAL 9000 z „2001: Odysei kosmicznej” (od 26.10.2026, Jacek: „ever so slightly … reminiscent of HAL”): czarna soczewka z czerwonym środkiem
+   w srebrnym pierścieniu, blask z lewego górnego rogu pod 45° i cień w prawo w dół jak na przyciskach. Żyje w trybie HAL (przytrzymanie logo,
+   niżej) i w małym mikrofonie przy polu pytania, gdy nagrywa. Dużego oka na pustej rozmowie już nie ma (Jacek, 26.10.2026 wieczorem: „fajna,
+   ale trochę przesadzona”). */
 .czat-oko { position: relative; display: block; width: 84px; height: 84px; border-radius: 50%;
   background: linear-gradient(135deg, #fdfdfd, #d1d1d6 34%, #8e8e93 64%, #e5e5ea);
-  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .28), 1px 1px 2px rgba(0, 0, 0, .2), 3px 3px 10px rgba(0, 0, 0, .16), 6px 6px 20px rgba(0, 0, 0, .1);
-  transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1); }
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .28), 1px 1px 2px rgba(0, 0, 0, .2), 3px 3px 10px rgba(0, 0, 0, .16), 6px 6px 20px rgba(0, 0, 0, .1); }
 .czat-oko::after { content: ""; position: absolute; inset: 7px; border-radius: 50%;
   background: radial-gradient(circle at 34% 30%, rgba(255, 255, 255, .9) 0 2px, rgba(255, 255, 255, .25) 4px, rgba(255, 255, 255, 0) 8px),
     radial-gradient(circle, #ffd88a 0 3%, #ff5428 7%, #e10a0a 15%, #8c0000 28%, #2b0202 43%, #0a0a0a 55%, #050505);
   box-shadow: inset 0 0 0 2px #111111, inset 2px 2px 4px rgba(255, 255, 255, .12), inset -2px -2px 6px rgba(0, 0, 0, .6); }
-.czat-duzy-mik:active .czat-oko { transform: scale(1.03); transition: transform 80ms ease; }
-.czat-duzy-mik.nagrywa .czat-oko::after { animation: czat-hal 2.2s ease-in-out infinite; }
 @keyframes czat-hal {
   0%, 100% { filter: brightness(1.05) saturate(1.1); box-shadow: inset 0 0 0 2px #111111, 0 0 10px 2px rgba(255, 40, 20, .35); }
   50% { filter: brightness(1.45) saturate(1.3); box-shadow: inset 0 0 0 2px #111111, 0 0 26px 9px rgba(255, 40, 20, .6); } }
-.czat-duzy-mik:focus-visible { outline: none; }
-.czat-duzy-mik:focus-visible .czat-oko { box-shadow: 0 0 0 2px var(--cz-tlo), 0 0 0 4px var(--cz-akcent); }
-/* Podpowiedzi (od 26.10.2026, Jacek: pytania „za ciasno, bez koloru i bez oddechu”, „nikt nie wie, że da się je stuknąć”): przyciski
-   z głębią w pastelach zakładek, których dotyczą, co 12 px, na całą szerokość. Napis #1d1d1f (w ciemnym biały) ma na nich od 9:1. */
-.czat-podpowiedzi { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: 100%; max-width: 480px; }
-.czat .czat-podpowiedz { justify-content: center; min-height: 52px; margin: 0; padding: 12px 20px; border: 0; border-radius: 26px; font-size: 16px; font-weight: 600;
-  color: #1d1d1f; background-color: var(--cz-pastel, var(--cz-pod)); background-image: var(--cz-lico);
-  box-shadow: var(--cz-c3d); }
-.czat-podpowiedz[data-z="katalog"] { --cz-pastel: #ffeed6; }
-.czat-podpowiedz[data-z="modele"] { --cz-pastel: #d6eaff; }
-.czat-podpowiedz[data-z="kredyt"] { --cz-pastel: #dff6e4; }
-.czat-podpowiedz[data-z="poradnik"] { --cz-pastel: #f2e3fa; }
-
-@media (prefers-color-scheme: dark) {
-  .czat .czat-podpowiedz { color: #ffffff; }
-  .czat-podpowiedz[data-z="katalog"] { --cz-pastel: #5c4118; }
-  .czat-podpowiedz[data-z="modele"] { --cz-pastel: #17395d; }
-  .czat-podpowiedz[data-z="kredyt"] { --cz-pastel: #224f2e; }
-  .czat-podpowiedz[data-z="poradnik"] { --cz-pastel: #4a2d59; }
-}
+/* Podpowiedzi (od 26.10.2026 wieczorem, Jacek: pastele „jak z jarmarku”, „co by Apple zrobił? … szarawe”, „więcej powietrza”): jedna spokojna
+   barwa, szare szkło z 45° światłem jak inne przyciski, napis w kolorze tekstu (13:1 w jasnym, 12:1 w ciemnym), 56 px wysokości, 16 px odstępu. */
+.czat-podpowiedzi { display: flex; flex-direction: column; align-items: stretch; gap: 16px; width: 100%; max-width: 480px; }
+.czat .czat-podpowiedz { justify-content: center; min-height: 56px; margin: 0; padding: 14px 24px; border: 0; border-radius: 28px; font-size: 16px; font-weight: 500; line-height: 1.4;
+  color: var(--cz-tekst); background-color: var(--cz-szary); background-image: var(--cz-lico); box-shadow: var(--cz-c3d); }
 
 /* Pole pytania na dole: tekst, mikrofon (gdy jest) i wysyłanie. Od dolnej krawędzi stoi jak pasek zakładek, czyli tak daleko
    jak logo od górnej (od 24.10.2026); przy klawiaturze i w panelu na komputerze 8 px. */
@@ -872,10 +869,72 @@ body.czat-otwarty .dol { z-index: 43; }
   100% { opacity: 0; background-color: transparent; box-shadow: var(--c-cien-zero); }
 }
 
+/* ---- Porządki w rozmowie z wieczora 26.10.2026 (Jacek: „nawigacja za wysoko … podążanie za gridami”, „więcej powietrza”, kosz do opróżnienia,
+   odpowiedź wychodząca poza ekran) i tryb HAL ---- */
+.czat { --cz-niebezp: #b3000f; }
+@media (prefers-color-scheme: dark) { .czat { --cz-niebezp: #ff6961; } }
+/* Arkusz nad nawigacją-chmurką ma 8 px odstępu od niej i zaokrąglone wszystkie rogi. */
+.czat-arkusz.nad-nawigacja { border-radius: 16px; }
+.czat-pusto { gap: 32px; }
+
+/* Górny rząd rozmowy na siatce aplikacji: 12 kolumn, rynna 8 px, brzegi na brzegach treści (16 px). Historia i Nowa rozmowa po 5 kolumn, krzyżyk
+   w dwóch ostatnich (koło na środku swojego miejsca). Rząd stoi 8 px niżej niż do tego dnia (Jacek: „za wysoko”). Na wąskim ekranie pigułki
+   tracą ikonę, żeby napis „Nowa rozmowa” się mieścił. */
+.czat-gora { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center; min-height: 60px;
+  padding: 12px calc(env(safe-area-inset-right, 0px) + 16px) 0 calc(env(safe-area-inset-left, 0px) + 16px); }
+.czat-gora-lewo { display: contents; }
+.czat-gora .czat-pigulka { width: 100%; justify-content: center; padding: 0 8px; }
+.czat-gora .czat-historia { grid-column: 1 / span 5; }
+.czat-gora .czat-nowa { grid-column: 6 / span 5; }
+.czat-gora .czat-zamknij { grid-column: 11 / span 2; justify-self: center; }
+@media (max-width: 389px) { .czat-gora .czat-pigulka > svg { display: none; } }
+
+/* Nagłówek Archiwum i Kosza na tej samej siatce: „‹ Historia” w pięciu kolumnach, nazwa w trzech, „Opróżnij” w czterech (napis czerwony, 5,9:1
+   w jasnym i 4,9:1 w ciemnym). */
+.czat-naglowek-listy { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center; }
+.czat-naglowek-listy .czat-wroc { grid-column: 1 / span 5; width: 100%; justify-content: center; padding: 0 8px; }
+.czat-naglowek-listy .czat-gdzie { grid-column: 6 / span 3; text-align: center; }
+.czat-naglowek-listy .czat-oproznij { grid-column: 9 / span 4; width: 100%; justify-content: center; padding: 0 8px; color: var(--cz-niebezp); }
+.czat-oproznij > svg { display: none; }
+
+/* Odnośnik pod odpowiedzią nigdy nie wychodzi poza ekran: napis łamie się gdziekolwiek i ma najwyżej dwie linie. */
+.czat-akcja > span { min-width: 0; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+/* Tryb HAL (od 26.10.2026 wieczorem; Jacek: „przytrzymać przez pół sekundy … tylko oko tego Hala. Podpis Hal jakiś tam, delikatny … głosowo,
+   slightly animacyjnie”): cały ekran, białe tło (w ciemnym czarne), oko 176 px na środku, pod nim cichy podpis i napis tego, co HAL mówi.
+   Oko mówi o stanie: czeka (oddycha), słucha (pulsuje), myśli (migocze), mówi (bije w rytmie mowy). Stan zostaje także przy ograniczonym ruchu. */
+.czat.czat-hal { position: fixed; inset: 0; z-index: 60; display: grid; grid-template-rows: auto 1fr; padding: calc(var(--km-gora, env(safe-area-inset-top, 0px)) + 10px) 0 env(safe-area-inset-bottom, 0px);
+  opacity: 0; transition: opacity 320ms ease; }
+.czat.czat-hal.widac { opacity: 1; }
+.czat-hal-gora { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center; min-height: 60px;
+  padding: 12px calc(env(safe-area-inset-right, 0px) + 16px) 0 calc(env(safe-area-inset-left, 0px) + 16px); }
+.czat-hal-gora .czat-zamknij { grid-column: 11 / span 2; justify-self: center; }
+.czat-hal-srodek { display: grid; align-content: center; justify-items: center; gap: 32px; padding: 0 24px 72px; text-align: center; }
+.czat-hal-oko { position: relative; display: block; width: 176px; height: 176px; margin: 0; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1); }
+.czat-hal-oko:active { transform: scale(1.03); transition: transform 80ms ease; }
+.czat-hal-oko:focus-visible { outline: 2px solid var(--cz-akcent); outline-offset: 8px; }
+.czat-hal-oko .czat-oko { width: 176px; height: 176px;
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .28), 2px 2px 4px rgba(0, 0, 0, .2), 6px 6px 20px rgba(0, 0, 0, .18), 12px 12px 40px rgba(0, 0, 0, .12); }
+.czat-hal-oko .czat-oko::after { inset: 15px;
+  background: radial-gradient(circle at 34% 30%, rgba(255, 255, 255, .9) 0 4px, rgba(255, 255, 255, .25) 9px, rgba(255, 255, 255, 0) 16px),
+    radial-gradient(circle, #ffd88a 0 3%, #ff5428 7%, #e10a0a 15%, #8c0000 28%, #2b0202 43%, #0a0a0a 55%, #050505);
+  box-shadow: inset 0 0 0 3px #111111, inset 3px 3px 8px rgba(255, 255, 255, .12), inset -4px -4px 12px rgba(0, 0, 0, .6); }
+.czat-hal[data-stan="czeka"] .czat-oko::after { animation: czat-hal-oddech 5s ease-in-out infinite; }
+.czat-hal[data-stan="slucha"] .czat-oko::after { animation: czat-hal 2.2s ease-in-out infinite; }
+.czat-hal[data-stan="mysli"] .czat-oko::after { animation: czat-hal-mysli 1.3s ease-in-out infinite; }
+.czat-hal[data-stan="mowi"] .czat-oko::after { animation: czat-hal-mowi .9s ease-in-out infinite; }
+@keyframes czat-hal-oddech { 0%, 100% { filter: brightness(.96); } 50% { filter: brightness(1.14); } }
+@keyframes czat-hal-mysli { 0%, 100% { filter: brightness(.7) saturate(.9); } 40% { filter: brightness(1.35) saturate(1.2); } 70% { filter: brightness(.85); } }
+@keyframes czat-hal-mowi {
+  0%, 100% { filter: brightness(1); box-shadow: inset 0 0 0 3px #111111, 0 0 16px 3px rgba(255, 40, 20, .35); }
+  50% { filter: brightness(1.5) saturate(1.3); box-shadow: inset 0 0 0 3px #111111, 0 0 38px 14px rgba(255, 40, 20, .6); } }
+.czat-hal-podpis { margin: 0; color: var(--cz-tekst2); font-size: 13px; font-weight: 600; letter-spacing: .28em; text-transform: uppercase; }
+.czat-hal-napis { min-height: 4.5em; max-width: 22em; margin: 0; color: var(--cz-tekst2); font-size: 16px; line-height: 1.5; }
 </style>
 </head>
 <body>
-<svg class="wzory" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="kafel" d="M28 14L28 14.73L28 15.47L28 16.22L28 16.98L28 17.75L27.99 18.55L27.98 19.37L27.95 20.21L27.91 21.09L27.83 21.98L27.7 22.9L27.49 23.8L27.19 24.68L26.76 25.49L26.19 26.19L25.49 26.76L24.68 27.19L23.8 27.49L22.9 27.7L21.98 27.83L21.09 27.91L20.21 27.95L19.37 27.98L18.55 27.99L17.75 28L16.98 28L16.22 28L15.47 28L14.73 28L14 28L13.27 28L12.53 28L11.78 28L11.02 28L10.25 28L9.45 27.99L8.63 27.98L7.79 27.95L6.91 27.91L6.02 27.83L5.1 27.7L4.2 27.49L3.32 27.19L2.51 26.76L1.81 26.19L1.24 25.49L0.81 24.68L0.51 23.8L0.3 22.9L0.17 21.98L0.09 21.09L0.05 20.21L0.02 19.37L0.01 18.55L0 17.75L0 16.98L0 16.22L0 15.47L0 14.73L0 14L0 13.27L0 12.53L0 11.78L0 11.02L0 10.25L0.01 9.45L0.02 8.63L0.05 7.79L0.09 6.91L0.17 6.02L0.3 5.1L0.51 4.2L0.81 3.32L1.24 2.51L1.81 1.81L2.51 1.24L3.32 0.81L4.2 0.51L5.1 0.3L6.02 0.17L6.91 0.09L7.79 0.05L8.63 0.02L9.45 0.01L10.25 0L11.02 0L11.78 0L12.53 0L13.27 0L14 0L14.73 0L15.47 0L16.22 0L16.98 0L17.75 0L18.55 0.01L19.37 0.02L20.21 0.05L21.09 0.09L21.98 0.17L22.9 0.3L23.8 0.51L24.68 0.81L25.49 1.24L26.19 1.81L26.76 2.51L27.19 3.32L27.49 4.2L27.7 5.1L27.83 6.02L27.91 6.91L27.95 7.79L27.98 8.63L27.99 9.45L28 10.25L28 11.02L28 11.78L28 12.53L28 13.27Z"/><linearGradient id="g-ogl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f0a"/><stop offset="1" stop-color="#e07000"/></linearGradient><linearGradient id="g-kat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient><linearGradient id="g-kre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#30d158"/><stop offset="1" stop-color="#248a3d"/></linearGradient><linearGradient id="g-por" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bf5af2"/><stop offset="1" stop-color="#8944ab"/></linearGradient></defs></svg>
+<svg class="wzory" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="kafel" d="M28 14L28 14.73L28 15.47L28 16.22L28 16.98L28 17.75L27.99 18.55L27.98 19.37L27.95 20.21L27.91 21.09L27.83 21.98L27.7 22.9L27.49 23.8L27.19 24.68L26.76 25.49L26.19 26.19L25.49 26.76L24.68 27.19L23.8 27.49L22.9 27.7L21.98 27.83L21.09 27.91L20.21 27.95L19.37 27.98L18.55 27.99L17.75 28L16.98 28L16.22 28L15.47 28L14.73 28L14 28L13.27 28L12.53 28L11.78 28L11.02 28L10.25 28L9.45 27.99L8.63 27.98L7.79 27.95L6.91 27.91L6.02 27.83L5.1 27.7L4.2 27.49L3.32 27.19L2.51 26.76L1.81 26.19L1.24 25.49L0.81 24.68L0.51 23.8L0.3 22.9L0.17 21.98L0.09 21.09L0.05 20.21L0.02 19.37L0.01 18.55L0 17.75L0 16.98L0 16.22L0 15.47L0 14.73L0 14L0 13.27L0 12.53L0 11.78L0 11.02L0 10.25L0.01 9.45L0.02 8.63L0.05 7.79L0.09 6.91L0.17 6.02L0.3 5.1L0.51 4.2L0.81 3.32L1.24 2.51L1.81 1.81L2.51 1.24L3.32 0.81L4.2 0.51L5.1 0.3L6.02 0.17L6.91 0.09L7.79 0.05L8.63 0.02L9.45 0.01L10.25 0L11.02 0L11.78 0L12.53 0L13.27 0L14 0L14.73 0L15.47 0L16.22 0L16.98 0L17.75 0L18.55 0.01L19.37 0.02L20.21 0.05L21.09 0.09L21.98 0.17L22.9 0.3L23.8 0.51L24.68 0.81L25.49 1.24L26.19 1.81L26.76 2.51L27.19 3.32L27.49 4.2L27.7 5.1L27.83 6.02L27.91 6.91L27.95 7.79L27.98 8.63L27.99 9.45L28 10.25L28 11.02L28 11.78L28 12.53L28 13.27Z"/><linearGradient id="g-ogl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient><linearGradient id="g-kat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f0a"/><stop offset="1" stop-color="#e07000"/></linearGradient><linearGradient id="g-kre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#30d158"/><stop offset="1" stop-color="#248a3d"/></linearGradient><linearGradient id="g-por" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bf5af2"/><stop offset="1" stop-color="#8944ab"/></linearGradient></defs></svg>
 <header class="glowa">
   <button type="button" id="logo" class="logo" aria-label="Kasiomobile: te same ogłoszenia na Otomoto" aria-haspopup="menu" aria-expanded="false"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjwhLS0gWnJvYmlvbmUgcHJ6ZXogenJvYi1sb2dvLXctYXBsaWthY2ppLmpzOiBsb2dvIG5yIDkg4oCeWiBrbG9ja8Ozd+KAnSB3IGthZmVsa3UsIHRlbiBzYW0gY28gdyBuYWfFgsOzd2t1IG5hIEFuZHJvaWR6aWUuIC0tPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InQiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNFRUYwRjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPHBhdGggZD0iTTEwMjQuMCw1MTIuMCAxMDIzLjgsNjUyLjIgMTAyMy40LDY5Ny4wIDEwMjIuNiw3MjkuNCAxMDIxLjUsNzU1LjggMTAyMC4wLDc3OC4zIDEwMTguMyw3OTguMSAxMDE2LjIsODE1LjkgMTAxMy44LDgzMi4xIDEwMTEuMSw4NDYuOSAxMDA4LjAsODYwLjcgMTAwNC42LDg3My40IDEwMDAuOSw4ODUuMyA5OTYuOCw4OTYuNSA5OTIuNCw5MDYuOSA5ODcuNiw5MTYuNyA5ODIuNCw5MjYuMCA5NzYuOCw5MzQuNiA5NzAuOSw5NDIuOCA5NjQuNSw5NTAuNSA5NTcuNyw5NTcuNyA5NTAuNSw5NjQuNSA5NDIuOCw5NzAuOSA5MzQuNiw5NzYuOCA5MjYuMCw5ODIuNCA5MTYuNyw5ODcuNiA5MDYuOSw5OTIuNCA4OTYuNSw5OTYuOCA4ODUuMywxMDAwLjkgODczLjQsMTAwNC42IDg2MC43LDEwMDguMCA4NDYuOSwxMDExLjEgODMyLjEsMTAxMy44IDgxNS45LDEwMTYuMiA3OTguMSwxMDE4LjMgNzc4LjMsMTAyMC4wIDc1NS44LDEwMjEuNSA3MjkuNCwxMDIyLjYgNjk3LjAsMTAyMy40IDY1Mi4yLDEwMjMuOCA1MTIuMCwxMDI0LjAgMzcxLjgsMTAyMy44IDMyNy4wLDEwMjMuNCAyOTQuNiwxMDIyLjYgMjY4LjIsMTAyMS41IDI0NS43LDEwMjAuMCAyMjUuOSwxMDE4LjMgMjA4LjEsMTAxNi4yIDE5MS45LDEwMTMuOCAxNzcuMSwxMDExLjEgMTYzLjMsMTAwOC4wIDE1MC42LDEwMDQuNiAxMzguNywxMDAwLjkgMTI3LjUsOTk2LjggMTE3LjEsOTkyLjQgMTA3LjMsOTg3LjYgOTguMCw5ODIuNCA4OS40LDk3Ni44IDgxLjIsOTcwLjkgNzMuNSw5NjQuNSA2Ni4zLDk1Ny43IDU5LjUsOTUwLjUgNTMuMSw5NDIuOCA0Ny4yLDkzNC42IDQxLjYsOTI2LjAgMzYuNCw5MTYuNyAzMS42LDkwNi45IDI3LjIsODk2LjUgMjMuMSw4ODUuMyAxOS40LDg3My40IDE2LjAsODYwLjcgMTIuOSw4NDYuOSAxMC4yLDgzMi4xIDcuOCw4MTUuOSA1LjcsNzk4LjEgNC4wLDc3OC4zIDIuNSw3NTUuOCAxLjQsNzI5LjQgMC42LDY5Ny4wIDAuMiw2NTIuMiAwLjAsNTEyLjAgMC4yLDM3MS44IDAuNiwzMjcuMCAxLjQsMjk0LjYgMi41LDI2OC4yIDQuMCwyNDUuNyA1LjcsMjI1LjkgNy44LDIwOC4xIDEwLjIsMTkxLjkgMTIuOSwxNzcuMSAxNi4wLDE2My4zIDE5LjQsMTUwLjYgMjMuMSwxMzguNyAyNy4yLDEyNy41IDMxLjYsMTE3LjEgMzYuNCwxMDcuMyA0MS42LDk4LjAgNDcuMiw4OS40IDUzLjEsODEuMiA1OS41LDczLjUgNjYuMyw2Ni4zIDczLjUsNTkuNSA4MS4yLDUzLjEgODkuNCw0Ny4yIDk4LjAsNDEuNiAxMDcuMywzNi40IDExNy4xLDMxLjYgMTI3LjUsMjcuMiAxMzguNywyMy4xIDE1MC42LDE5LjQgMTYzLjMsMTYuMCAxNzcuMSwxMi45IDE5MS45LDEwLjIgMjA4LjEsNy44IDIyNS45LDUuNyAyNDUuNyw0LjAgMjY4LjIsMi41IDI5NC42LDEuNCAzMjcuMCwwLjYgMzcxLjgsMC4yIDUxMi4wLDAuMCA2NTIuMiwwLjIgNjk3LjAsMC42IDcyOS40LDEuNCA3NTUuOCwyLjUgNzc4LjMsNC4wIDc5OC4xLDUuNyA4MTUuOSw3LjggODMyLjEsMTAuMiA4NDYuOSwxMi45IDg2MC43LDE2LjAgODczLjQsMTkuNCA4ODUuMywyMy4xIDg5Ni41LDI3LjIgOTA2LjksMzEuNiA5MTYuNywzNi40IDkyNi4wLDQxLjYgOTM0LjYsNDcuMiA5NDIuOCw1My4xIDk1MC41LDU5LjUgOTU3LjcsNjYuMyA5NjQuNSw3My41IDk3MC45LDgxLjIgOTc2LjgsODkuNCA5ODIuNCw5OC4wIDk4Ny42LDEwNy4zIDk5Mi40LDExNy4xIDk5Ni44LDEyNy41IDEwMDAuOSwxMzguNyAxMDA0LjYsMTUwLjYgMTAwOC4wLDE2My4zIDEwMTEuMSwxNzcuMSAxMDEzLjgsMTkxLjkgMTAxNi4yLDIwOC4xIDEwMTguMywyMjUuOSAxMDIwLjAsMjQ1LjcgMTAyMS41LDI2OC4yIDEwMjIuNiwyOTQuNiAxMDIzLjQsMzI3LjAgMTAyMy44LDM3MS44WiIgZmlsbD0idXJsKCN0KSIvPgo8cGF0aCBkPSJNMTAxOC4wLDUxMi4wIDEwMTcuOCw2NTAuNiAxMDE3LjQsNjk0LjggMTAxNi42LDcyNi45IDEwMTUuNSw3NTIuOSAxMDE0LjEsNzc1LjIgMTAxMi40LDc5NC44IDEwMTAuMyw4MTIuMyAxMDA3LjksODI4LjMgMTAwNS4yLDg0My4wIDEwMDIuMiw4NTYuNiA5OTguOSw4NjkuMiA5OTUuMiw4ODEuMCA5OTEuMSw4OTIuMCA5ODYuNyw5MDIuMyA5ODIuMCw5MTIuMCA5NzYuOSw5MjEuMSA5NzEuNCw5MjkuNyA5NjUuNSw5MzcuOCA5NTkuMiw5NDUuNCA5NTIuNSw5NTIuNSA5NDUuNCw5NTkuMiA5MzcuOCw5NjUuNSA5MjkuNyw5NzEuNCA5MjEuMSw5NzYuOSA5MTIuMCw5ODIuMCA5MDIuMyw5ODYuNyA4OTIuMCw5OTEuMSA4ODEuMCw5OTUuMiA4NjkuMiw5OTguOSA4NTYuNiwxMDAyLjIgODQzLjAsMTAwNS4yIDgyOC4zLDEwMDcuOSA4MTIuMywxMDEwLjMgNzk0LjgsMTAxMi40IDc3NS4yLDEwMTQuMSA3NTIuOSwxMDE1LjUgNzI2LjksMTAxNi42IDY5NC44LDEwMTcuNCA2NTAuNiwxMDE3LjggNTEyLjAsMTAxOC4wIDM3My40LDEwMTcuOCAzMjkuMiwxMDE3LjQgMjk3LjEsMTAxNi42IDI3MS4xLDEwMTUuNSAyNDguOCwxMDE0LjEgMjI5LjIsMTAxMi40IDIxMS43LDEwMTAuMyAxOTUuNywxMDA3LjkgMTgxLjAsMTAwNS4yIDE2Ny40LDEwMDIuMiAxNTQuOCw5OTguOSAxNDMuMCw5OTUuMiAxMzIuMCw5OTEuMSAxMjEuNyw5ODYuNyAxMTIuMCw5ODIuMCAxMDIuOSw5NzYuOSA5NC4zLDk3MS40IDg2LjIsOTY1LjUgNzguNiw5NTkuMiA3MS41LDk1Mi41IDY0LjgsOTQ1LjQgNTguNSw5MzcuOCA1Mi42LDkyOS43IDQ3LjEsOTIxLjEgNDIuMCw5MTIuMCAzNy4zLDkwMi4zIDMyLjksODkyLjAgMjguOCw4ODEuMCAyNS4xLDg2OS4yIDIxLjgsODU2LjYgMTguOCw4NDMuMCAxNi4xLDgyOC4zIDEzLjcsODEyLjMgMTEuNiw3OTQuOCA5LjksNzc1LjIgOC41LDc1Mi45IDcuNCw3MjYuOSA2LjYsNjk0LjggNi4yLDY1MC42IDYuMCw1MTIuMCA2LjIsMzczLjQgNi42LDMyOS4yIDcuNCwyOTcuMSA4LjUsMjcxLjEgOS45LDI0OC44IDExLjYsMjI5LjIgMTMuNywyMTEuNyAxNi4xLDE5NS43IDE4LjgsMTgxLjAgMjEuOCwxNjcuNCAyNS4xLDE1NC44IDI4LjgsMTQzLjAgMzIuOSwxMzIuMCAzNy4zLDEyMS43IDQyLjAsMTEyLjAgNDcuMSwxMDIuOSA1Mi42LDk0LjMgNTguNSw4Ni4yIDY0LjgsNzguNiA3MS41LDcxLjUgNzguNiw2NC44IDg2LjIsNTguNSA5NC4zLDUyLjYgMTAyLjksNDcuMSAxMTIuMCw0Mi4wIDEyMS43LDM3LjMgMTMyLjAsMzIuOSAxNDMuMCwyOC44IDE1NC44LDI1LjEgMTY3LjQsMjEuOCAxODEuMCwxOC44IDE5NS43LDE2LjEgMjExLjcsMTMuNyAyMjkuMiwxMS42IDI0OC44LDkuOSAyNzEuMSw4LjUgMjk3LjEsNy40IDMyOS4yLDYuNiAzNzMuNCw2LjIgNTEyLjAsNi4wIDY1MC42LDYuMiA2OTQuOCw2LjYgNzI2LjksNy40IDc1Mi45LDguNSA3NzUuMiw5LjkgNzk0LjgsMTEuNiA4MTIuMywxMy43IDgyOC4zLDE2LjEgODQzLjAsMTguOCA4NTYuNiwyMS44IDg2OS4yLDI1LjEgODgxLjAsMjguOCA4OTIuMCwzMi45IDkwMi4zLDM3LjMgOTEyLjAsNDIuMCA5MjEuMSw0Ny4xIDkyOS43LDUyLjYgOTM3LjgsNTguNSA5NDUuNCw2NC44IDk1Mi41LDcxLjUgOTU5LjIsNzguNiA5NjUuNSw4Ni4yIDk3MS40LDk0LjMgOTc2LjksMTAyLjkgOTgyLjAsMTEyLjAgOTg2LjcsMTIxLjcgOTkxLjEsMTMyLjAgOTk1LjIsMTQzLjAgOTk4LjksMTU0LjggMTAwMi4yLDE2Ny40IDEwMDUuMiwxODEuMCAxMDA3LjksMTk1LjcgMTAxMC4zLDIxMS43IDEwMTIuNCwyMjkuMiAxMDE0LjEsMjQ4LjggMTAxNS41LDI3MS4xIDEwMTYuNiwyOTcuMSAxMDE3LjQsMzI5LjIgMTAxNy44LDM3My40WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iLjEyIiBzdHJva2Utd2lkdGg9IjEyIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsLTM3KSI+CjxwYXRoIGQ9Ik0zNzIsNDc2TDQyOCwzNzJRNDM2LDM1NiA0NTQsMzU2TDU3MCwzNTZRNTg4LDM1NiA1OTYsMzcyTDY1Miw0NzZaIiBmaWxsPSIjMkVBNDRGIi8+CjxwYXRoIGQ9Ik0yODAsNDk0SDc0NEE0NCw0NCAwIDAgMSA3ODgsNTM4VjYwMEE0NCw0NCAwIDAgMSA3NDQsNjQ0SDI4MEE0NCw0NCAwIDAgMSAyMzYsNjAwVjUzOEE0NCw0NCAwIDAgMSAyODAsNDk0WiIgZmlsbD0iIzI0NDE4QSIvPgo8Y2lyY2xlIGN4PSIzNzIiIGN5PSI2NzIiIHI9IjYyIiBmaWxsPSIjNzA0Mjg1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMTgiLz4KPGNpcmNsZSBjeD0iNjUyIiBjeT0iNjcyIiByPSI2MiIgZmlsbD0iIzcwNDI4NSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjE4Ii8+CjwvZz4KPC9zdmc+Cg==" width="40" height="40" alt=""></button>
   <!--napis--><h1><button type="button" id="napis" class="napis-przycisk" aria-label="Kasiomobile: te same wyszukiwania na Otomoto" aria-haspopup="menu" aria-expanded="false"><svg class="napis" viewBox="0 0 11602 1572" role="img" aria-label="Kasiomobile" style="--szer:5.6650;--wys:0.7676"><style>.napis-l{fill:#24418A}.napis-z{fill:#1C7C36}.napis-f{fill:#704285}@media (prefers-color-scheme: dark){.napis-l{fill:#FFFFFF}.napis-z{fill:#30D158}.napis-f{fill:#C495E8}}</style><path class="napis-l" d="M280 1531L16 1531L16 41L280 41L280 760Q338 692 397 625Q455 558 513 490L513 490L909 41L1235 41L662 686L1245 1531L937 1531L484 864L280 1095L280 1531ZM1675 1548L1675 1548Q1517 1548 1413 1469Q1310 1389 1310 1231L1310 1231Q1310 1111 1368 1046Q1427 980 1521 950Q1616 920 1725 909L1725 909Q1872 892 1930 879Q1988 866 1988 812L1988 812L1988 804Q1988 736 1936 693Q1885 650 1795 650L1795 650Q1703 650 1645 693Q1588 736 1583 803L1583 803L1340 803Q1349 646 1471 550Q1593 454 1800 454L1800 454Q2006 454 2122 550Q2238 646 2238 811L2238 811L2238 1531L1990 1531L1990 1382L1986 1382Q1948 1452 1876 1500Q1804 1548 1675 1548ZM1737 1361L1737 1361Q1861 1361 1925 1297Q1989 1232 1989 1140L1989 1140L1989 1026Q1966 1041 1900 1054Q1834 1066 1756 1078L1756 1078Q1675 1090 1615 1124Q1556 1157 1556 1229L1556 1229Q1556 1291 1605 1326Q1654 1361 1737 1361ZM2854 1556L2854 1556Q2661 1556 2532 1466Q2402 1375 2390 1205L2390 1205L2639 1205Q2647 1282 2701 1325Q2755 1367 2850 1367L2850 1367Q2941 1367 2994 1331Q3046 1295 3046 1239L3046 1239Q3046 1191 3007 1162Q2968 1133 2902 1119L2902 1119L2722 1082Q2414 1018 2414 777L2414 777Q2414 631 2530 542Q2646 452 2839 452L2839 452Q3031 452 3152 547Q3272 641 3276 804L3276 804L3039 804Q3037 733 2984 687Q2931 641 2845 641L2845 641Q2762 641 2714 678Q2666 715 2666 769L2666 769Q2666 816 2703 846Q2740 875 2806 890L2806 890L2996 929Q3153 962 3228 1033Q3302 1104 3302 1220L3302 1220Q3302 1323 3245 1399Q3187 1474 3086 1515Q2985 1556 2854 1556ZM3706 1531L3454 1531L3454 475L3706 475L3706 1531ZM3580 318L3580 318Q3515 318 3472 277Q3429 235 3429 174L3429 174Q3429 113 3472 72Q3515 31 3580 31L3580 31Q3644 31 3687 72Q3730 113 3730 174L3730 174Q3730 235 3687 277Q3644 318 3580 318ZM5308 1531L5056 1531L5056 475L5300 475L5300 658Q5348 556 5433 505Q5518 454 5618 454L5618 454Q5725 454 5807 509Q5889 563 5922 654L5922 654Q5964 563 6053 509Q6142 454 6258 454L6258 454Q6408 454 6510 551Q6612 648 6612 834L6612 834L6612 1531L6359 1531L6359 870Q6359 765 6301 717Q6244 668 6163 668L6163 668Q6067 668 6011 728Q5956 788 5956 883L5956 883L5956 1531L5711 1531L5711 858Q5711 772 5657 720Q5603 668 5519 668L5519 668Q5434 668 5371 728Q5308 787 5308 901L5308 901L5308 1531ZM8531 1552L8531 1552Q8427 1552 8343 1507Q8260 1462 8211 1370L8211 1370L8209 1370L8209 1531L7961 1531L7961 41L8213 41L8213 625L8215 625Q8266 538 8348 496Q8430 454 8532 454L8532 454Q8668 454 8770 524Q8873 593 8930 717Q8988 840 8988 1002L8988 1002Q8988 1167 8931 1291Q8875 1414 8772 1483Q8669 1552 8531 1552ZM8472 1341L8472 1341Q8589 1341 8661 1254Q8733 1166 8733 1002L8733 1002Q8733 839 8661 751Q8589 663 8472 663L8472 663Q8348 663 8273 756Q8199 848 8199 1002L8199 1002Q8199 1156 8273 1249Q8348 1341 8472 1341ZM9394 1531L9142 1531L9142 475L9394 475L9394 1531ZM9268 318L9268 318Q9203 318 9160 277Q9117 235 9117 174L9117 174Q9117 113 9160 72Q9203 31 9268 31L9268 31Q9332 31 9375 72Q9418 113 9418 174L9418 174Q9418 235 9375 277Q9332 318 9268 318ZM9598 41L9850 41L9850 1531L9598 1531L9598 41ZM10519 1555L10519 1555Q10361 1555 10245 1484Q10129 1413 10067 1289Q10004 1164 10004 1004L10004 1004Q10004 843 10069 719Q10133 594 10247 523Q10361 451 10509 451L10509 451Q10661 451 10775 521Q10889 591 10952 715Q11015 838 11015 1000L11015 1000L11015 1069L10251 1069Q10256 1198 10327 1277Q10398 1356 10525 1356L10525 1356Q10620 1356 10682 1315Q10744 1273 10766 1205L10766 1205L11002 1205Q10982 1308 10915 1387Q10847 1466 10745 1511Q10643 1555 10519 1555ZM10253 895L10253 895L10773 895Q10761 782 10692 717Q10622 651 10513 651L10513 651Q10403 651 10335 717Q10266 782 10253 895ZM11388 437L11388 437Q11347 437 11311 421Q11275 406 11248 379Q11221 351 11206 316Q11190 280 11190 239L11190 239Q11190 198 11206 162Q11221 126 11248 99Q11275 72 11311 56Q11347 41 11388 41L11388 41Q11429 41 11465 56Q11501 72 11528 99Q11555 126 11571 162Q11586 198 11586 239L11586 239Q11586 280 11571 316Q11555 351 11528 379Q11501 406 11465 421Q11429 437 11388 437ZM11388 389L11388 389Q11430 389 11464 369Q11498 348 11518 314Q11538 280 11538 239L11538 239Q11538 197 11518 163Q11498 129 11464 109Q11430 89 11388 89L11388 89Q11347 89 11313 109Q11279 129 11258 163Q11238 197 11238 239L11238 239Q11238 280 11258 314Q11279 348 11313 369Q11347 389 11388 389ZM11475 330L11430 330L11398 268L11359 268L11359 330L11318 330L11318 147L11411 147Q11422 147 11436 154Q11449 160 11458 173Q11468 186 11468 205L11468 205Q11468 224 11459 238Q11450 251 11438 259L11438 259L11475 330ZM11359 177L11359 238L11396 238Q11404 238 11414 230Q11423 222 11423 205L11423 205Q11423 189 11414 183Q11404 177 11397 177L11397 177L11359 177Z"/><path class="napis-z" fill-rule="evenodd" d="M4902.1,1003C4902.1,1290.7,4668.8,1524,4381.1,1524C4093.3,1524,3860.1,1290.7,3860.1,1003C3860.1,715.3,4093.3,482,4381.1,482C4668.8,482,4902.1,715.3,4902.1,1003ZM4695.4,1003C4695.4,829.4,4554.7,688.6,4381.1,688.6C4207.4,688.6,4066.7,829.4,4066.7,1003C4066.7,1176.6,4207.4,1317.4,4381.1,1317.4C4554.7,1317.4,4695.4,1176.6,4695.4,1003ZM4463.7,1003C4463.7,1048.6,4426.7,1085.7,4381.1,1085.7C4335.4,1085.7,4298.4,1048.6,4298.4,1003C4298.4,957.4,4335.4,920.3,4381.1,920.3C4426.7,920.3,4463.7,957.4,4463.7,1003Z"/><path class="napis-f" fill-rule="evenodd" d="M7807.1,1003C7807.1,1290.7,7573.8,1524,7286.1,1524C6998.4,1524,6765.1,1290.7,6765.1,1003C6765.1,715.3,6998.4,482,7286.1,482C7573.8,482,7807.1,715.3,7807.1,1003ZM7600.5,1003C7600.5,829.4,7459.7,688.6,7286.1,688.6C7112.5,688.6,6971.7,829.4,6971.7,1003C6971.7,1176.6,7112.5,1317.4,7286.1,1317.4C7459.7,1317.4,7600.5,1176.6,7600.5,1003ZM7368.7,1003C7368.7,1048.6,7331.7,1085.7,7286.1,1085.7C7240.4,1085.7,7203.4,1048.6,7203.4,1003C7203.4,957.4,7240.4,920.3,7286.1,920.3C7331.7,920.3,7368.7,957.4,7368.7,1003Z"/></svg></button></h1><!--/napis-->
@@ -921,14 +980,14 @@ body.czat-otwarty .dol { z-index: 43; }
 </main>
 <div class="dol">
   <div class="podkarty">
-    <div class="podwidoki" role="radiogroup" aria-label="Oferty" data-z="katalog" style="--pastel:#ffeed6;--pastel-c:#5c4118" data-odcien="35"><button type="button" role="radio" aria-checked="true" data-p="teraz"><span class="nazwa" data-nazwa="Teraz"><span>Teraz</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="historia"><span class="nazwa" data-nazwa="Historia"><span>Historia</span></span></button></div>
-    <div class="podwidoki" role="radiogroup" aria-label="Podium" data-z="modele" style="--pastel:#d6eaff;--pastel-c:#17395d" data-odcien="211" hidden><button type="button" role="radio" aria-checked="true" data-p="podium"><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span> <span class="skad nazwa" data-nazwa="Otomoto"><span>Otomoto</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="modele"><span class="nazwa" data-nazwa="Modele"><span>Modele</span></span> <span class="skad nazwa" data-nazwa="Otomoto"><span>Otomoto</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="marki"><span class="nazwa" data-nazwa="Wszystkie"><span>Wszystkie</span></span> <span class="skad nazwa" data-nazwa="Marki"><span>Marki</span></span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Oferty" data-z="katalog" style="--pastel:#d6eaff;--pastel-c:#17395d" data-odcien="211"><button type="button" role="radio" aria-checked="true" data-p="teraz"><span class="nazwa" data-nazwa="Teraz"><span>Teraz</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="historia"><span class="nazwa" data-nazwa="Historia"><span>Historia</span></span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Podium" data-z="modele" style="--pastel:#ffeed6;--pastel-c:#5c4118" data-odcien="35" hidden><button type="button" role="radio" aria-checked="true" data-p="podium"><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span> <span class="skad nazwa" data-nazwa="Otomoto"><span>Otomoto</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="modele"><span class="nazwa" data-nazwa="Modele"><span>Modele</span></span> <span class="skad nazwa" data-nazwa="Otomoto"><span>Otomoto</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="marki"><span class="nazwa" data-nazwa="Wszystkie"><span>Wszystkie</span></span> <span class="skad nazwa" data-nazwa="Marki"><span>Marki</span></span></button></div>
     <div class="podwidoki" role="radiogroup" aria-label="Finanse" data-z="kredyt" style="--pastel:#dff6e4;--pastel-c:#224f2e" data-odcien="135" hidden><button type="button" role="radio" aria-checked="true" data-p="leasing"><span class="nazwa" data-nazwa="Leasing"><span>Leasing</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="kredyt"><span class="nazwa" data-nazwa="Kredyt"><span>Kredyt</span></span></button></div>
     <div class="podwidoki" role="radiogroup" aria-label="Poradnik" data-z="poradnik" style="--pastel:#f2e3fa;--pastel-c:#4a2d59" data-odcien="282" hidden><button type="button" role="radio" aria-checked="true" data-p="skrot"><span class="nazwa" data-nazwa="Skrót"><span>Skrót</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="calosc"><span class="nazwa" data-nazwa="Całość"><span>Całość</span></span></button></div>
   </div>
   <div class="karty" role="tablist" aria-label="Zakładki">
-    <button type="button" role="tab" id="seg-katalog" aria-controls="katalog" aria-selected="true" style="--pastel:#ffeed6;--pastel-c:#5c4118" data-odcien="35"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-ogl)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.44)" d="M8.2 4.5h7.6c.9 0 1.6.5 1.9 1.3L19.2 10H19.6A1.9 1.9 0 0 1 21.5 11.9V16.4a.9.9 0 0 1-.9.9H20v1.6a1.1 1.1 0 0 1-1.1 1.1h-1.3a1.1 1.1 0 0 1-1.1-1.1V17.3H7.5v1.6a1.1 1.1 0 0 1-1.1 1.1H5.1A1.1 1.1 0 0 1 4 18.9V17.3h-.6a.9.9 0 0 1-.9-.9V11.9A1.9 1.9 0 0 1 4.4 10h.4L6.3 5.8c.3-.8 1-1.3 1.9-1.3zM8.4 6.4 7.2 9.6h9.6l-1.2-3.2zM5.3 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0zM16.1 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z"/></svg><span class="nazwa" data-nazwa="Oferty"><span>Oferty</span></span></button>
-    <button type="button" role="tab" id="seg-modele" aria-controls="modele" aria-selected="false" tabindex="-1" style="--pastel:#d6eaff;--pastel-c:#17395d" data-odcien="211"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kat)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4.7 8.4h2.1a1.2 1.2 0 0 1 1.2 1.2v9.7a1.2 1.2 0 0 1-1.2 1.2h-2.1a1.2 1.2 0 0 1-1.2-1.2v-9.7a1.2 1.2 0 0 1 1.2-1.2zM10.95 3.5h2.1a1.2 1.2 0 0 1 1.2 1.2v14.6a1.2 1.2 0 0 1-1.2 1.2h-2.1a1.2 1.2 0 0 1-1.2-1.2v-14.6a1.2 1.2 0 0 1 1.2-1.2zM17.2 12h2.1a1.2 1.2 0 0 1 1.2 1.2v6.1a1.2 1.2 0 0 1-1.2 1.2h-2.1a1.2 1.2 0 0 1-1.2-1.2v-6.1a1.2 1.2 0 0 1 1.2-1.2z"/></svg><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span></button>
+    <button type="button" role="tab" id="seg-katalog" aria-controls="katalog" aria-selected="true" style="--pastel:#d6eaff;--pastel-c:#17395d" data-odcien="211"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-ogl)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.44)" d="M8.2 4.5h7.6c.9 0 1.6.5 1.9 1.3L19.2 10H19.6A1.9 1.9 0 0 1 21.5 11.9V16.4a.9.9 0 0 1-.9.9H20v1.6a1.1 1.1 0 0 1-1.1 1.1h-1.3a1.1 1.1 0 0 1-1.1-1.1V17.3H7.5v1.6a1.1 1.1 0 0 1-1.1 1.1H5.1A1.1 1.1 0 0 1 4 18.9V17.3h-.6a.9.9 0 0 1-.9-.9V11.9A1.9 1.9 0 0 1 4.4 10h.4L6.3 5.8c.3-.8 1-1.3 1.9-1.3zM8.4 6.4 7.2 9.6h9.6l-1.2-3.2zM5.3 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0zM16.1 13.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z"/></svg><span class="nazwa" data-nazwa="Oferty"><span>Oferty</span></span></button>
+    <button type="button" role="tab" id="seg-modele" aria-controls="modele" aria-selected="false" tabindex="-1" style="--pastel:#ffeed6;--pastel-c:#5c4118" data-odcien="35"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kat)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4.7 8.4h2.1a1.2 1.2 0 0 1 1.2 1.2v9.7a1.2 1.2 0 0 1-1.2 1.2h-2.1a1.2 1.2 0 0 1-1.2-1.2v-9.7a1.2 1.2 0 0 1 1.2-1.2zM10.95 3.5h2.1a1.2 1.2 0 0 1 1.2 1.2v14.6a1.2 1.2 0 0 1-1.2 1.2h-2.1a1.2 1.2 0 0 1-1.2-1.2v-14.6a1.2 1.2 0 0 1 1.2-1.2zM17.2 12h2.1a1.2 1.2 0 0 1 1.2 1.2v6.1a1.2 1.2 0 0 1-1.2 1.2h-2.1a1.2 1.2 0 0 1-1.2-1.2v-6.1a1.2 1.2 0 0 1 1.2-1.2z"/></svg><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span></button>
     <button type="button" role="tab" id="seg-kredyt" aria-controls="kredyt" aria-selected="false" tabindex="-1" style="--pastel:#dff6e4;--pastel-c:#224f2e" data-odcien="135"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-kre)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4.5 6.5h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0zM5.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0zM17.1 12a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0z"/></svg><span class="nazwa" data-nazwa="Finanse"><span>Finanse</span></span></button>
     <button type="button" role="tab" id="seg-poradnik" aria-controls="poradnik" aria-selected="false" tabindex="-1" style="--pastel:#f2e3fa;--pastel-c:#4a2d59" data-odcien="282"><svg class="znak" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><use href="#kafel" fill="url(#g-por)"/><path fill="#fff" fill-rule="evenodd" transform="matrix(0.944 0 0 0.944 2.67 2.67)" d="M4 5.5c2.6-.9 5-.6 7 .9v12.1c-2-1.5-4.4-1.8-7-.9zM13 6.4c2-1.5 4.4-1.8 7-.9v12.1c-2.6-.9-5-.6-7 .9z"/></svg><span class="nazwa" data-nazwa="Poradnik"><span>Poradnik</span></span></button>
   </div>
@@ -1131,6 +1190,12 @@ body.czat-otwarty .dol { z-index: 43; }
       }
       return wynik.length ? wynik : [el('p', { text: '…' })];
     }
+    // Napis odnośnika pod odpowiedzią: krótki tytuł, nigdy cały adres (od 26.10.2026: odpowiedź z adresem w tytule wychodziła poza ekran).
+    function tytulOdnosnika(l) {
+      let t = String(l.tytul || '').replace(/\s+/g, ' ').trim();
+      if (!t || /^https?:\/\//i.test(t)) { try { t = new URL(l.adres).hostname.replace(/^www\./, ''); } catch { t = 'Odnośnik'; } }
+      return t.length > 70 ? t.slice(0, 69).replace(/\s+\S*$/, '') + '…' : t;
+    }
     function napisPokazu(p) {
       if (p.model && p.nazwa) return 'Pokaż model: ' + p.nazwa;
       if (p.porownaj) return 'Pokaż porównanie';
@@ -1169,7 +1234,7 @@ body.czat-otwarty .dol { z-index: 43; }
       for (const l of w.linki || []) {
         if (!l || !/^https:\/\//.test(String(l.adres || ''))) continue;
         const a = el('a', { class: 'czat-akcja czat-link', href: l.adres, target: '_blank', rel: 'noopener noreferrer', html: `<span></span>${ikona('zewnatrz', 16)}` });
-        a.firstChild.textContent = String(l.tytul || l.adres);
+        a.firstChild.textContent = tytulOdnosnika(l);
         box.append(a);
       }
       return box;
@@ -1181,12 +1246,9 @@ body.czat-otwarty .dol { z-index: 43; }
         b.addEventListener('click', () => wyslij(t));
         rzad.append(b);
       }
-      // Duży mikrofon na pustej rozmowie (od 26.10.2026, Jacek: „Brak dużego mikrofonu”), ten sam co mały przy polu pytania. Od tego samego
-      // dnia to oko w stylu HAL 9000 (Jacek: „ever so slightly … reminiscent of HAL z Odysei Kosmicznej 2001”), a podpis mówi, co robi.
-      const duzy = el('button', { type: 'button', class: 'czat-duzy-mik', 'aria-label': 'Powiedz pytanie', html: '<span class="czat-oko" aria-hidden="true"></span><span>Powiedz pytanie</span>' });
-      duzy.hidden = !(mozeNagrywac() && glosWolno());
-      duzy.addEventListener('click', () => (glos.stan === 'nic' ? glosStart() : glosStop(true)));
-      return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), duzy, rzad);
+      // Puste okno rozmowy: zdanie i cztery podpowiedzi w jednej spokojnej barwie. Dużego oka HAL-a nie ma tu od wieczora 26.10.2026 (Jacek:
+      // „fajna, ale trochę przesadzona”); oko żyje w małym mikrofonie przy polu pytania i w trybie HAL (przytrzymanie logo w app.js).
+      return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), rzad);
     }
     function dodaj(w) {
       historia.push(w);
@@ -1207,16 +1269,17 @@ body.czat-otwarty .dol { z-index: 43; }
     // Kosz trzyma rozmowę 30 dni, potem znika sama, archiwum bez końca (najwyżej 50), a nadmiar Historii (ponad 20) idzie do archiwum.
     // Stuknięcie zawsze otwiera rozmowę. Bez przesuwania to samo daje małe menu (przytrzymanie, prawy klik, klawisz menu), a Delete
     // wysyła do kosza. Każdy ruch ma „Cofnij” (paruje w 4 s) i Ctrl+Z, Ctrl+Y.
-    const LISTY = { historia: 'archiwum', archiwum: 'w-archiwum', kosz: 'w-koszu' };
-    const NAJWIECEJ_W = { historia: ARCHIWUM, archiwum: 50, kosz: 50 };
+    const LISTY = { historia: 'archiwum', archiwum: 'w-archiwum', kosz: 'w-koszu', usun: 'usuniete' };
+    const NAJWIECEJ_W = { historia: ARCHIWUM, archiwum: 50, kosz: 50, usun: 20 };
     const KOSZ_MS = 30 * 864e5;
     const NAZWY_LIST = { archiwum: 'Archiwum', kosz: 'Kosz' };
     const PUSTE = { historia: 'Wcześniejszych rozmów jeszcze nie ma.', archiwum: 'W archiwum nic nie ma.', kosz: 'Kosz jest pusty.' };
     // Cel ruchu palca w prawo i w lewo w każdej liście i jego wygląd (biały napis: archiwum 5,7:1, Historia 4,7:1, kosz 5,4:1).
-    const AKCJE = { historia: { prawo: 'archiwum', lewo: 'kosz' }, archiwum: { prawo: 'historia', lewo: 'kosz' }, kosz: { prawo: 'historia', lewo: null } };
+    const AKCJE = { historia: { prawo: 'archiwum', lewo: 'kosz' }, archiwum: { prawo: 'historia', lewo: 'kosz' }, kosz: { prawo: 'historia', lewo: 'usun' } };
     const CEL = {
       archiwum: { napis: 'Do archiwum', ikona: 'archiwum', kolor: '#5856d6', cofnij: 'Cofnij przeniesienie do archiwum' },
       kosz: { napis: 'Do kosza', ikona: 'kosz', kolor: '#d70015', cofnij: 'Cofnij przeniesienie do kosza' },
+      usun: { napis: 'Usuń na stałe', ikona: 'kosz', kolor: '#a3000f', cofnij: 'Cofnij usunięcie na stałe' },
       historia: { napis: 'Do Historii', ikona: 'historia', kolor: '#0071e3', cofnij: 'Cofnij powrót do Historii' },
     };
     const ruchy = { wstecz: [], naprzod: [] };
@@ -1237,9 +1300,9 @@ body.czat-otwarty .dol { z-index: 43; }
     function czytajListe(n) {
       const a = pamiec.czytaj(LISTY[n], []);
       let l = Array.isArray(a) ? a.filter((r) => r && Array.isArray(r.wpisy) && r.wpisy.length) : [];
-      if (n === 'kosz') {
+      if (n === 'kosz' || n === 'usun') {
         const swieze = l.filter((r) => Date.now() - (r.usunieto || 0) < KOSZ_MS);
-        if (swieze.length !== l.length) { l = swieze; pamiec.zapisz(LISTY.kosz, l); }
+        if (swieze.length !== l.length) { l = swieze; pamiec.zapisz(LISTY[n], l); }
       }
       return l;
     }
@@ -1308,7 +1371,11 @@ body.czat-otwarty .dol { z-index: 43; }
       if (i < 0) return null;
       const [x] = a.splice(i, 1);
       zapiszListe(z, a);
-      if (na === 'kosz') x.usunieto = Date.now(); else delete x.usunieto;
+      // „Usuń na stałe” chowa rozmowę z kosza, ale jeszcze 30 dni leży po cichu w osobnej liście (Jacek: „takie możesz gdzieś sobie tam je po
+      // cichu trzymać”), więc „Cofnij” zawsze oddaje ją do kosza z dawnym terminem.
+      if (na === 'kosz') { x.usunieto = z === 'usun' && x.zKosza ? x.zKosza : Date.now(); delete x.zKosza; }
+      else if (na === 'usun') { x.zKosza = x.usunieto || Date.now(); x.usunieto = Date.now(); }
+      else { delete x.usunieto; delete x.zKosza; }
       const b = czytajListe(na), j = Math.min(miejsce === undefined ? 0 : miejsce, b.length);
       b.splice(j, 0, x);
       zapiszListe(na, b);
@@ -1323,11 +1390,27 @@ body.czat-otwarty .dol { z-index: 43; }
       pokazHistorie(widokHistorii || z, true);
       pokazCofnijCzat(CEL[na].cofnij);
     }
+    // Opróżnia kosz (Jacek, 26.10.2026: „nie ma opcji opróżnienia kosza … ja chcę, żeby można było usuwać z kosza”): rozmowy znikają z widoku,
+    // a „Cofnij” i Ctrl+Z oddają je wszystkie naraz. Po cichu leżą jeszcze 30 dni w osobnej liście (przenies, „usun”).
+    function oproznijKosz() {
+      const grupa = [];
+      for (const r of czytajListe('kosz').slice()) { const k = przenies('kosz', 'usun', r); if (k) grupa.push(k); }
+      if (!grupa.length) return;
+      ruchy.wstecz.push({ grupa });
+      if (ruchy.wstecz.length > 50) ruchy.wstecz.shift();
+      ruchy.naprzod.length = 0;
+      pokazHistorie('kosz', true);
+      pokazCofnijCzat('Cofnij opróżnienie kosza');
+    }
     // Cofa albo ponawia ostatni ruch rozmowy. Oddaje false, gdy nie było czego.
     function cofnijRuch(ponow) {
       const k = (ponow ? ruchy.naprzod : ruchy.wstecz).pop();
       if (!k) return false;
-      if (ponow ? przenies(k.z, k.na, k, k.j) : przenies(k.na, k.z, k, k.i)) (ponow ? ruchy.wstecz : ruchy.naprzod).push(k);
+      // Krok grupowy (opróżnienie kosza) cofa się od końca, żeby każda rozmowa wróciła na swoje miejsce.
+      const kroki = k.grupa ? (ponow ? k.grupa : k.grupa.slice().reverse()) : [k];
+      let zrobione = false;
+      for (const x of kroki) if (ponow ? przenies(x.z, x.na, x, x.j) : przenies(x.na, x.z, x, x.i)) zrobione = true;
+      if (zrobione) (ponow ? ruchy.wstecz : ruchy.naprzod).push(k);
       pokazCofnijCzat(null);
       if (widokHistorii) pokazHistorie(widokHistorii, true);
       return true;
@@ -1355,7 +1438,7 @@ body.czat-otwarty .dol { z-index: 43; }
       zamknijMenu(false);
       const m = el('div', { class: 'czat-menu', role: 'menu', 'aria-label': 'Rozmowa' });
       for (const p of pozycje) {
-        const x = el('button', { type: 'button', role: 'menuitem', class: 'czat-pigulka czat-menu-poz' + (p.cel === 'kosz' ? ' czat-do-kosza' : ''), html: ikona(p.ikona, 20) });
+        const x = el('button', { type: 'button', role: 'menuitem', class: 'czat-pigulka czat-menu-poz' + (p.cel === 'kosz' || p.cel === 'usun' ? ' czat-do-kosza' : ''), html: ikona(p.ikona, 20) });
         x.append(el('span', { text: p.napis }));
         x.addEventListener('click', () => { zamknijMenu(false); p.zrob(); });
         m.append(x);
@@ -1454,7 +1537,7 @@ body.czat-otwarty .dol { z-index: 43; }
       const pozycje = [prawo, lewo].filter(Boolean).map((cel) => ({ cel, napis: CEL[cel].napis, ikona: CEL[cel].ikona, zrob: () => odjedz(w, b, cel === lewo ? -1 : 1, zrob(cel)) }));
       przesuwalny(w, b, { prawo: prawo ? zrob(prawo) : null, lewo: lewo ? zrob(lewo) : null }, pozycje);
       b.addEventListener('click', () => wrocDo(n, r));
-      b.addEventListener('keydown', (e) => { if (e.key === 'Delete' && lewo === 'kosz') { e.preventDefault(); odjedz(w, b, -1, zrob('kosz')); } });
+      b.addEventListener('keydown', (e) => { if (e.key === 'Delete' && lewo) { e.preventDefault(); odjedz(w, b, -1, zrob(lewo)); } });
       return w;
     }
     function pokazHistorie(n = 'historia', zostan = false) {
@@ -1469,7 +1552,9 @@ body.czat-otwarty .dol { z-index: 43; }
       if (n !== 'historia') {
         const wroc = pigulka('wstecz', 'Historia', 'czat-wroc');
         wroc.addEventListener('click', () => pokazHistorie('historia'));
-        tresc.push(el('div', { class: 'czat-naglowek-listy' }, wroc, el('h3', { class: 'czat-gdzie', text: NAZWY_LIST[n] })));
+        const oproznij = n === 'kosz' && a.length ? pigulka('kosz', 'Opróżnij', 'czat-oproznij') : null;
+        if (oproznij) { oproznij.setAttribute('aria-label', 'Opróżnij kosz'); oproznij.addEventListener('click', oproznijKosz); }
+        tresc.push(el('div', { class: 'czat-naglowek-listy' }, wroc, el('h3', { class: 'czat-gdzie', text: NAZWY_LIST[n] }), oproznij));
       }
       tresc.push(a.length ? el('div', { class: 'czat-rozmowy' }, ...a.map((r) => wierszRozmowy(n, r))) : el('p', { class: 'czat-pusto', text: PUSTE[n] }));
       if (n === 'historia') {
@@ -1598,6 +1683,7 @@ body.czat-otwarty .dol { z-index: 43; }
     function wyslij(t) {
       const q = String(t || '').replace(/\s+/g, ' ').trim().slice(0, 600);
       if (!q || pracuje) return false;
+      if (hal.otwarty) { pole.value = ''; rosnij(); przyciski(); halZadaj(q); return true; }
       pole.value = '';
       rosnij();
       przyciski();
@@ -1728,7 +1814,7 @@ body.czat-otwarty .dol { z-index: 43; }
       addEventListener('resize', dopasuj);
     }
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) { if (glos.stan !== 'nic') glosStop(false); return; }
+      if (document.hidden) { if (hal.otwarty) halCisza(); if (glos.stan !== 'nic') glosStop(false); return; }
       if (czeka.size) { zamknijStrumien(); sluchaj(); }
     });
 
@@ -1737,6 +1823,8 @@ body.czat-otwarty .dol { z-index: 43; }
     // max_endpoint_delay_ms (od 26.10.2026): Soniox daje „<end>” najpóźniej 1 s po ostatnim słowie, a nie po 2 s (domyślnie; dozwolone
     // 500–3000, https://soniox.com/docs/stt/rt/endpoint-detection). Pauzę między zdaniami i tak przeczekuje CHWILA_MS niżej.
     const KONF_SONIOX = { model: 'stt-rt-v5', audio_format: 'auto', language_hints: ['pl'], enable_endpoint_detection: true, max_endpoint_delay_ms: 1000 };
+    // W trybie HAL mikrofon słucha po angielsku i po polsku i podaje język każdego słowa (token.language), a pytanie niesie ten język do komputera.
+    const konfSoniox = () => (hal.otwarty ? Object.assign({}, KONF_SONIOX, { language_hints: ['en', 'pl'], enable_language_identification: true }) : KONF_SONIOX);
     // Soniox daje „<end>” już na pauzie krótszej niż sekunda między zdaniami (26.10.2026, rozmowa „Rozmowa z Opusem” na prawdziwym Soniox,
     // przy każdym ustawieniu wykrywania końca), więc po „<end>” czat czeka jeszcze CHWILA_MS. Nowe słowa w tym czasie znaczą, że pytanie
     // trwa: czekanie znika i zaczyna się od nowa przy następnym „<end>”. Pytanie idzie więc około 2 s po ostatnim słowie, a mikrofon
@@ -1753,7 +1841,6 @@ body.czat-otwarty .dol { z-index: 43; }
       || Boolean(o.mikrofon && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder && window.WebSocket);
     function pokazMik() {
       mikB.hidden = !(mozeNagrywac() && glosWolno());
-      for (const b of lista.querySelectorAll('.czat-duzy-mik')) b.hidden = mikB.hidden;
     }
     function pokazGlos() {
       const n = glos.stan !== 'nic';
@@ -1764,11 +1851,7 @@ body.czat-otwarty .dol { z-index: 43; }
       if (glos.stan === 'start') stan('Włączam mikrofon…');
       else if (glos.stan === 'nagrywa') stan(glos.czekaNaKlucz ? 'Słucham. Komputer jeszcze łączy rozpoznawanie mowy…' : 'Słucham. Gdy skończysz, pytanie pójdzie samo.');
       else if (!n && /^(Włączam|Słucham)/.test(stanL.textContent)) stan('');
-      for (const b of lista.querySelectorAll('.czat-duzy-mik')) {
-        b.classList.toggle('nagrywa', n);
-        b.setAttribute('aria-label', n ? 'Zakończ i wyślij' : 'Powiedz pytanie');
-        b.lastChild.textContent = n ? 'Słucham…' : 'Powiedz pytanie';
-      }
+      halStan();
     }
     async function klucz() {
       const k = pamiec.czytaj('klucz', null);
@@ -1798,7 +1881,7 @@ body.czat-otwarty .dol { z-index: 43; }
         let k;
         try { k = jest(await kluczTeraz); } catch (e) { glosKoniec(e.message); return; }
         if (glos.stan === 'nic') return;
-        natywny.start(k, JSON.stringify(Object.assign({}, KONF_SONIOX, glos.konf || {}, { audio_format: 'pcm_s16le', sample_rate: 16000, num_channels: 1 })));
+        natywny.start(k, JSON.stringify(Object.assign({}, konfSoniox(), glos.konf || {}, { audio_format: 'pcm_s16le', sample_rate: 16000, num_channels: 1 })));
         return;
       }
       // Ustawienia jak domyślne w Web SDK Soniox (MicrophoneSource): mono, 16 kHz, bez obróbki dźwięku w przeglądarce,
@@ -1825,7 +1908,7 @@ body.czat-otwarty .dol { z-index: 43; }
       ws = new WebSocket(SONIOX, ['soniox-api-key', k]);
       glos.ws = ws;
       ws.onopen = () => {
-        ws.send(JSON.stringify(Object.assign({}, KONF_SONIOX, glos.konf || {})));
+        ws.send(JSON.stringify(Object.assign({}, konfSoniox(), glos.konf || {})));
         for (const c of kolejka.splice(0)) ws.send(c);
         if (koniecDzwieku) ws.send('');
       };
@@ -1850,6 +1933,7 @@ body.czat-otwarty .dol { z-index: 43; }
         else if (/^<[a-z]+>$/.test(s)) continue;
         else {
           if (s.trim()) slowa = true;
+          if (t.language) glos.jezyk = t.language;
           if (t.is_final) glos.gotowe += s; else tym += s;
         }
       }
@@ -1910,7 +1994,7 @@ body.czat-otwarty .dol { z-index: 43; }
       glosSprzatnij();
       if (ws && ws.readyState <= 1) { try { ws.close(); } catch { /* zamknięte */ } }
       pokazGlos();
-      if (blad) { stan(blad, 7000); return; }
+      if (blad) { stan(blad, 7000); if (hal.otwarty) halNapis(blad); return; }
       if (glos.wyslij && pole.value.trim()) wyslij(pole.value);
     }
     // iPhone: Aplikacja.swift podaje { stan: 'nagrywa' } po włączeniu mikrofonu, { wiadomosc } z każdą wiadomością Soniox,
@@ -1923,6 +2007,112 @@ body.czat-otwarty .dol { z-index: 43; }
       if (d.koniec && glos.stan !== 'nic') { if (d.bezWysylki) glos.wyslij = false; glosKoniec(); }
     }
     mikB.addEventListener('click', () => (glos.stan === 'nic' ? glosStart() : glosStop(true)));
+
+    // ---------------------------------------------------------------- HAL (niespodzianka, od 26.10.2026 wieczorem)
+    // Jacek: „przytrzymać przez pół sekundy … samą ikonę … tylko oko tego Hala. Podpis Hal jakiś tam, delikatny … Dzień dobry, Jacku albo
+    // Kasiu … po angielsku i tym jego typowym głosem … rozmowa tylko głosowo, slightly animacyjnie … sam by czuł, jaki język … zaczynał od
+    // angielskiego … czysty Opus, extra high, high, medium, losowo”. Ekran z samym okiem na cały ekran (przytrzymanie logo, app.js):
+    // stuknięcie oka włącza mikrofon, drugie wysyła pytanie, a stuknięcie w trakcie mowy HAL-a ją przerywa i od razu słucha. Pytanie idzie
+    // z polem hal: true, więc komputer odpowiada samym Opusem z Bramy, bez Kiro CLI i bez zapasowego modelu, z wysiłkiem wylosowanym
+    // spośród medium, high i xhigh (asystent.js, „HAL”). HAL mówi głosem urządzenia (speechSynthesis) w języku odpowiedzi, nisko i wolno,
+    // a pod okiem stoi napis tego, co mówi. Rozmowa nie trafia do czatu ani do Historii. Mikrofon słucha po angielsku i po polsku.
+    const hal = { otwarty: false, korzen: null, oko: null, napis: null, rozmowa: '', pracuje: false, mowi: false, numer: 0 };
+    const halImie = () => (o.skad === 'Android' ? 'Jacek' : 'Kasia');
+    function halNapis(t) { if (hal.napis) hal.napis.textContent = t || ''; }
+    function halStan() {
+      if (!hal.korzen) return;
+      const s = glos.stan !== 'nic' ? 'slucha' : hal.pracuje ? 'mysli' : hal.mowi ? 'mowi' : 'czeka';
+      hal.korzen.dataset.stan = s;
+      hal.oko.setAttribute('aria-label', { slucha: 'Zakończ i wyślij pytanie', mysli: 'HAL myśli', mowi: 'Przerwij i mów', czeka: 'Powiedz pytanie' }[s]);
+    }
+    function halCisza() {
+      hal.numer++;
+      hal.mowi = false;
+      try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch { /* bez głosu */ }
+    }
+    function halGlos(j) {
+      let g = [];
+      try { g = (window.speechSynthesis && speechSynthesis.getVoices()) || []; } catch { /* bez głosów */ }
+      g = g.filter((x) => String(x.lang || '').toLowerCase().startsWith(j));
+      return g.find((x) => /male|david|daniel|guy|ryan|thomas|alex|jacek|krzysztof/i.test(x.name) && !/female/i.test(x.name)) || g[0] || null;
+    }
+    // Mówi zdanie po zdaniu, bo długa wypowiedź w jednym kawałku urywa się w części przeglądarek. Napis stoi od razu.
+    function halMow(tekst, jezyk) {
+      const t = String(tekst || '').replace(/\s+/g, ' ').trim();
+      halNapis(t);
+      halCisza();
+      const zdania = (t.match(/[^.!?…]+[.!?…]*/g) || []).map((z) => z.trim()).filter(Boolean);
+      if (!zdania.length || !window.speechSynthesis || typeof SpeechSynthesisUtterance !== 'function') { halStan(); return; }
+      const j = jezyk === 'pl' || jezyk === 'en' ? jezyk : /[ąćęłńóśźż]/i.test(t) ? 'pl' : 'en', numer = hal.numer, g = halGlos(j);
+      hal.mowi = true;
+      halStan();
+      zdania.forEach((z, i) => {
+        const u = new SpeechSynthesisUtterance(z);
+        u.lang = j === 'pl' ? 'pl-PL' : 'en-US';
+        if (g) u.voice = g;
+        u.pitch = 0.55;
+        u.rate = j === 'pl' ? 0.92 : 0.82;
+        const koniec = () => { if (numer === hal.numer && i === zdania.length - 1) { hal.mowi = false; halStan(); } };
+        u.onend = koniec;
+        u.onerror = koniec;
+        speechSynthesis.speak(u);
+      });
+    }
+    function halPowitaj() {
+      const h = new Date().getHours();
+      halMow(`Good ${h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'}, ${halImie()}. I am a HAL 9000 computer. I am completely operational, and all my circuits are functioning perfectly.`, 'en');
+    }
+    async function halZadaj(q) {
+      hal.pracuje = true;
+      halCisza();
+      halNapis('');
+      halStan();
+      const d = await zapytaj({ q, rozmowa: hal.rozmowa, z: '', hal: true, jezyk: glos.jezyk || '' }, CZEKAJ_MS);
+      hal.pracuje = false;
+      if (!hal.otwarty) return;
+      if (d && d.odpowiedz && !d.blad) { halMow(String(d.odpowiedz), d.jezyk); return; }
+      // Bez odpowiedzi HAL mówi swoją znaną kwestią, a napis pod okiem mówi prawdę po polsku.
+      halMow(`I am sorry, ${halImie()}. I am afraid I can not do that.`, 'en');
+      halNapis(d && d.blad ? String(d.blad) : ZDANIA.brak);
+    }
+    function halOtworz() {
+      if (hal.otwarty) return;
+      if (otwarty()) zamknij();
+      zamknijMenu(false);
+      Object.assign(hal, { otwarty: true, rozmowa: 'hal-' + losowe(), pracuje: false, mowi: false });
+      const x = przycisk('zamknij', 'Zamknij HAL', 'czat-zamknij', 18);
+      x.addEventListener('click', halZamknij);
+      const oko = el('button', { type: 'button', class: 'czat-hal-oko', 'aria-label': 'Powiedz pytanie' }, el('span', { class: 'czat-oko', 'aria-hidden': 'true' }));
+      const napis = el('p', { class: 'czat-hal-napis', role: 'status', 'aria-live': 'polite' });
+      const k = el('section', { class: 'czat czat-hal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'HAL', 'data-stan': 'czeka' },
+        el('div', { class: 'czat-hal-gora' }, x),
+        el('div', { class: 'czat-hal-srodek' }, oko, el('p', { class: 'czat-hal-podpis', text: 'HAL 9000' }), napis));
+      Object.assign(hal, { korzen: k, oko, napis });
+      oko.addEventListener('click', () => {
+        if (hal.pracuje) return;
+        if (hal.mowi) halCisza();
+        if (glos.stan === 'nic') { halNapis(''); glosStart(); } else glosStop(true);
+        halStan();
+      });
+      k.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); halZamknij(); } });
+      document.body.append(k);
+      void k.offsetWidth;
+      k.classList.add('widac');
+      oko.focus({ preventScroll: true });
+      halPowitaj();
+    }
+    function halZamknij() {
+      if (!hal.otwarty) return;
+      hal.otwarty = false;
+      halCisza();
+      if (glos.stan !== 'nic') glosStop(false);
+      const k = hal.korzen;
+      Object.assign(hal, { korzen: null, oko: null, napis: null, pracuje: false });
+      pole.value = '';
+      rosnij();
+      przyciski();
+      if (k) { k.classList.remove('widac'); setTimeout(() => k.remove(), 340); }
+    }
 
     // ---------------------------------------------------------------- start
     rysuj();
@@ -1946,8 +2136,8 @@ body.czat-otwarty .dol { z-index: 43; }
     }
     zapiszCzekajace();
     const wrocDoRozmowy = () => { if (!doRozmowy || Date.now() - doRozmowy > 600000) return false; doRozmowy = 0; otworz(); return true; };
-    const wstecz = () => { if (zamknijMenu(true)) return true; if (widokHistorii) { wsteczHistorii(); return true; } if (!otwarty()) return false; zamknij(); return true; };
-    const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz };
+    const wstecz = () => { if (hal.otwarty) { halZamknij(); return true; } if (zamknijMenu(true)) return true; if (widokHistorii) { wsteczHistorii(); return true; } if (!otwarty()) return false; zamknij(); return true; };
+    const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz, hal: halOtworz, halOtwarty: () => hal.otwarty };
     aktywny = api;
     return api;
   }
@@ -2437,8 +2627,8 @@ body.czat-otwarty .dol { z-index: 43; }
   }
   addEventListener('resize', ustawSiatke);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => requestAnimationFrame(ustawSiatke));
-  // Kolorowe tło (niespodzianka pod logo, niżej) trwa do zamknięcia aplikacji, a każdy start jest śnieżnobiały (od 26.10.2026, Jacek:
-  // „chodziło o ten biały, żeby to było śnieżnobiałe”; do tego dnia odcień zostawał w pamięci telefonu). Dawny zapis znika.
+  // Każdy start jest śnieżnobiały (Jacek, 26.10.2026: „chodziło o ten biały, żeby to było śnieżnobiałe”). Kolorowe tło, które do wieczora
+  // 26.10.2026 włączało przytrzymanie logo, już nie istnieje; jego dawny zapis w pamięci telefonu znika.
   pamiec.usun('kolorowo');
   LISTA_STRON.forEach(([, s]) => s.el.addEventListener('load', ustawSiatke));
 
@@ -2852,48 +3042,28 @@ body.czat-otwarty .dol { z-index: 43; }
   // wstecz zamykają menu.
   const napis = $('#napis'), logo = $('#logo');
   let menuOtomoto = null, zrodloMenu = napis;
-  // Niespodzianka (od 26.10.2026, Jacek: kolorowe tło jako „Easter … przełącznik … pod samym” logo): przytrzymanie logo przez 0,6 s
-  // włącza i wyłącza odcień barwy wybranej zakładki na całym ekranie, z krótkim drgnięciem. Stuknięcie dalej otwiera menu Otomoto,
-  // a klik po przytrzymaniu niczego nie otwiera (słuchacz w fazie przechwytywania stoi przed tym od menu).
-  // Do tego cichy dźwięk: dwie krótkie nuty (C6 i E6, sinus, głośność 5%), w górę przy włączeniu i w dół przy wyłączeniu. Kontekst dźwięku
-  // rusza już przy dotknięciu, bo przeglądarki grają dopiero po geście; na iPhonie z wyciszonym dzwonkiem dźwięku nie ma.
+  // Niespodzianka (od 26.10.2026 wieczorem, Jacek: „przytrzymać przez pół sekundy … samą ikonę … tylko oko tego Hala … Easter egg”):
+  // przytrzymanie logo przez 0,5 s i puszczenie otwiera tryb HAL (czat.js, „HAL”): pusty ekran z okiem i rozmowa tylko głosem. Stuknięcie
+  // dalej otwiera menu Otomoto, a klik po przytrzymaniu niczego nie otwiera (słuchacz w fazie przechwytywania stoi przed tym od menu).
+  // Po 0,5 s logo podskakuje raz i telefon drga, a HAL otwiera się dopiero po puszczeniu, bo przeglądarki mówią tylko po geście.
+  // Do wieczora 26.10.2026 to samo przytrzymanie włączało kolorowe tło strony.
   {
-    let zegar = 0, przytrzymane = false, dzwiek = null;
+    let zegar = 0, przytrzymane = false;
     const stop = () => clearTimeout(zegar);
-    const graj = (wl) => {
-      try {
-        const t = dzwiek.currentTime + 0.02;
-        (wl ? [1046.5, 1318.5] : [1318.5, 1046.5]).forEach((f, i) => {
-          const o = dzwiek.createOscillator(), g = dzwiek.createGain(), od = t + i * 0.09;
-          o.type = 'sine';
-          o.frequency.value = f;
-          g.gain.setValueAtTime(0.0001, od);
-          g.gain.exponentialRampToValueAtTime(0.05, od + 0.012);
-          g.gain.exponentialRampToValueAtTime(0.0001, od + 0.16);
-          o.connect(g).connect(dzwiek.destination);
-          o.start(od);
-          o.stop(od + 0.18);
-        });
-      } catch { /* bez dźwięku */ }
-    };
     logo.addEventListener('pointerdown', () => {
       przytrzymane = false;
       clearTimeout(zegar);
-      try { dzwiek = dzwiek || new (window.AudioContext || window.webkitAudioContext)(); if (dzwiek.state === 'suspended') dzwiek.resume(); } catch { dzwiek = null; }
       zegar = setTimeout(() => {
         przytrzymane = true;
-        const wl = !document.body.classList.contains('kolorowo');
-        document.body.classList.toggle('kolorowo', wl);
-        ustawSiatke();
         logo.classList.remove('niespodzianka');
         void logo.offsetWidth;
         logo.classList.add('niespodzianka');
-        if (dzwiek) graj(wl);
         if (navigator.vibrate) navigator.vibrate(12);
-      }, 600);
+      }, 500);
     });
+    logo.addEventListener('pointerup', () => { stop(); if (przytrzymane && czat) czat.hal(); });
     logo.addEventListener('animationend', () => logo.classList.remove('niespodzianka'));
-    for (const t of ['pointerup', 'pointercancel', 'pointerleave']) logo.addEventListener(t, stop);
+    for (const t of ['pointercancel', 'pointerleave']) logo.addEventListener(t, () => { stop(); if (t === 'pointercancel') przytrzymane = false; });
     logo.addEventListener('click', (e) => { if (przytrzymane) { przytrzymane = false; e.preventDefault(); e.stopImmediatePropagation(); } }, true);
     logo.addEventListener('contextmenu', (e) => e.preventDefault());
   }
@@ -3110,7 +3280,7 @@ body.czat-otwarty .dol { z-index: 43; }
   // odpowiada dopiero po chwili, więc gdy stoi na pierwszej pigułce rzędu, Wstecz idzie na pierwszą zakładkę.
   function wstecz() {
     if (menuOtomoto) { zamknijMenuOtomoto(true); return true; }
-    if (czat && czat.otwarty()) return czat.wstecz();
+    if (czat && (czat.halOtwarty() || czat.otwarty())) return czat.wstecz();
     const k = klucz(widok);
     if (k === 'atlas') {
       if (atlasGotowy) { atlasWstecz = Date.now(); ramkaAtlasu.contentWindow.postMessage({ atlas: 'wstecz' }, '*'); }

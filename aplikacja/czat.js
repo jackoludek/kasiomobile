@@ -194,6 +194,12 @@
       }
       return wynik.length ? wynik : [el('p', { text: '…' })];
     }
+    // Napis odnośnika pod odpowiedzią: krótki tytuł, nigdy cały adres (od 26.10.2026: odpowiedź z adresem w tytule wychodziła poza ekran).
+    function tytulOdnosnika(l) {
+      let t = String(l.tytul || '').replace(/\s+/g, ' ').trim();
+      if (!t || /^https?:\/\//i.test(t)) { try { t = new URL(l.adres).hostname.replace(/^www\./, ''); } catch { t = 'Odnośnik'; } }
+      return t.length > 70 ? t.slice(0, 69).replace(/\s+\S*$/, '') + '…' : t;
+    }
     function napisPokazu(p) {
       if (p.model && p.nazwa) return 'Pokaż model: ' + p.nazwa;
       if (p.porownaj) return 'Pokaż porównanie';
@@ -232,7 +238,7 @@
       for (const l of w.linki || []) {
         if (!l || !/^https:\/\//.test(String(l.adres || ''))) continue;
         const a = el('a', { class: 'czat-akcja czat-link', href: l.adres, target: '_blank', rel: 'noopener noreferrer', html: `<span></span>${ikona('zewnatrz', 16)}` });
-        a.firstChild.textContent = String(l.tytul || l.adres);
+        a.firstChild.textContent = tytulOdnosnika(l);
         box.append(a);
       }
       return box;
@@ -244,12 +250,9 @@
         b.addEventListener('click', () => wyslij(t));
         rzad.append(b);
       }
-      // Duży mikrofon na pustej rozmowie (od 26.10.2026, Jacek: „Brak dużego mikrofonu”), ten sam co mały przy polu pytania. Od tego samego
-      // dnia to oko w stylu HAL 9000 (Jacek: „ever so slightly … reminiscent of HAL z Odysei Kosmicznej 2001”), a podpis mówi, co robi.
-      const duzy = el('button', { type: 'button', class: 'czat-duzy-mik', 'aria-label': 'Powiedz pytanie', html: '<span class="czat-oko" aria-hidden="true"></span><span>Powiedz pytanie</span>' });
-      duzy.hidden = !(mozeNagrywac() && glosWolno());
-      duzy.addEventListener('click', () => (glos.stan === 'nic' ? glosStart() : glosStop(true)));
-      return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), duzy, rzad);
+      // Puste okno rozmowy: zdanie i cztery podpowiedzi w jednej spokojnej barwie. Dużego oka HAL-a nie ma tu od wieczora 26.10.2026 (Jacek:
+      // „fajna, ale trochę przesadzona”); oko żyje w małym mikrofonie przy polu pytania i w trybie HAL (przytrzymanie logo w app.js).
+      return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), rzad);
     }
     function dodaj(w) {
       historia.push(w);
@@ -270,16 +273,17 @@
     // Kosz trzyma rozmowę 30 dni, potem znika sama, archiwum bez końca (najwyżej 50), a nadmiar Historii (ponad 20) idzie do archiwum.
     // Stuknięcie zawsze otwiera rozmowę. Bez przesuwania to samo daje małe menu (przytrzymanie, prawy klik, klawisz menu), a Delete
     // wysyła do kosza. Każdy ruch ma „Cofnij” (paruje w 4 s) i Ctrl+Z, Ctrl+Y.
-    const LISTY = { historia: 'archiwum', archiwum: 'w-archiwum', kosz: 'w-koszu' };
-    const NAJWIECEJ_W = { historia: ARCHIWUM, archiwum: 50, kosz: 50 };
+    const LISTY = { historia: 'archiwum', archiwum: 'w-archiwum', kosz: 'w-koszu', usun: 'usuniete' };
+    const NAJWIECEJ_W = { historia: ARCHIWUM, archiwum: 50, kosz: 50, usun: 20 };
     const KOSZ_MS = 30 * 864e5;
     const NAZWY_LIST = { archiwum: 'Archiwum', kosz: 'Kosz' };
     const PUSTE = { historia: 'Wcześniejszych rozmów jeszcze nie ma.', archiwum: 'W archiwum nic nie ma.', kosz: 'Kosz jest pusty.' };
     // Cel ruchu palca w prawo i w lewo w każdej liście i jego wygląd (biały napis: archiwum 5,7:1, Historia 4,7:1, kosz 5,4:1).
-    const AKCJE = { historia: { prawo: 'archiwum', lewo: 'kosz' }, archiwum: { prawo: 'historia', lewo: 'kosz' }, kosz: { prawo: 'historia', lewo: null } };
+    const AKCJE = { historia: { prawo: 'archiwum', lewo: 'kosz' }, archiwum: { prawo: 'historia', lewo: 'kosz' }, kosz: { prawo: 'historia', lewo: 'usun' } };
     const CEL = {
       archiwum: { napis: 'Do archiwum', ikona: 'archiwum', kolor: '#5856d6', cofnij: 'Cofnij przeniesienie do archiwum' },
       kosz: { napis: 'Do kosza', ikona: 'kosz', kolor: '#d70015', cofnij: 'Cofnij przeniesienie do kosza' },
+      usun: { napis: 'Usuń na stałe', ikona: 'kosz', kolor: '#a3000f', cofnij: 'Cofnij usunięcie na stałe' },
       historia: { napis: 'Do Historii', ikona: 'historia', kolor: '#0071e3', cofnij: 'Cofnij powrót do Historii' },
     };
     const ruchy = { wstecz: [], naprzod: [] };
@@ -300,9 +304,9 @@
     function czytajListe(n) {
       const a = pamiec.czytaj(LISTY[n], []);
       let l = Array.isArray(a) ? a.filter((r) => r && Array.isArray(r.wpisy) && r.wpisy.length) : [];
-      if (n === 'kosz') {
+      if (n === 'kosz' || n === 'usun') {
         const swieze = l.filter((r) => Date.now() - (r.usunieto || 0) < KOSZ_MS);
-        if (swieze.length !== l.length) { l = swieze; pamiec.zapisz(LISTY.kosz, l); }
+        if (swieze.length !== l.length) { l = swieze; pamiec.zapisz(LISTY[n], l); }
       }
       return l;
     }
@@ -371,7 +375,11 @@
       if (i < 0) return null;
       const [x] = a.splice(i, 1);
       zapiszListe(z, a);
-      if (na === 'kosz') x.usunieto = Date.now(); else delete x.usunieto;
+      // „Usuń na stałe” chowa rozmowę z kosza, ale jeszcze 30 dni leży po cichu w osobnej liście (Jacek: „takie możesz gdzieś sobie tam je po
+      // cichu trzymać”), więc „Cofnij” zawsze oddaje ją do kosza z dawnym terminem.
+      if (na === 'kosz') { x.usunieto = z === 'usun' && x.zKosza ? x.zKosza : Date.now(); delete x.zKosza; }
+      else if (na === 'usun') { x.zKosza = x.usunieto || Date.now(); x.usunieto = Date.now(); }
+      else { delete x.usunieto; delete x.zKosza; }
       const b = czytajListe(na), j = Math.min(miejsce === undefined ? 0 : miejsce, b.length);
       b.splice(j, 0, x);
       zapiszListe(na, b);
@@ -386,11 +394,27 @@
       pokazHistorie(widokHistorii || z, true);
       pokazCofnijCzat(CEL[na].cofnij);
     }
+    // Opróżnia kosz (Jacek, 26.10.2026: „nie ma opcji opróżnienia kosza … ja chcę, żeby można było usuwać z kosza”): rozmowy znikają z widoku,
+    // a „Cofnij” i Ctrl+Z oddają je wszystkie naraz. Po cichu leżą jeszcze 30 dni w osobnej liście (przenies, „usun”).
+    function oproznijKosz() {
+      const grupa = [];
+      for (const r of czytajListe('kosz').slice()) { const k = przenies('kosz', 'usun', r); if (k) grupa.push(k); }
+      if (!grupa.length) return;
+      ruchy.wstecz.push({ grupa });
+      if (ruchy.wstecz.length > 50) ruchy.wstecz.shift();
+      ruchy.naprzod.length = 0;
+      pokazHistorie('kosz', true);
+      pokazCofnijCzat('Cofnij opróżnienie kosza');
+    }
     // Cofa albo ponawia ostatni ruch rozmowy. Oddaje false, gdy nie było czego.
     function cofnijRuch(ponow) {
       const k = (ponow ? ruchy.naprzod : ruchy.wstecz).pop();
       if (!k) return false;
-      if (ponow ? przenies(k.z, k.na, k, k.j) : przenies(k.na, k.z, k, k.i)) (ponow ? ruchy.wstecz : ruchy.naprzod).push(k);
+      // Krok grupowy (opróżnienie kosza) cofa się od końca, żeby każda rozmowa wróciła na swoje miejsce.
+      const kroki = k.grupa ? (ponow ? k.grupa : k.grupa.slice().reverse()) : [k];
+      let zrobione = false;
+      for (const x of kroki) if (ponow ? przenies(x.z, x.na, x, x.j) : przenies(x.na, x.z, x, x.i)) zrobione = true;
+      if (zrobione) (ponow ? ruchy.wstecz : ruchy.naprzod).push(k);
       pokazCofnijCzat(null);
       if (widokHistorii) pokazHistorie(widokHistorii, true);
       return true;
@@ -418,7 +442,7 @@
       zamknijMenu(false);
       const m = el('div', { class: 'czat-menu', role: 'menu', 'aria-label': 'Rozmowa' });
       for (const p of pozycje) {
-        const x = el('button', { type: 'button', role: 'menuitem', class: 'czat-pigulka czat-menu-poz' + (p.cel === 'kosz' ? ' czat-do-kosza' : ''), html: ikona(p.ikona, 20) });
+        const x = el('button', { type: 'button', role: 'menuitem', class: 'czat-pigulka czat-menu-poz' + (p.cel === 'kosz' || p.cel === 'usun' ? ' czat-do-kosza' : ''), html: ikona(p.ikona, 20) });
         x.append(el('span', { text: p.napis }));
         x.addEventListener('click', () => { zamknijMenu(false); p.zrob(); });
         m.append(x);
@@ -517,7 +541,7 @@
       const pozycje = [prawo, lewo].filter(Boolean).map((cel) => ({ cel, napis: CEL[cel].napis, ikona: CEL[cel].ikona, zrob: () => odjedz(w, b, cel === lewo ? -1 : 1, zrob(cel)) }));
       przesuwalny(w, b, { prawo: prawo ? zrob(prawo) : null, lewo: lewo ? zrob(lewo) : null }, pozycje);
       b.addEventListener('click', () => wrocDo(n, r));
-      b.addEventListener('keydown', (e) => { if (e.key === 'Delete' && lewo === 'kosz') { e.preventDefault(); odjedz(w, b, -1, zrob('kosz')); } });
+      b.addEventListener('keydown', (e) => { if (e.key === 'Delete' && lewo) { e.preventDefault(); odjedz(w, b, -1, zrob(lewo)); } });
       return w;
     }
     function pokazHistorie(n = 'historia', zostan = false) {
@@ -532,7 +556,9 @@
       if (n !== 'historia') {
         const wroc = pigulka('wstecz', 'Historia', 'czat-wroc');
         wroc.addEventListener('click', () => pokazHistorie('historia'));
-        tresc.push(el('div', { class: 'czat-naglowek-listy' }, wroc, el('h3', { class: 'czat-gdzie', text: NAZWY_LIST[n] })));
+        const oproznij = n === 'kosz' && a.length ? pigulka('kosz', 'Opróżnij', 'czat-oproznij') : null;
+        if (oproznij) { oproznij.setAttribute('aria-label', 'Opróżnij kosz'); oproznij.addEventListener('click', oproznijKosz); }
+        tresc.push(el('div', { class: 'czat-naglowek-listy' }, wroc, el('h3', { class: 'czat-gdzie', text: NAZWY_LIST[n] }), oproznij));
       }
       tresc.push(a.length ? el('div', { class: 'czat-rozmowy' }, ...a.map((r) => wierszRozmowy(n, r))) : el('p', { class: 'czat-pusto', text: PUSTE[n] }));
       if (n === 'historia') {
@@ -661,6 +687,7 @@
     function wyslij(t) {
       const q = String(t || '').replace(/\s+/g, ' ').trim().slice(0, 600);
       if (!q || pracuje) return false;
+      if (hal.otwarty) { pole.value = ''; rosnij(); przyciski(); halZadaj(q); return true; }
       pole.value = '';
       rosnij();
       przyciski();
@@ -791,7 +818,7 @@
       addEventListener('resize', dopasuj);
     }
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) { if (glos.stan !== 'nic') glosStop(false); return; }
+      if (document.hidden) { if (hal.otwarty) halCisza(); if (glos.stan !== 'nic') glosStop(false); return; }
       if (czeka.size) { zamknijStrumien(); sluchaj(); }
     });
 
@@ -800,6 +827,8 @@
     // max_endpoint_delay_ms (od 26.10.2026): Soniox daje „<end>” najpóźniej 1 s po ostatnim słowie, a nie po 2 s (domyślnie; dozwolone
     // 500–3000, https://soniox.com/docs/stt/rt/endpoint-detection). Pauzę między zdaniami i tak przeczekuje CHWILA_MS niżej.
     const KONF_SONIOX = { model: 'stt-rt-v5', audio_format: 'auto', language_hints: ['pl'], enable_endpoint_detection: true, max_endpoint_delay_ms: 1000 };
+    // W trybie HAL mikrofon słucha po angielsku i po polsku i podaje język każdego słowa (token.language), a pytanie niesie ten język do komputera.
+    const konfSoniox = () => (hal.otwarty ? Object.assign({}, KONF_SONIOX, { language_hints: ['en', 'pl'], enable_language_identification: true }) : KONF_SONIOX);
     // Soniox daje „<end>” już na pauzie krótszej niż sekunda między zdaniami (26.10.2026, rozmowa „Rozmowa z Opusem” na prawdziwym Soniox,
     // przy każdym ustawieniu wykrywania końca), więc po „<end>” czat czeka jeszcze CHWILA_MS. Nowe słowa w tym czasie znaczą, że pytanie
     // trwa: czekanie znika i zaczyna się od nowa przy następnym „<end>”. Pytanie idzie więc około 2 s po ostatnim słowie, a mikrofon
@@ -816,7 +845,6 @@
       || Boolean(o.mikrofon && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder && window.WebSocket);
     function pokazMik() {
       mikB.hidden = !(mozeNagrywac() && glosWolno());
-      for (const b of lista.querySelectorAll('.czat-duzy-mik')) b.hidden = mikB.hidden;
     }
     function pokazGlos() {
       const n = glos.stan !== 'nic';
@@ -827,11 +855,7 @@
       if (glos.stan === 'start') stan('Włączam mikrofon…');
       else if (glos.stan === 'nagrywa') stan(glos.czekaNaKlucz ? 'Słucham. Komputer jeszcze łączy rozpoznawanie mowy…' : 'Słucham. Gdy skończysz, pytanie pójdzie samo.');
       else if (!n && /^(Włączam|Słucham)/.test(stanL.textContent)) stan('');
-      for (const b of lista.querySelectorAll('.czat-duzy-mik')) {
-        b.classList.toggle('nagrywa', n);
-        b.setAttribute('aria-label', n ? 'Zakończ i wyślij' : 'Powiedz pytanie');
-        b.lastChild.textContent = n ? 'Słucham…' : 'Powiedz pytanie';
-      }
+      halStan();
     }
     async function klucz() {
       const k = pamiec.czytaj('klucz', null);
@@ -861,7 +885,7 @@
         let k;
         try { k = jest(await kluczTeraz); } catch (e) { glosKoniec(e.message); return; }
         if (glos.stan === 'nic') return;
-        natywny.start(k, JSON.stringify(Object.assign({}, KONF_SONIOX, glos.konf || {}, { audio_format: 'pcm_s16le', sample_rate: 16000, num_channels: 1 })));
+        natywny.start(k, JSON.stringify(Object.assign({}, konfSoniox(), glos.konf || {}, { audio_format: 'pcm_s16le', sample_rate: 16000, num_channels: 1 })));
         return;
       }
       // Ustawienia jak domyślne w Web SDK Soniox (MicrophoneSource): mono, 16 kHz, bez obróbki dźwięku w przeglądarce,
@@ -888,7 +912,7 @@
       ws = new WebSocket(SONIOX, ['soniox-api-key', k]);
       glos.ws = ws;
       ws.onopen = () => {
-        ws.send(JSON.stringify(Object.assign({}, KONF_SONIOX, glos.konf || {})));
+        ws.send(JSON.stringify(Object.assign({}, konfSoniox(), glos.konf || {})));
         for (const c of kolejka.splice(0)) ws.send(c);
         if (koniecDzwieku) ws.send('');
       };
@@ -913,6 +937,7 @@
         else if (/^<[a-z]+>$/.test(s)) continue;
         else {
           if (s.trim()) slowa = true;
+          if (t.language) glos.jezyk = t.language;
           if (t.is_final) glos.gotowe += s; else tym += s;
         }
       }
@@ -973,7 +998,7 @@
       glosSprzatnij();
       if (ws && ws.readyState <= 1) { try { ws.close(); } catch { /* zamknięte */ } }
       pokazGlos();
-      if (blad) { stan(blad, 7000); return; }
+      if (blad) { stan(blad, 7000); if (hal.otwarty) halNapis(blad); return; }
       if (glos.wyslij && pole.value.trim()) wyslij(pole.value);
     }
     // iPhone: Aplikacja.swift podaje { stan: 'nagrywa' } po włączeniu mikrofonu, { wiadomosc } z każdą wiadomością Soniox,
@@ -986,6 +1011,112 @@
       if (d.koniec && glos.stan !== 'nic') { if (d.bezWysylki) glos.wyslij = false; glosKoniec(); }
     }
     mikB.addEventListener('click', () => (glos.stan === 'nic' ? glosStart() : glosStop(true)));
+
+    // ---------------------------------------------------------------- HAL (niespodzianka, od 26.10.2026 wieczorem)
+    // Jacek: „przytrzymać przez pół sekundy … samą ikonę … tylko oko tego Hala. Podpis Hal jakiś tam, delikatny … Dzień dobry, Jacku albo
+    // Kasiu … po angielsku i tym jego typowym głosem … rozmowa tylko głosowo, slightly animacyjnie … sam by czuł, jaki język … zaczynał od
+    // angielskiego … czysty Opus, extra high, high, medium, losowo”. Ekran z samym okiem na cały ekran (przytrzymanie logo, app.js):
+    // stuknięcie oka włącza mikrofon, drugie wysyła pytanie, a stuknięcie w trakcie mowy HAL-a ją przerywa i od razu słucha. Pytanie idzie
+    // z polem hal: true, więc komputer odpowiada samym Opusem z Bramy, bez Kiro CLI i bez zapasowego modelu, z wysiłkiem wylosowanym
+    // spośród medium, high i xhigh (asystent.js, „HAL”). HAL mówi głosem urządzenia (speechSynthesis) w języku odpowiedzi, nisko i wolno,
+    // a pod okiem stoi napis tego, co mówi. Rozmowa nie trafia do czatu ani do Historii. Mikrofon słucha po angielsku i po polsku.
+    const hal = { otwarty: false, korzen: null, oko: null, napis: null, rozmowa: '', pracuje: false, mowi: false, numer: 0 };
+    const halImie = () => (o.skad === 'Android' ? 'Jacek' : 'Kasia');
+    function halNapis(t) { if (hal.napis) hal.napis.textContent = t || ''; }
+    function halStan() {
+      if (!hal.korzen) return;
+      const s = glos.stan !== 'nic' ? 'slucha' : hal.pracuje ? 'mysli' : hal.mowi ? 'mowi' : 'czeka';
+      hal.korzen.dataset.stan = s;
+      hal.oko.setAttribute('aria-label', { slucha: 'Zakończ i wyślij pytanie', mysli: 'HAL myśli', mowi: 'Przerwij i mów', czeka: 'Powiedz pytanie' }[s]);
+    }
+    function halCisza() {
+      hal.numer++;
+      hal.mowi = false;
+      try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch { /* bez głosu */ }
+    }
+    function halGlos(j) {
+      let g = [];
+      try { g = (window.speechSynthesis && speechSynthesis.getVoices()) || []; } catch { /* bez głosów */ }
+      g = g.filter((x) => String(x.lang || '').toLowerCase().startsWith(j));
+      return g.find((x) => /male|david|daniel|guy|ryan|thomas|alex|jacek|krzysztof/i.test(x.name) && !/female/i.test(x.name)) || g[0] || null;
+    }
+    // Mówi zdanie po zdaniu, bo długa wypowiedź w jednym kawałku urywa się w części przeglądarek. Napis stoi od razu.
+    function halMow(tekst, jezyk) {
+      const t = String(tekst || '').replace(/\s+/g, ' ').trim();
+      halNapis(t);
+      halCisza();
+      const zdania = (t.match(/[^.!?…]+[.!?…]*/g) || []).map((z) => z.trim()).filter(Boolean);
+      if (!zdania.length || !window.speechSynthesis || typeof SpeechSynthesisUtterance !== 'function') { halStan(); return; }
+      const j = jezyk === 'pl' || jezyk === 'en' ? jezyk : /[ąćęłńóśźż]/i.test(t) ? 'pl' : 'en', numer = hal.numer, g = halGlos(j);
+      hal.mowi = true;
+      halStan();
+      zdania.forEach((z, i) => {
+        const u = new SpeechSynthesisUtterance(z);
+        u.lang = j === 'pl' ? 'pl-PL' : 'en-US';
+        if (g) u.voice = g;
+        u.pitch = 0.55;
+        u.rate = j === 'pl' ? 0.92 : 0.82;
+        const koniec = () => { if (numer === hal.numer && i === zdania.length - 1) { hal.mowi = false; halStan(); } };
+        u.onend = koniec;
+        u.onerror = koniec;
+        speechSynthesis.speak(u);
+      });
+    }
+    function halPowitaj() {
+      const h = new Date().getHours();
+      halMow(`Good ${h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'}, ${halImie()}. I am a HAL 9000 computer. I am completely operational, and all my circuits are functioning perfectly.`, 'en');
+    }
+    async function halZadaj(q) {
+      hal.pracuje = true;
+      halCisza();
+      halNapis('');
+      halStan();
+      const d = await zapytaj({ q, rozmowa: hal.rozmowa, z: '', hal: true, jezyk: glos.jezyk || '' }, CZEKAJ_MS);
+      hal.pracuje = false;
+      if (!hal.otwarty) return;
+      if (d && d.odpowiedz && !d.blad) { halMow(String(d.odpowiedz), d.jezyk); return; }
+      // Bez odpowiedzi HAL mówi swoją znaną kwestią, a napis pod okiem mówi prawdę po polsku.
+      halMow(`I am sorry, ${halImie()}. I am afraid I can not do that.`, 'en');
+      halNapis(d && d.blad ? String(d.blad) : ZDANIA.brak);
+    }
+    function halOtworz() {
+      if (hal.otwarty) return;
+      if (otwarty()) zamknij();
+      zamknijMenu(false);
+      Object.assign(hal, { otwarty: true, rozmowa: 'hal-' + losowe(), pracuje: false, mowi: false });
+      const x = przycisk('zamknij', 'Zamknij HAL', 'czat-zamknij', 18);
+      x.addEventListener('click', halZamknij);
+      const oko = el('button', { type: 'button', class: 'czat-hal-oko', 'aria-label': 'Powiedz pytanie' }, el('span', { class: 'czat-oko', 'aria-hidden': 'true' }));
+      const napis = el('p', { class: 'czat-hal-napis', role: 'status', 'aria-live': 'polite' });
+      const k = el('section', { class: 'czat czat-hal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'HAL', 'data-stan': 'czeka' },
+        el('div', { class: 'czat-hal-gora' }, x),
+        el('div', { class: 'czat-hal-srodek' }, oko, el('p', { class: 'czat-hal-podpis', text: 'HAL 9000' }), napis));
+      Object.assign(hal, { korzen: k, oko, napis });
+      oko.addEventListener('click', () => {
+        if (hal.pracuje) return;
+        if (hal.mowi) halCisza();
+        if (glos.stan === 'nic') { halNapis(''); glosStart(); } else glosStop(true);
+        halStan();
+      });
+      k.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); halZamknij(); } });
+      document.body.append(k);
+      void k.offsetWidth;
+      k.classList.add('widac');
+      oko.focus({ preventScroll: true });
+      halPowitaj();
+    }
+    function halZamknij() {
+      if (!hal.otwarty) return;
+      hal.otwarty = false;
+      halCisza();
+      if (glos.stan !== 'nic') glosStop(false);
+      const k = hal.korzen;
+      Object.assign(hal, { korzen: null, oko: null, napis: null, pracuje: false });
+      pole.value = '';
+      rosnij();
+      przyciski();
+      if (k) { k.classList.remove('widac'); setTimeout(() => k.remove(), 340); }
+    }
 
     // ---------------------------------------------------------------- start
     rysuj();
@@ -1009,8 +1140,8 @@
     }
     zapiszCzekajace();
     const wrocDoRozmowy = () => { if (!doRozmowy || Date.now() - doRozmowy > 600000) return false; doRozmowy = 0; otworz(); return true; };
-    const wstecz = () => { if (zamknijMenu(true)) return true; if (widokHistorii) { wsteczHistorii(); return true; } if (!otwarty()) return false; zamknij(); return true; };
-    const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz };
+    const wstecz = () => { if (hal.otwarty) { halZamknij(); return true; } if (zamknijMenu(true)) return true; if (widokHistorii) { wsteczHistorii(); return true; } if (!otwarty()) return false; zamknij(); return true; };
+    const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz, hal: halOtworz, halOtwarty: () => hal.otwarty };
     aktywny = api;
     return api;
   }

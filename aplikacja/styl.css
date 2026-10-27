@@ -135,9 +135,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
    a ujemny margines trzyma układ nagłówka taki, jak przy samym obrazku 40 px. */
 .logo { position: relative; flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin: -4px; padding: 0; border: 0; border-radius: 14px; background: none; }
 .logo img { display: block; width: 40px; height: 40px; transition: transform 120ms ease, filter 400ms ease; }
-/* Niespodzianka (od 26.10.2026, Jacek: „kolory trochę zmieni … w obu przypadkach … efekt dźwiękowy, ale może subtelne”): w kolorowym trybie
-   barwy logo przesuwają się o 28°, a przy każdym przełączeniu logo podskakuje raz (app.js, „Niespodzianka”, razem z cichym dźwiękiem). */
-body.kolorowo .logo img { filter: hue-rotate(28deg) saturate(1.3); }
+/* Niespodzianka (od 26.10.2026 wieczorem, Jacek: „przytrzymać przez pół sekundy … samą ikonę”): po 0,5 s przytrzymania logo podskakuje raz,
+   a po puszczeniu otwiera się tryb HAL (app.js, „Niespodzianka”; czat.js, „HAL”). Do tego dnia to przytrzymanie włączało kolorowe tło. */
 .logo.niespodzianka img { animation: niespodzianka 420ms cubic-bezier(.3, 1.7, .5, 1); }
 @keyframes niespodzianka { 40% { transform: scale(1.14) rotate(-6deg); } }
 .logo:active img { transform: scale(.94); }
@@ -399,28 +398,20 @@ body.okno main { margin-bottom: env(safe-area-inset-bottom); }
 .podwidoki [role="radio"].ciagniety { z-index: 2; cursor: grabbing; box-shadow: 0 0 0 1px var(--barwa), 0 6px 16px var(--cien-mocny); }
 
 /* Barwy zakładek (od 25.10.2026 wieczorem; Jacek: „Zdechły niebieski … zdechłego zielonego … pseudo fiolet”, a paleta Apple: żywa barwa
-   do akcentu, pastel z niej do rzeczy dyskretnych). Każda zakładka ma barwę z palety systemowej Apple: pomarańczowe Oferty, niebieskie Podium,
-   zielone Finanse i fioletowy Poradnik (Oferty i Finanse zamieniły się barwami 26.10.2026, Jacek: „pomarańczowy jest excited”). --gleboka to ta barwa przyciemniona tak, że biały napis ma na niej od 4,5:1, --zywa-c to
+   do akcentu, pastel z niej do rzeczy dyskretnych). Każda zakładka ma barwę z palety systemowej Apple: niebieskie Oferty, pomarańczowe Podium,
+   zielone Finanse i fioletowy Poradnik (Oferty i Finanse zamieniły się barwami 26.10.2026, Jacek: „pomarańczowy jest excited”; wieczorem Oferty i Podium zamieniły się barwami: pierwsza niebieska, druga pomarańczowa). --gleboka to ta barwa przyciemniona tak, że biały napis ma na niej od 4,5:1, --zywa-c to
    żywa barwa ciemnego motywu, a --pastel z index.html to 16% barwy na bieli (w ciemnym 28% na #1c1c1e). --barwa to barwa wybranej rzeczy
    w bieżącym motywie: tło wybranej zakładki i pigułki, pierścień i pasek przenoszenia. Tło nagłówka, nawigacji i stron jest we wszystkich
    czterech zakładkach takie samo: biel, w ciemnym czerń (Jacek, 26.10.2026, po próbie z odcieniami barw zakładek na całym ekranie:
    „ten eksperyment z kolorem … się nie udało, wracamy do bieli wszystkich czterech takiej samej”). Kontrast każdej pary liczy skrypt. */
-#seg-katalog, .podwidoki[data-z="katalog"], body[data-zakladka="katalog"] { --gleboka: #bc5500; --zywa-c: #ff9f0a; }
-#seg-modele, .podwidoki[data-z="modele"], body[data-zakladka="modele"] { --gleboka: #0071e3; --zywa-c: #0a84ff; }
+#seg-katalog, .podwidoki[data-z="katalog"], body[data-zakladka="katalog"] { --gleboka: #0071e3; --zywa-c: #0a84ff; }
+#seg-modele, .podwidoki[data-z="modele"], body[data-zakladka="modele"] { --gleboka: #bc5500; --zywa-c: #ff9f0a; }
 #seg-kredyt, .podwidoki[data-z="kredyt"], body[data-zakladka="kredyt"] { --gleboka: #1e7d36; --zywa-c: #30d158; }
 #seg-poradnik, .podwidoki[data-z="poradnik"], body[data-zakladka="poradnik"] { --gleboka: #9a4fcf; --zywa-c: #bf5af2; }
 body, .karty [role="tab"], .podwidoki { --barwa: var(--gleboka, var(--akcent)); }
 body { --tlo-pasa: var(--tlo); background-color: var(--tlo-pasa); }
-/* Kolorowe tło jako niespodzianka (od 26.10.2026; Jacek: „ten kolorowy … jest Easter … przełącznik … pod samym” logo): przytrzymanie logo
-   przez 0,6 s włącza i wyłącza odcień 10% barwy wybranej zakładki na całym ekranie, także pod stronami (app.js, „Niespodzianka”).
-   Domyślnie biel, w ciemnym motywie zawsze czerń. Odcień trwa do zamknięcia aplikacji, a każdy start jest śnieżnobiały (od 26.10.2026,
-   Jacek: „chodziło o ten biały, żeby to było śnieżnobiałe”). Odcienie idą za barwami zakładek: Oferty pomarańczowe, Finanse zielone. */
-@media (prefers-color-scheme: light) {
-  body.kolorowo[data-zakladka="katalog"] { --tlo-pasa: #fff4e6; }
-  body.kolorowo[data-zakladka="modele"] { --tlo-pasa: #e6f2ff; }
-  body.kolorowo[data-zakladka="kredyt"] { --tlo-pasa: #ebf9ee; }
-  body.kolorowo[data-zakladka="poradnik"] { --tlo-pasa: #f7eefc; }
-}
+/* Tło strony, nagłówka i pasa nawigacji jest śnieżnobiałe (w ciemnym motywie czarne) w każdej zakładce (Jacek, 26.10.2026: „chodziło o ten
+   biały”). Kolorowego tła, które do wieczora 26.10.2026 włączało przytrzymanie logo, już nie ma. */
 @media (prefers-color-scheme: dark) {
   body, .karty [role="tab"], .podwidoki { --barwa: var(--zywa-c, var(--akcent)); }
   .karty [role="tab"]:not([aria-selected="true"]) { background-color: var(--pastel-c); }
@@ -521,3 +512,30 @@ body.czat-otwarty .dol { z-index: 43; }
   .postep-paska { display: none; }
 }
 @media (min-width: 1240px) { .podwidoki [role="radio"] { flex: 0 0 176px; } }
+
+/* Nawigacja jako chmurka (od 26.10.2026 wieczorem; Jacek: „we need to sacrifice a little bit of real estate … rounded cloud, rather than just
+   flat cutoff … a separate entity … some drop shadow”): na telefonie zakładki i pigułki stoją w zaokrąglonej chmurce z ramką i cieniem, 8 px od
+   brzegów ekranu, a nie na pasie ściętym od dołu. Brzegi zakładek zostają na linii siatki: chmurka wystaje 8 px poza nią, tyle ma wypełnienia
+   (krawędź chmurki 8 px od ekranu, wypełnienie 8 px, przyciski 16 px). Pas jest przezroczysty, a chmurkę rysuje jego ::before. Odstęp pod chmurką
+   to dawny odstęp pod przyciskami minus 8 px wypełnienia, więc przenoszenie nawigacji (--km-nav-y) działa jak przedtem. Ciemny motyw: #1c1c1e
+   z włoskiem (cienia na czerni nie widać). Podczas przenoszenia pasek postępu stoi nad chmurką jako osobna karta. */
+:root {
+  --chmura-tlo: #ffffff;
+  --chmura-cien: 0 0 0 1px rgba(0, 0, 0, .1), 0 2px 6px rgba(0, 0, 0, .08), 0 10px 28px rgba(0, 0, 0, .14), 0 20px 44px rgba(0, 0, 0, .08);
+  --chmura-cien-gora: 0 0 0 1px rgba(0, 0, 0, .1), 0 4px 12px rgba(0, 0, 0, .16), 0 18px 48px rgba(0, 0, 0, .2);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --chmura-tlo: #1c1c1e;
+    --chmura-cien: 0 0 0 1px rgba(255, 255, 255, .16), inset 0 1px 0 rgba(255, 255, 255, .07);
+    --chmura-cien-gora: 0 0 0 1px rgba(255, 255, 255, .24), inset 0 1px 0 rgba(255, 255, 255, .1);
+  }
+}
+@media (max-width: 759px) {
+  .dol { --dol-pb: max(var(--km-dol-min), calc(var(--km-dol-baza) + var(--km-nav-y, 0px))); padding-top: 16px; padding-bottom: var(--dol-pb); background-color: transparent; box-shadow: none; }
+  .dol::before { content: ""; position: absolute; z-index: -1; top: 8px; bottom: max(0px, calc(var(--dol-pb) - 8px)); left: calc(var(--km-x0) - 8px); right: calc(var(--km-x1) - 8px);
+    border-radius: calc(var(--km-rog) + 8px); background: var(--chmura-tlo); box-shadow: var(--chmura-cien); pointer-events: none; transition: box-shadow 160ms ease; }
+  .dol.przenoszony { box-shadow: none; }
+  .dol.przenoszony::before { box-shadow: var(--chmura-cien-gora); }
+  .postep-paska { left: calc(var(--km-x0) - 8px); right: calc(var(--km-x1) - 8px); padding: 0 16px; border-radius: 16px; background: var(--chmura-tlo); box-shadow: var(--chmura-cien); }
+}

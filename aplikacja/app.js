@@ -480,8 +480,8 @@
   }
   addEventListener('resize', ustawSiatke);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => requestAnimationFrame(ustawSiatke));
-  // Kolorowe tło (niespodzianka pod logo, niżej) trwa do zamknięcia aplikacji, a każdy start jest śnieżnobiały (od 26.10.2026, Jacek:
-  // „chodziło o ten biały, żeby to było śnieżnobiałe”; do tego dnia odcień zostawał w pamięci telefonu). Dawny zapis znika.
+  // Każdy start jest śnieżnobiały (Jacek, 26.10.2026: „chodziło o ten biały, żeby to było śnieżnobiałe”). Kolorowe tło, które do wieczora
+  // 26.10.2026 włączało przytrzymanie logo, już nie istnieje; jego dawny zapis w pamięci telefonu znika.
   pamiec.usun('kolorowo');
   LISTA_STRON.forEach(([, s]) => s.el.addEventListener('load', ustawSiatke));
 
@@ -895,48 +895,28 @@
   // wstecz zamykają menu.
   const napis = $('#napis'), logo = $('#logo');
   let menuOtomoto = null, zrodloMenu = napis;
-  // Niespodzianka (od 26.10.2026, Jacek: kolorowe tło jako „Easter … przełącznik … pod samym” logo): przytrzymanie logo przez 0,6 s
-  // włącza i wyłącza odcień barwy wybranej zakładki na całym ekranie, z krótkim drgnięciem. Stuknięcie dalej otwiera menu Otomoto,
-  // a klik po przytrzymaniu niczego nie otwiera (słuchacz w fazie przechwytywania stoi przed tym od menu).
-  // Do tego cichy dźwięk: dwie krótkie nuty (C6 i E6, sinus, głośność 5%), w górę przy włączeniu i w dół przy wyłączeniu. Kontekst dźwięku
-  // rusza już przy dotknięciu, bo przeglądarki grają dopiero po geście; na iPhonie z wyciszonym dzwonkiem dźwięku nie ma.
+  // Niespodzianka (od 26.10.2026 wieczorem, Jacek: „przytrzymać przez pół sekundy … samą ikonę … tylko oko tego Hala … Easter egg”):
+  // przytrzymanie logo przez 0,5 s i puszczenie otwiera tryb HAL (czat.js, „HAL”): pusty ekran z okiem i rozmowa tylko głosem. Stuknięcie
+  // dalej otwiera menu Otomoto, a klik po przytrzymaniu niczego nie otwiera (słuchacz w fazie przechwytywania stoi przed tym od menu).
+  // Po 0,5 s logo podskakuje raz i telefon drga, a HAL otwiera się dopiero po puszczeniu, bo przeglądarki mówią tylko po geście.
+  // Do wieczora 26.10.2026 to samo przytrzymanie włączało kolorowe tło strony.
   {
-    let zegar = 0, przytrzymane = false, dzwiek = null;
+    let zegar = 0, przytrzymane = false;
     const stop = () => clearTimeout(zegar);
-    const graj = (wl) => {
-      try {
-        const t = dzwiek.currentTime + 0.02;
-        (wl ? [1046.5, 1318.5] : [1318.5, 1046.5]).forEach((f, i) => {
-          const o = dzwiek.createOscillator(), g = dzwiek.createGain(), od = t + i * 0.09;
-          o.type = 'sine';
-          o.frequency.value = f;
-          g.gain.setValueAtTime(0.0001, od);
-          g.gain.exponentialRampToValueAtTime(0.05, od + 0.012);
-          g.gain.exponentialRampToValueAtTime(0.0001, od + 0.16);
-          o.connect(g).connect(dzwiek.destination);
-          o.start(od);
-          o.stop(od + 0.18);
-        });
-      } catch { /* bez dźwięku */ }
-    };
     logo.addEventListener('pointerdown', () => {
       przytrzymane = false;
       clearTimeout(zegar);
-      try { dzwiek = dzwiek || new (window.AudioContext || window.webkitAudioContext)(); if (dzwiek.state === 'suspended') dzwiek.resume(); } catch { dzwiek = null; }
       zegar = setTimeout(() => {
         przytrzymane = true;
-        const wl = !document.body.classList.contains('kolorowo');
-        document.body.classList.toggle('kolorowo', wl);
-        ustawSiatke();
         logo.classList.remove('niespodzianka');
         void logo.offsetWidth;
         logo.classList.add('niespodzianka');
-        if (dzwiek) graj(wl);
         if (navigator.vibrate) navigator.vibrate(12);
-      }, 600);
+      }, 500);
     });
+    logo.addEventListener('pointerup', () => { stop(); if (przytrzymane && czat) czat.hal(); });
     logo.addEventListener('animationend', () => logo.classList.remove('niespodzianka'));
-    for (const t of ['pointerup', 'pointercancel', 'pointerleave']) logo.addEventListener(t, stop);
+    for (const t of ['pointercancel', 'pointerleave']) logo.addEventListener(t, () => { stop(); if (t === 'pointercancel') przytrzymane = false; });
     logo.addEventListener('click', (e) => { if (przytrzymane) { przytrzymane = false; e.preventDefault(); e.stopImmediatePropagation(); } }, true);
     logo.addEventListener('contextmenu', (e) => e.preventDefault());
   }
@@ -1153,7 +1133,7 @@
   // odpowiada dopiero po chwili, więc gdy stoi na pierwszej pigułce rzędu, Wstecz idzie na pierwszą zakładkę.
   function wstecz() {
     if (menuOtomoto) { zamknijMenuOtomoto(true); return true; }
-    if (czat && czat.otwarty()) return czat.wstecz();
+    if (czat && (czat.halOtwarty() || czat.otwarty())) return czat.wstecz();
     const k = klucz(widok);
     if (k === 'atlas') {
       if (atlasGotowy) { atlasWstecz = Date.now(); ramkaAtlasu.contentWindow.postMessage({ atlas: 'wstecz' }, '*'); }
