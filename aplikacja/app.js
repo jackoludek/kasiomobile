@@ -730,7 +730,8 @@
       setTimeout(() => { S.sprawdzano = 0; kontrola(); }, 4000);
     }
     function start() {
-      S.wlacz = SKAD !== 'Android' && Boolean(KANAL) && matchMedia('(pointer: coarse)').matches;
+      // Strona testowa (?test=…, testy/przegladarka.mjs) nigdy nie zapisuje użycia, żeby próby nie trafiły na prawdziwy kanał Kasi.
+      S.wlacz = SKAD !== 'Android' && Boolean(KANAL) && matchMedia('(pointer: coarse)').matches && !/[?&]test=/.test(location.search);
       if (!S.wlacz) return;
       S.id = String(pamiec.czytaj('uzycie-id', '') || '');
       if (!/^[0-9a-f]{8}$/.test(S.id)) { S.id = Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, '0')).join(''); pamiec.zapisz('uzycie-id', S.id); }
