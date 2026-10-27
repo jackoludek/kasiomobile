@@ -1214,10 +1214,22 @@ body[data-wyglad="4"] .karty [aria-selected="true"] .znak path { fill: #ffffff; 
       nowaB.disabled = pracuje || !historia.length;
       historiaB.disabled = pracuje;
     }
+    // Pole pytania (27.10.2026; Jacek: tekst z dyktowania ma mieć ostatnie zdanie przy palcu i nie może uciekać poza ekran): im więcej tekstu, tym drobniejsze
+    // litery (od zwykłych do 14 px), a gdy i tak się nie mieści, pole przewija się do końca. Rozmiar liczymy od początku przy każdej zmianie, więc po
+    // skasowaniu tekstu litery wracają do zwykłych.
+    const ROZM_MIN = 14, POLE_MAX = 132;
     function rosnij() {
+      pole.style.fontSize = '';
       pole.style.height = 'auto';
-      pole.style.height = Math.min(pole.scrollHeight + 2, 132) + 'px';
+      let rozm = parseFloat(getComputedStyle(pole).fontSize) || 16;
+      while (pole.scrollHeight + 2 > POLE_MAX && rozm > ROZM_MIN) {
+        rozm -= 1;
+        pole.style.fontSize = rozm + 'px';
+        pole.style.height = 'auto';
+      }
+      pole.style.height = Math.min(pole.scrollHeight + 2, POLE_MAX) + 'px';
     }
+    const poleNaDole = () => pole.scrollTop + pole.clientHeight >= pole.scrollHeight - 4;
     const naDol = () => { lista.scrollTop = lista.scrollHeight; };
     const usunPusto = () => { const p = lista.querySelector('.czat-pusto'); if (p) p.remove(); };
     function zapiszHistorie() {
@@ -2003,8 +2015,11 @@ body[data-wyglad="4"] .karty [aria-selected="true"] .znak path { fill: #ffffff; 
         }
       }
       glos.tym = tym;
+      // Jeśli pole stało na dole, po dopisaniu słów przewija się do końca (ostatnie zdanie zawsze widać). Przewinięte ręcznie wyżej zostaje tam, gdzie je zostawiono.
+      const bylNaDole = poleNaDole();
       pole.value = (glos.gotowe + glos.tym).replace(/\s+/g, ' ').trim();
       rosnij();
+      if (bylNaDole) pole.scrollTop = pole.scrollHeight;
       przyciski();
       if (slowa) { clearTimeout(glos.chwila); glos.chwila = 0; }
       if (koniec && (glos.stan === 'nagrywa' || glos.stan === 'start')) {
