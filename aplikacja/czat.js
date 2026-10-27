@@ -48,6 +48,8 @@
     czytaj(k, d) { try { const v = localStorage.getItem('kasiomobile-czat:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
     zapisz(k, v) { try { localStorage.setItem('kasiomobile-czat:' + k, JSON.stringify(v)); } catch { /* pełna pamięć: zostaje poprzednie */ } },
   };
+  // Dziennik użycia (app.js, „dziennik użycia”) dostaje od czatu pytania, odpowiedzi (sam rozmiar), HAL-a i mikrofon; bez niego nic się nie zmienia.
+  const uz = (typ, dane) => { try { if (window.Uzycie) window.Uzycie.czat(typ, dane); } catch { /* dziennik nie psuje czatu */ } };
   const pauza = (ms) => new Promise((r) => setTimeout(r, ms));
   const losowe = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(16).padStart(2, '0')).join('');
   function el(tag, atr, ...dzieci) {
@@ -137,8 +139,7 @@
     const historiaB = pigulka('historia', 'Historia', 'czat-historia');
     historiaB.setAttribute('aria-pressed', 'false');
     const nowaB = pigulka('nowa', 'Nowa rozmowa', 'czat-nowa');
-    const gora = el('div', { class: 'czat-gora' }, tryb === 'arkusz' ? el('span', { class: 'czat-uchwyt', 'aria-hidden': 'true' }) : null,
-      el('div', { class: 'czat-gora-lewo' }, historiaB, nowaB), zamknijB);
+    const gora = el('div', { class: 'czat-gora' }, tryb === 'arkusz' ? el('span', { class: 'czat-uchwyt', 'aria-hidden': 'true' }) : null, zamknijB);
     const lista = el('div', { class: 'czat-lista', role: 'log', 'aria-live': 'polite', 'aria-label': 'Rozmowa z asystentem' });
     const stanL = el('p', { class: 'czat-stan', role: 'status', hidden: true });
     const pole = el('textarea', { class: 'czat-tekst', rows: '1', maxlength: '600', placeholder: 'Zapytaj o auta…', 'aria-label': 'Pytanie do asystenta', enterkeyhint: 'send', autocomplete: 'off' });
@@ -150,7 +151,10 @@
     // (błękitne szkło ze strzałką, styl w czat.css).
     const cofnijC = pigulka('cofnij', 'Cofnij', 'czat-cofnij');
     const cofnijPole = el('div', { class: 'czat-cofnij-pole', hidden: true }, cofnijC);
-    korzen.append(gora, lista, stanL, forma, cofnijPole);
+    // Historia i Nowa rozmowa stoją pod kciukiem, tuż nad polem pytania, każda na sześciu kolumnach siatki (od 27.10.2026, Jacek: „Pod kciuk”);
+    // u góry zostaje sam krzyżyk. „Cofnij” po ruchu rozmowy stoi tuż nad tym rzędem.
+    const nawi = el('div', { class: 'czat-nawi' }, historiaB, nowaB, cofnijPole);
+    korzen.append(gora, lista, stanL, nawi, forma);
     if (zaslona) document.body.append(zaslona);
     (o.miejsce || document.body).append(korzen);
 
@@ -423,6 +427,7 @@
       clearTimeout(zegarCofnij);
       cofnijPole.classList.remove('paruje');
       cofnijPole.hidden = !opis;
+      korzen.classList.toggle('z-cofnij', Boolean(opis));
       if (!opis) return;
       cofnijC.setAttribute('aria-label', opis);
       void cofnijPole.offsetWidth;
@@ -679,6 +684,7 @@
       przyciski();
       const w = !d ? { kto: 'ai', blad: ZDANIA.brak, q } : d.blad ? { kto: 'ai', blad: String(d.blad), q }
         : { kto: 'ai', tekst: String(d.odpowiedz || ''), linki: Array.isArray(d.linki) ? d.linki.slice(0, 3) : [], pokaz: d.pokaz && BIERNIK[d.pokaz.zakladka] ? d.pokaz : null };
+      uz('odpowiedz', w.blad ? 'błąd: ' + String(w.blad).slice(0, 80) : `${(w.tekst || '').length} znaków, odnośników ${(w.linki || []).length}${w.pokaz ? ', pokaż ' + w.pokaz.zakladka : ''}`);
       const e = dodaj(w);
       // Długa odpowiedź: widać jej początek, nie koniec.
       if (e.offsetHeight > lista.clientHeight - 48) e.scrollIntoView({ block: 'start' }); else naDol();
@@ -687,7 +693,8 @@
     function wyslij(t) {
       const q = String(t || '').replace(/\s+/g, ' ').trim().slice(0, 600);
       if (!q || pracuje) return false;
-      if (hal.otwarty) { pole.value = ''; rosnij(); przyciski(); halZadaj(q); return true; }
+      if (hal.otwarty) { uz('hal-pytanie', q); pole.value = ''; rosnij(); przyciski(); halZadaj(q); return true; }
+      uz('pytanie', q);
       pole.value = '';
       rosnij();
       przyciski();
@@ -873,6 +880,7 @@
     async function glosStart() {
       if (glos.stan !== 'nic' || pracuje) return;
       Object.assign(glos, { stan: 'start', gotowe: '', tym: '', wyslij: true, maKlucz: false, czekaNaKlucz: false });
+      uz('mik', 'start');
       pokazGlos();
       const kluczTeraz = klucz();
       kluczTeraz.catch(() => { /* błąd przychodzi niżej, przez await */ });
@@ -998,7 +1006,7 @@
       glosSprzatnij();
       if (ws && ws.readyState <= 1) { try { ws.close(); } catch { /* zamknięte */ } }
       pokazGlos();
-      if (blad) { stan(blad, 7000); if (hal.otwarty) halNapis(blad); return; }
+      if (blad) { stan(blad, 7000); uz('mik', 'błąd: ' + blad); if (hal.otwarty) halNapis(blad); return; }
       if (glos.wyslij && pole.value.trim()) wyslij(pole.value);
     }
     // iPhone: Aplikacja.swift podaje { stan: 'nagrywa' } po włączeniu mikrofonu, { wiadomosc } z każdą wiadomością Soniox,
@@ -1074,7 +1082,8 @@
       const d = await zapytaj({ q, rozmowa: hal.rozmowa, z: '', hal: true, jezyk: glos.jezyk || '' }, CZEKAJ_MS);
       hal.pracuje = false;
       if (!hal.otwarty) return;
-      if (d && d.odpowiedz && !d.blad) { halMow(String(d.odpowiedz), d.jezyk); return; }
+      if (d && d.odpowiedz && !d.blad) { uz('hal-odpowiedz', `${String(d.odpowiedz).length} znaków, ${d.jezyk || ''}`); halMow(String(d.odpowiedz), d.jezyk); return; }
+      uz('hal-odpowiedz', 'błąd');
       // Bez odpowiedzi HAL mówi swoją znaną kwestią, a napis pod okiem mówi prawdę po polsku.
       halMow(`I am sorry, ${halImie()}. I am afraid I can not do that.`, 'en');
       halNapis(d && d.blad ? String(d.blad) : ZDANIA.brak);
@@ -1103,10 +1112,12 @@
       void k.offsetWidth;
       k.classList.add('widac');
       oko.focus({ preventScroll: true });
+      uz('hal', 'otwarty');
       halPowitaj();
     }
     function halZamknij() {
       if (!hal.otwarty) return;
+      uz('hal', 'zamkniety');
       hal.otwarty = false;
       halCisza();
       if (glos.stan !== 'nic') glosStop(false);

@@ -485,6 +485,296 @@
   pamiec.usun('kolorowo');
   LISTA_STRON.forEach(([, s]) => s.el.addEventListener('load', ustawSiatke));
 
+  // ---------------------------------------------------------------- dziennik użycia (od 27.10.2026)
+  // Jacek: „zapisywał jej interakcje z tą aplikacją … gdzie jej palec śmigał, co ona oglądała, i jak oglądała … user study … odtworzyć w jej
+  // tempie … całe dni z przerwami … wszystko, co wpisuje”. Po Fiszkach (27.10.2026): Kasi powie o tym Jacek, dane idą same na komputer w domu,
+  // zapis jest domyślnie wyłączony: telefon niczego nie zapisuje ani nie wysyła, dopóki komputer nie potwierdzi zgody (node asystent.js --uzycie wlacz; do tego czasu
+  // idzie tylko pusty ping z losowym numerem instalacji, najwyżej raz na 10 minut), a zbieranie trwa, aż Jacek je wyłączy (node asystent.js --uzycie wylacz). Zapisuje tylko to, co dzieje się w tej aplikacji i w jej
+  // ramkach, nigdy nic spoza niej. Tylko na ekranach dotykowych poza Androidem Jacka, więc jego próby w przeglądarce na komputerze i na Redmi
+  // niczego nie zaśmiecają. Zdarzenia to tablice [czas, kod, …]; kody: S sesja, v widoczność, r rozmiar okna, p dotyk (0 palec w dół, 1 ruch,
+  // 2 w górę, 3 przerwany), c stuknięcie z nazwą elementu, s przewinięcie, n zakładka albo pigułka, d okno ze szczegółami, i wpisany tekst,
+  // q czat i HAL, u zarys ekranu (prostokąty i podpisy widocznych elementów). Co 45 s albo po ok. 8 tys. znaków zdarzenia idą w paczkach
+  // (gzip, base64, do 3,5 tys. znaków) na „<kanał>-uzycie”; komputer potwierdza każdą na „<kanał>-odpowiedz”: { id: 'u-<instalacja>', ack: n,
+  // uzycie }. Paczka bez potwierdzenia czeka w telefonie (do 120, w IndexedDB) i idzie jeszcze raz po 10 minutach; komputer wyłącza zapis
+  // polem uzycie: false. Dzienny limit 150 wysłanych wiadomości chroni limit ntfy.sh (250 na dobę), który dzielą z pytaniami do asystenta.
+  // Ramki z innej strony (Atlas) są dla nas zamknięte, więc dotyku w Atlasie nie widać; zostaje zakładka i pigułka.
+  const UZYCIE = (() => {
+    const MAX_SUROWYCH = 8000, MAX_BASE64 = 3500, MAX_PACZEK = 120, DZIENNIE = 150, PONOW_MS = 10 * 60000, CO_MS = 45000, SESJA_MS = 30 * 60000, MAX_ELEMENTOW = 45;
+    const S = { wlacz: false, ok: false, stop: false, id: '', n: 1, kolejka: [], rozmiar: 0, paczki: [], gotowe: Promise.resolve(), zegar: 0, lot: false, dzis: 0, dzienKlucz: '',
+      sprawdzano: 0, ukryta: 0, zarys: '', zarysT: 0, zarysZegar: 0 };
+    const czekaj = (ms) => new Promise((r) => setTimeout(r, ms));
+    const przytnij = (t, n) => String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, n);
+    const bez = (f) => (...a) => { try { return f(...a); } catch { /* dziennik nie psuje aplikacji */ } };
+    const zapisPaczek = () => schowek.zapisz('uzycie-paczki', JSON.stringify(S.paczki.map(({ n, t0, z, d }) => ({ n, t0, z, d }))));
+
+    function zapisz(kod, ...dane) {
+      if (!S.wlacz || S.stop || !S.ok) return;
+      S.kolejka.push([Date.now(), kod, ...dane]);
+      S.rozmiar += 14 + dane.reduce((a, d) => a + String(d).length + 3, 0);
+      if (S.rozmiar >= MAX_SUROWYCH) zamknij();
+      else if (!S.zegar) S.zegar = setTimeout(zamknij, CO_MS);
+    }
+    // Paczka: czasy jako różnice od poprzedniego zdarzenia (pierwsze od t0), gzip i base64; za duża dzieli się na pół.
+    async function pakuj(z) {
+      const t0 = z[0][0];
+      let pop = t0;
+      const tab = z.map((x) => { const dt = x[0] - pop; pop = x[0]; return [dt, ...x.slice(1)]; });
+      const json = JSON.stringify(tab);
+      let d = json, f = 'j';
+      if (typeof CompressionStream === 'function' && typeof Blob === 'function') {
+        try {
+          const b = new Uint8Array(await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+          let s = '';
+          for (let i = 0; i < b.length; i += 8192) s += String.fromCharCode(...b.subarray(i, i + 8192));
+          d = btoa(s);
+          f = 'g';
+        } catch { /* bez kompresji */ }
+      }
+      if (d.length > MAX_BASE64 && z.length > 1) { const p = z.length >> 1; return (await pakuj(z.slice(0, p))).concat(await pakuj(z.slice(p))); }
+      return [{ t0, z: f, d }];
+    }
+    async function zamknij() {
+      clearTimeout(S.zegar);
+      S.zegar = 0;
+      const z = S.kolejka;
+      S.kolejka = [];
+      S.rozmiar = 0;
+      if (z.length && !S.stop) {
+        await S.gotowe;
+        for (const p of await pakuj(z)) { p.n = S.n++; S.paczki.push(p); }
+        pamiec.zapisz('uzycie-n', S.n);
+        while (S.paczki.length > MAX_PACZEK) S.paczki.shift();
+        await zapisPaczek();
+        pamiec.usun('uzycie-kolejka');
+      }
+      wyslij(false);
+    }
+    async function wyslij(koniec) {
+      if (S.lot || S.stop || !S.ok || !S.paczki.length || !S.wlacz) return;
+      S.lot = true;
+      try {
+        const dzis = new Date().toISOString().slice(0, 10);
+        if (S.dzienKlucz !== dzis) { const z = pamiec.czytaj('uzycie-dzis', null); S.dzis = z && z.d === dzis ? Number(z.n) || 0 : 0; S.dzienKlucz = dzis; }
+        for (const p of S.paczki.slice()) {
+          if (p.wys && Date.now() - p.wys < PONOW_MS) continue;
+          if (S.dzis >= DZIENNIE) break;
+          const r = await fetch(`${SERWER}/${KANAL}-uzycie`, { method: 'POST', cache: 'no-store', keepalive: Boolean(koniec), body: JSON.stringify({ u: S.id, n: p.n, t0: p.t0, z: p.z, d: p.d }) });
+          if (!r.ok) break;
+          p.wys = Date.now();
+          S.dzis++;
+          pamiec.zapisz('uzycie-dzis', { d: dzis, n: S.dzis });
+          await czekaj(1200);
+        }
+      } catch { /* bez sieci paczki czekają w telefonie */ }
+      S.lot = false;
+      setTimeout(kontrola, 6000);
+    }
+    // Komputer potwierdza paczki i może wyłączyć zapis: czytamy jego wiadomości o tej instalacji z ostatnich 12 godzin.
+    async function kontrola() {
+      if (!S.wlacz || Date.now() - S.sprawdzano < 15000) return;
+      S.sprawdzano = Date.now();
+      try {
+        const potw = new Set();
+        let wlacz = null;
+        for (const m of await wiadomosci(`${KANAL}-odpowiedz`, '12h')) {
+          let d;
+          try { d = JSON.parse(m.message); } catch { continue; }
+          if (!d || d.id !== 'u-' + S.id) continue;
+          for (const a of Array.isArray(d.ack) ? d.ack : [d.ack]) if (Number.isInteger(a)) potw.add(a);
+          if (typeof d.uzycie === 'boolean') wlacz = d.uzycie;
+        }
+        if (potw.size) {
+          const przed = S.paczki.length;
+          S.paczki = S.paczki.filter((p) => !potw.has(p.n));
+          if (S.paczki.length !== przed) await zapisPaczek();
+        }
+        if (wlacz === false) {
+          if (S.ok || !S.stop) { S.ok = false; S.stop = true; pamiec.usun('uzycie-ok'); pamiec.zapisz('uzycie-stop', true); S.kolejka = []; S.paczki = []; pamiec.usun('uzycie-kolejka'); await zapisPaczek(); }
+        } else if (wlacz === true && (!S.ok || S.stop)) {
+          S.ok = true; S.stop = false; pamiec.zapisz('uzycie-ok', true); pamiec.usun('uzycie-stop'); sesja();
+        }
+      } catch { /* bez sieci */ }
+      if (!document.hidden && (S.paczki.length || S.stop || !S.ok)) setTimeout(kontrola, 90000);
+    }
+    // Opis stuniętego elementu: znacznik#id | napis | nagłówek karty, w której leży (na przykład tytuł auta).
+    function opis(cel) {
+      if (!cel || !cel.closest) return '';
+      const k = cel.closest('button, a, summary, label, input, select, textarea, [role="tab"], [role="radio"], [role="button"], [role="checkbox"]') || cel;
+      const tekst = przytnij(k.getAttribute('aria-label') || k.getAttribute('title') || k.value || k.textContent, 48);
+      const kt = k.closest('article, li, tr, [data-id], dialog, section'), h = kt && kt !== k ? kt.querySelector('h1, h2, h3, h4, strong') : null;
+      return [k.tagName.toLowerCase() + (k.id ? '#' + przytnij(k.id, 20) : ''), tekst, h ? przytnij(h.textContent, 44) : ''].filter(Boolean).join(' | ');
+    }
+    // Zarys ekranu: do 45 widocznych elementów jako [x, y, szerokość, wysokość, „znacznik:napis”] we współrzędnych okna, żeby przy odtwarzaniu
+    // było widać, co leżało pod palcem. Tylko gdy zarys się zmienił i nie częściej niż co 2,5 s.
+    function elementy(doc, dx, dy, wynik) {
+      const okno = doc.defaultView, w = okno.innerWidth, h = okno.innerHeight;
+      for (const e of doc.querySelectorAll('img, button, a[href], input, select, summary, h1, h2, h3, h4, strong, [role="tab"], [role="radio"], [role="button"]')) {
+        if (wynik.length >= MAX_ELEMENTOW) break;
+        const r = e.getBoundingClientRect();
+        if (r.width < 8 || r.height < 8 || r.bottom <= 0 || r.top >= h || r.right <= 0 || r.left >= w) continue;
+        const cs = okno.getComputedStyle(e);
+        if (cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') continue;
+        wynik.push([Math.round(r.left + dx), Math.round(r.top + dy), Math.round(r.width), Math.round(r.height),
+          e.tagName.toLowerCase().slice(0, 3) + ':' + przytnij(e.getAttribute('aria-label') || e.alt || e.value || e.textContent, 26)]);
+      }
+    }
+    const zarysTeraz = bez(() => {
+      const wynik = [];
+      elementy(document, 0, 0, wynik);
+      const s = STRONY[klucz(widok)];
+      if (s && s.el && s.el.contentDocument && s.el.contentDocument.documentElement && !document.body.classList.contains('czat-otwarty') && !document.querySelector('.czat-hal')) {
+        const r = s.el.getBoundingClientRect();
+        elementy(s.el.contentDocument, r.left, r.top, wynik);
+      }
+      return wynik;
+    });
+    function planujZarys(ms) {
+      if (!S.wlacz || S.stop || !S.ok) return;
+      clearTimeout(S.zarysZegar);
+      S.zarysZegar = setTimeout(bez(() => {
+        const teraz = Date.now();
+        if (teraz - S.zarysT < 2500) { planujZarys(2500 - (teraz - S.zarysT)); return; }
+        const z = zarysTeraz();
+        if (!z || !z.length) return;
+        const j = JSON.stringify(z);
+        if (j === S.zarys) return;
+        S.zarys = j;
+        S.zarysT = teraz;
+        zapisz('u', przytnij(document.body.dataset.zakladka || '', 12), z);
+      }), ms || 500);
+    }
+    const widziane = new WeakSet();
+    function podepnij(doc, ramka, nazwa) {
+      if (!S.wlacz || !doc || !doc.documentElement || widziane.has(doc)) return;
+      widziane.add(doc);
+      const przes = () => { if (!ramka) return [0, 0]; const r = ramka.getBoundingClientRect(); return [r.left, r.top]; };
+      let ostT = 0, ostX = -99, ostY = -99;
+      for (const [typ, kod] of [['touchstart', 0], ['touchmove', 1], ['touchend', 2], ['touchcancel', 3]]) {
+        doc.addEventListener(typ, bez((e) => {
+          const t = kod >= 2 ? e.changedTouches && e.changedTouches[0] : e.touches && e.touches[0];
+          if (!t) return;
+          const [dx, dy] = przes(), x = Math.round(t.clientX + dx), y = Math.round(t.clientY + dy), teraz = Date.now();
+          if (kod === 1 && (teraz - ostT < 66 || Math.abs(x - ostX) + Math.abs(y - ostY) < 4)) return;
+          ostT = teraz; ostX = x; ostY = y;
+          zapisz('p', kod, x, y);
+        }), { capture: true, passive: true });
+      }
+      doc.addEventListener('click', bez((e) => {
+        const [dx, dy] = przes();
+        zapisz('c', Math.round(e.clientX + dx), Math.round(e.clientY + dy), opis(e.target), nazwa);
+      }), { capture: true, passive: true });
+      // Przewijanie: najwyżej co 150 ms, z ostatnim położeniem po zatrzymaniu; zarys ekranu po ustaniu ruchu.
+      let sT = 0, sZegar = 0, sCel = null;
+      doc.addEventListener('scroll', bez((e) => {
+        sCel = e.target;
+        const rob = bez(() => {
+          sZegar = 0;
+          sT = Date.now();
+          const el = sCel && sCel.nodeType === 9 ? (sCel.scrollingElement || sCel.documentElement) : sCel;
+          if (!el) return;
+          zapisz('s', nazwa + (el.nodeType === 1 && el.className && typeof el.className === 'string' && sCel.nodeType !== 9 ? '.' + przytnij(el.className.split(' ')[0], 16) : ''),
+            Math.round(el.scrollTop), Math.max(0, Math.round(el.scrollHeight - el.clientHeight)));
+          planujZarys(450);
+        });
+        const minelo = Date.now() - sT;
+        if (minelo >= 150) rob(); else if (!sZegar) sZegar = setTimeout(rob, 150 - minelo);
+      }), { capture: true, passive: true });
+      // Wpisany tekst i ustawienia (suwaki kalkulatora, szukanie, filtry): wartość po 0,7 s ciszy.
+      const wpis = {};
+      doc.addEventListener('input', bez((e) => {
+        const c = e.target;
+        if (!c || !/^(INPUT|TEXTAREA|SELECT)$/.test(c.tagName) || c.type === 'password') return;
+        const k = przytnij(c.id || c.name || c.placeholder || c.type || 'pole', 30);
+        clearTimeout(wpis[k]);
+        wpis[k] = setTimeout(bez(() => zapisz('i', nazwa, k, przytnij(c.type === 'checkbox' || c.type === 'radio' ? c.checked : c.value, 80))), 700);
+      }), { capture: true, passive: true });
+      // Okno ze szczegółami (auto, filtry, galeria): otwarcie z tytułem i zamknięcie.
+      let otwarte = 0;
+      const MO = (doc.defaultView && doc.defaultView.MutationObserver) || MutationObserver;
+      new MO(bez(() => {
+        const d = doc.querySelector('dialog[open]'), jest = d ? 1 : 0;
+        if (jest === otwarte) return;
+        otwarte = jest;
+        const h = d ? d.querySelector('h1, h2, h3, [aria-label]') : null;
+        zapisz('d', nazwa, jest, d ? przytnij((h && (h.textContent || h.getAttribute('aria-label'))) || d.getAttribute('aria-label') || '', 60) : '');
+        planujZarys(700);
+      })).observe(doc.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['open'] });
+    }
+    // Zakładka i pigułka zmieniają się też bez stuknięcia (asystent, powrót do aplikacji), więc patrzymy na atrybuty, a nie na kliknięcia.
+    function nawigacja() {
+      let zak = '';
+      const pig = {};
+      const sprawdz = bez(() => {
+        const z = document.body.dataset.zakladka || '';
+        if (z && z !== zak) { zak = z; zapisz('n', 'z', z); planujZarys(800); }
+        for (const r of document.querySelectorAll('.podwidoki [role="radio"][aria-checked="true"]')) {
+          const g = r.closest('.podwidoki'), id = g ? g.dataset.z : '', p = r.dataset.p || '';
+          if (id && p && pig[id] !== p) { pig[id] = p; zapisz('n', 'p', id + ':' + p); planujZarys(800); }
+        }
+      });
+      new MutationObserver(sprawdz).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['data-zakladka', 'aria-checked'] });
+      sprawdz();
+    }
+    function sesja() {
+      zapisz('S', innerWidth, innerHeight, Math.round(devicePixelRatio * 100) / 100, SKAD, matchMedia('(prefers-color-scheme: dark)').matches ? 'c' : 'j', przytnij(navigator.userAgent, 100));
+      planujZarys(1500);
+    }
+    // Zgoda komputera: dopóki jej nie ma, telefon niczego nie zapisuje ani nie wysyła, tylko pyta pustą paczką (n: 0, ping) z losowym numerem instalacji.
+    // Przy starcie najwyżej raz na minutę, później najwyżej raz na 10 minut, więc zapis włączony na komputerze telefon zauważa przy najbliższym otwarciu.
+    function pytaj(start) {
+      if (!S.wlacz || S.ok) return;
+      const teraz = Date.now(), ost = Number(pamiec.czytaj('uzycie-ping', 0)) || 0;
+      if (teraz - ost < (start ? 60000 : 600000)) return;
+      pamiec.zapisz('uzycie-ping', teraz);
+      fetch(`${SERWER}/${KANAL}-uzycie`, { method: 'POST', cache: 'no-store', body: JSON.stringify({ u: S.id, n: 0, ping: 1 }) }).catch(() => {});
+      setTimeout(() => { S.sprawdzano = 0; kontrola(); }, 4000);
+    }
+    function start() {
+      S.wlacz = SKAD !== 'Android' && Boolean(KANAL) && matchMedia('(pointer: coarse)').matches;
+      if (!S.wlacz) return;
+      S.id = String(pamiec.czytaj('uzycie-id', '') || '');
+      if (!/^[0-9a-f]{8}$/.test(S.id)) { S.id = Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, '0')).join(''); pamiec.zapisz('uzycie-id', S.id); }
+      S.n = Number(pamiec.czytaj('uzycie-n', 1)) || 1;
+      S.stop = pamiec.czytaj('uzycie-stop', false) === true;
+      S.ok = !S.stop && pamiec.czytaj('uzycie-ok', false) === true;
+      S.gotowe = schowek.czytaj('uzycie-paczki').then((t) => {
+        try {
+          const p = JSON.parse(t || '[]');
+          if (Array.isArray(p)) S.paczki = p.filter((x) => x && Number.isInteger(x.n) && typeof x.d === 'string').concat(S.paczki);
+          S.n = Math.max(S.n, ...S.paczki.map((x) => x.n + 1));
+        } catch { /* zepsuty zapis: zaczynamy od nowa */ }
+      }, () => {});
+      const ost = pamiec.czytaj('uzycie-kolejka', []);
+      if (Array.isArray(ost) && ost.length && S.ok && !S.stop) S.kolejka = ost.filter(Array.isArray); else pamiec.usun('uzycie-kolejka');
+      podepnij(document, null, 'app');
+      nawigacja();
+      if (S.ok && !S.stop) sesja();
+      document.addEventListener('visibilitychange', bez(() => {
+        zapisz('v', document.hidden ? 0 : 1);
+        if (document.hidden) { S.ukryta = Date.now(); if (S.kolejka.length) pamiec.zapisz('uzycie-kolejka', S.kolejka); zamknij(); }
+        else { if (S.ukryta && Date.now() - S.ukryta > SESJA_MS && S.ok && !S.stop) sesja(); S.ukryta = 0; pytaj(false); kontrola(); planujZarys(900); }
+      }));
+      addEventListener('pagehide', bez(() => { if (S.kolejka.length) pamiec.zapisz('uzycie-kolejka', S.kolejka); zamknij(); }));
+      let rz = 0;
+      addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(bez(() => { zapisz('r', innerWidth, innerHeight); planujZarys(600); }), 400); });
+      S.gotowe.then(() => {
+        pytaj(true);
+        wyslij(false);
+        setTimeout(kontrola, 8000);
+      });
+    }
+    const api = {
+      podepnij: bez(podepnij),
+      czat: bez((typ, dane) => { zapisz('q', typ, przytnij(dane, 300)); if (typ === 'hal' || /^czat-/.test(typ)) planujZarys(700); }),
+      stan: () => ({ wlaczone: S.wlacz && S.ok && !S.stop, ok: S.ok, stop: S.stop, id: S.id, nastepny: S.n, oczekuje: S.paczki.length, wRam: S.kolejka.length, dzis: S.dzis }),
+      splukaj: () => zamknij(),
+      kontrola: () => { S.sprawdzano = 0; return kontrola(); },
+    };
+    start();
+    window.Uzycie = api;
+    return api;
+  })();
+
   // Otwarte okno w stronie (filtry, szczegóły auta, galeria) dostaje cały ekran: nagłówek, pigułki i zakładki chowają się,
   // a po zamknięciu wracają. Strony w ramkach mają to samo pochodzenie (blob:), więc ich okna widać stąd.
   const okna = {};
@@ -504,6 +794,7 @@
         if (a && /^https?:/i.test(a.href) && !a.target) a.target = '_blank';
       }, true);
       new w.MutationObserver(sprawdz).observe(w.document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['open'] });
+      UZYCIE.podepnij(w.document, s.el, k);
       sprawdz();
     });
   });
@@ -1090,7 +1381,7 @@
     // Rozmowa na telefonie kończy się nad nawigacją, więc zakładki zostają widać i działają (od 26.10.2026, Jacek: „brak jakiejkolwiek
     // nawigacji po tych czatach”). Na szerokim ekranie nawigacja stoi u góry, a rozmowa jest panelem z prawej.
     dol: () => { const d = $('.dol'); return innerWidth >= 760 || !d || !d.offsetHeight ? 0 : innerHeight - d.getBoundingClientRect().top; },
-    naZmiane: (otwarty) => document.body.classList.toggle('czat-otwarty', otwarty),
+    naZmiane: (otwarty) => { document.body.classList.toggle('czat-otwarty', otwarty); UZYCIE.czat(otwarty ? 'czat-otwarty' : 'czat-zamkniety', ''); },
     // Od powłoki 2 (Aplikacja.swift, window.KASIOMOBILE_POWLOKA, od 26.10.2026) mikrofon słucha od stuknięcia („nagrywaj”), zanim przyjdzie klucz.
     glosNatywny: mostGlosu ? { start: (klucz, konfiguracja) => mostGlosu.postMessage({ co: 'start', klucz, konfiguracja }),
       stop: (zaraz) => mostGlosu.postMessage({ co: 'stop', zaraz: Boolean(zaraz) }),

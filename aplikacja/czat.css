@@ -60,7 +60,7 @@
 .czat-gora { flex: none; position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 52px; padding: 4px 8px 0 16px; }
 /* Historia i Nowa rozmowa (od 26.10.2026): przyciski z napisem w szkle z 45° światłem, co 8 px, cel 48 px. Historia włączona stoi
    w akcencie z napisem na barwie (biały 4,7:1, w ciemnym czarny 5,8:1). Bez rozmowy Nowa rozmowa jest przygaszona. */
-.czat-gora-lewo { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
 .czat-pigulka { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 40px; margin: 4px 0; padding: 0 16px 0 12px; border: 0; border-radius: 20px;
   background-color: var(--cz-szary); background-image: var(--cz-lico); box-shadow: var(--cz-c3d); color: var(--cz-tekst);
   font: inherit; font-size: 15px; font-weight: 600; line-height: 1; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent;
@@ -317,17 +317,24 @@
 .czat-arkusz.nad-nawigacja { border-radius: 16px; }
 .czat-pusto { gap: 32px; }
 
-/* Górny rząd rozmowy na siatce aplikacji: 12 kolumn, rynna 8 px, brzegi na brzegach treści (16 px). Historia i Nowa rozmowa po 5 kolumn, krzyżyk
-   w dwóch ostatnich (koło na środku swojego miejsca). Rząd stoi 8 px niżej niż do tego dnia (Jacek: „za wysoko”). Na wąskim ekranie pigułki
-   tracą ikonę, żeby napis „Nowa rozmowa” się mieścił. */
-.czat-gora { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center; min-height: 60px;
-  padding: 12px calc(env(safe-area-inset-right, 0px) + 16px) 0 calc(env(safe-area-inset-left, 0px) + 16px); }
-.czat-gora-lewo { display: contents; }
-.czat-gora .czat-pigulka { width: 100%; justify-content: center; padding: 0 8px; }
-.czat-gora .czat-historia { grid-column: 1 / span 5; }
-.czat-gora .czat-nowa { grid-column: 6 / span 5; }
+/* Górny rząd rozmowy ma tylko krzyżyk: koło w dwóch ostatnich kolumnach siatki. Historia i Nowa rozmowa stoją pod kciukiem, tuż nad polem
+   pytania, każda na sześciu kolumnach (od 27.10.2026, Jacek: „Pod kciuk”; do tego dnia stały na górze, 5 + 5 + 2 kolumny). „Cofnij” po ruchu
+   rozmowy stoi tuż nad tym rzędem. Rząd zostaje na miejscu także w Historii, Archiwum i Koszu, gdzie pola pytania nie ma. */
+.czat-gora { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center; min-height: 56px;
+  padding: 8px calc(env(safe-area-inset-right, 0px) + 16px) 0 calc(env(safe-area-inset-left, 0px) + 16px); }
 .czat-gora .czat-zamknij { grid-column: 11 / span 2; justify-self: center; }
-@media (max-width: 389px) { .czat-gora .czat-pigulka > svg { display: none; } }
+.czat-nawi { position: relative; flex: none; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center;
+  padding: 8px calc(env(safe-area-inset-right, 0px) + 16px) 0 calc(env(safe-area-inset-left, 0px) + 16px); background: var(--cz-tlo); box-shadow: inset 0 .5px 0 var(--cz-ramka); }
+.czat-nawi > .czat-pigulka { width: 100%; justify-content: center; padding: 0 8px; }
+.czat-nawi > .czat-historia { grid-column: 1 / span 6; }
+.czat-nawi > .czat-nowa { grid-column: 7 / span 6; }
+.czat-nawi > .czat-cofnij-pole { bottom: calc(100% + 12px); }
+/* Gdy „Cofnij” stoi nad rzędem Historia i Nowa rozmowa, dół listy zostawia mu miejsce (48 px pigułki, 12 px odstępu i 16 px oddechu), żeby nie zasłaniał
+   chipów Archiwum i Kosz, które na krótkiej liście leżą tuż nad rzędem (zrzut z 27.10.2026: pigułka przykrywała napis „Kosz”). */
+.czat-lista { transition: padding-bottom 200ms cubic-bezier(.2, 0, 0, 1); }
+.czat.z-cofnij .czat-lista { padding-bottom: 76px; }
+@media (prefers-reduced-motion: reduce) { .czat-lista { transition: none; } }
+.czat-pole { box-shadow: none; }
 
 /* Nagłówek Archiwum i Kosza na tej samej siatce: „‹ Historia” w pięciu kolumnach, nazwa w trzech, „Opróżnij” w czterech (napis czerwony, 5,9:1
    w jasnym i 4,9:1 w ciemnym). */

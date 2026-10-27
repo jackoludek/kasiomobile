@@ -429,7 +429,7 @@
     w.zakladki = t.map((b) => (b ? b.textContent.trim() : '')).join(',');
     w.zakladkiIkony = t.filter((b) => b && b.querySelector('svg.znak use') && b.querySelector('svg.znak').getBoundingClientRect().width >= 20).length;
     w.dolNetto = Math.round(rd.height);
-    const rt = t.filter(Boolean).map((b) => b.getBoundingClientRect()), rp = [...document.querySelectorAll('.podkarty .podwidoki:not([hidden]) [role="radio"]')].map((b) => b.getBoundingClientRect());
+    const rt = t.filter(Boolean).map((b) => b.getBoundingClientRect()).sort((a, b) => a.left - b.left), rp = [...document.querySelectorAll('.podkarty .podwidoki:not([hidden]) [role="radio"]')].map((b) => b.getBoundingClientRect()).sort((a, b) => a.left - b.left);
     const rowne = (a) => a.length < 2 || Math.max(...a.map((q) => q.width)) - Math.min(...a.map((q) => q.width)) <= 0.5;
     if (innerWidth < 760) {
       const ss = getComputedStyle(document.querySelector('.siatka-sonda')), sx0 = parseFloat(ss.paddingLeft), sx1 = innerWidth - parseFloat(ss.paddingRight);
@@ -489,11 +489,11 @@
       w.poradnikNaZewnatrz = [...pr.querySelectorAll('a[href^="http"]')].every((a) => a.target === '_blank');
       maleCele(pr, 'Poradnik, strona');
       // Najpierw skrót, potem całość (od 23.10.2026, poradnik.js w misji). Etap 1 zaczyna od skrótu, a „Czytaj całość” odsłania
-      // resztę w tym samym miejscu; etap 2 (ta sama karta) pamięta to do końca sesji. Strona sprzed tej zmiany nie ma przycisku.
+      // resztę w tym samym miejscu; etap 2 (nowe otwarcie aplikacji) znowu zaczyna od skrótu (app.js zeruje „poradnik-calosc” przy każdym starcie). Strona sprzed tej zmiany nie ma przycisku.
       const calosc = pr.querySelector('#calosc');
       if (!calosc) w.poradnikSkrot = 'strona bez skrótu';
       else if (ETAP === 1) w.poradnikSkrot = calosc.hidden && Boolean(pr.querySelector('#czytaj-calosc'));
-      else w.poradnikPamieta = !calosc.hidden;
+      else w.poradnikOdSkrotu = calosc.hidden;
       await krok('poradnik');
       if (calosc && ETAP === 1) {
         pr.querySelector('#czytaj-calosc').click();
