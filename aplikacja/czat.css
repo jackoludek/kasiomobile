@@ -381,3 +381,18 @@
   50% { filter: brightness(1.5) saturate(1.3); box-shadow: inset 0 0 0 3px #111111, 0 0 38px 14px rgba(255, 40, 20, .6); } }
 .czat-hal-podpis { margin: 0; color: var(--cz-tekst2); font-size: 13px; font-weight: 600; letter-spacing: .28em; text-transform: uppercase; }
 .czat-hal-napis { min-height: 4.5em; max-width: 22em; margin: 0; color: var(--cz-tekst2); font-size: 16px; line-height: 1.5; }
+/* Pytania na stałe (od 27.10.2026; Jacek: „możliwość edytowania i ustawienia sobie własnych pytań na stałe, a jeden klik za pytanie”, „przesuwalność”).
+   Zwykły widok: lista pytań jak dotąd (jedno stuknięcie wysyła) i cicha pigułka „Edytuj pytania”. Edycja: wiersze z uchwytem (przesuń), tekstem (stuknij, żeby zmienić)
+   i krzyżykiem (usuń), pod nimi „Dodaj pytanie” i „Gotowe” po sześć kolumn siatki. Nowe pytanie wpisuje się albo dyktuje w zwykłym polu pytania. */
+.czat-pyt-edytuj { margin: 0; }
+.czat-pyt-wiersz { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: center; min-height: 56px; border: 1px solid var(--cz-ramka); border-radius: 28px;
+  background-color: var(--cz-pod); background-image: var(--cz-lico); box-shadow: var(--cz-c3d); }
+.czat-pyt-wiersz.edytowany { border-color: var(--cz-akcent); box-shadow: 0 0 0 2px var(--cz-akcent), var(--cz-c3d); }
+.czat-pyt-wiersz.przeciagany { position: relative; z-index: 2; border-color: var(--cz-akcent); box-shadow: 0 0 0 2px var(--cz-akcent), 0 8px 20px rgba(0, 0, 0, .18); transform: scale(1.02); }
+.czat-pyt-uchwyt, .czat-pyt-usun { display: grid; place-items: center; width: 48px; height: 48px; margin: 0; padding: 0; border: 0; border-radius: 24px; background: none; color: var(--cz-tekst2); cursor: pointer; }
+.czat-pyt-uchwyt { cursor: grab; touch-action: none; }
+.czat-pyt-wiersz.przeciagany .czat-pyt-uchwyt { cursor: grabbing; }
+.czat-pyt-uchwyt:focus-visible, .czat-pyt-usun:focus-visible, .czat-pyt-tekst:focus-visible { outline: 2px solid var(--cz-akcent); outline-offset: -2px; }
+.czat-pyt-tekst { min-width: 0; margin: 0; padding: 12px 4px; border: 0; border-radius: 12px; background: none; color: var(--cz-tekst); font: inherit; font-weight: 500; line-height: 1.35; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.czat-pyt-akcje { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; width: 100%; max-width: 480px; }
+.czat-pyt-akcje > .czat-pigulka { width: 100%; justify-content: center; padding: 0 8px; }

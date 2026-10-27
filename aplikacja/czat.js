@@ -32,8 +32,12 @@
   const BIERNIK = { katalog: 'Oferty', nowe: 'Oferty', modele: 'Podium', kredyt: 'Finanse', historia: 'Historię', poradnik: 'Poradnik' };
   // Podpowiedzi w barwach zakładek, których dotyczą (od 26.10.2026): Podium niebieskie, Oferty zielone, Poradnik fioletowy, Finanse pomarańczowe.
   const PODPOWIEDZI = [['Najbezpieczniejsze auto do 75 tys. zł?', 'modele'], ['Co nowego dziś na Otomoto?', 'katalog'], ['Czy Corolla kombi zmieści psa?', 'poradnik'], ['Ile wyjdzie rata za 60 tys. zł?', 'kredyt']];
+  // Własne pytania na stałe (od 27.10.2026; Jacek: „możliwość edytowania i ustawienia sobie własnych pytań na stałe, a jeden klik za pytanie”): na pustej rozmowie
+  // zamiast czterech stałych podpowiedzi stoi lista z pamięci telefonu (za pierwszym razem te same cztery). Najwyżej 12 pytań po 120 znaków.
+  const PYTANIA_MAX = 12, PYTANIE_DL = 120;
   const ZDANIA = {
     pusto: 'Zapytaj o auta, raty albo oferty. Odpowiada komputer w domu, zwykle w kilka sekund.',
+    edycja: 'Stuknij pytanie, żeby je zmienić. Nowe wpisz albo podyktuj.',
     brak: 'Komputer nie odpowiedział. Może jest wyłączony albo śpi.',
     siec: 'Brak połączenia z internetem. Pytanie nie poszło.',
     klucz: 'Komputer nie dał klucza do mikrofonu. Może jest wyłączony.',
@@ -41,6 +45,9 @@
     // Zgoda jest, ale telefon nie dał dźwięku (od 26.10.2026: na Redmi tak było bez zgody MODIFY_AUDIO_SETTINGS w aplikacji).
     mikrofonBrak: 'Telefon nie dał dźwięku z mikrofonu. Spróbuj jeszcze raz albo napisz pytanie.',
     soniox: 'Rozpoznawanie mowy nie odpowiedziało. Spróbuj jeszcze raz albo napisz pytanie.',
+    // Mikrofon wyłączył się sam (od 27.10.2026): cisza dłuższa niż bezpiecznik albo zamknięte połączenie. Nic nie poszło, tekst zostaje w polu.
+    cisza: (s) => `Cisza od ${s} sekund, więc przestałem słuchać. Tekst zostaje w polu.`,
+    zerwane: (jest) => `Rozpoznawanie mowy się rozłączyło.${jest ? ' Tekst zostaje w polu.' : ''}`,
   };
   // Strumień odpowiedzi z ntfy.sh czytany na bieżąco; bez strumieni (stara przeglądarka) pytamy co 2,5 sekundy.
   const STRUMIEN = typeof ReadableStream === 'function' && typeof TextDecoder === 'function';
@@ -77,6 +84,10 @@
     wstecz: '<path d="M14.7 6.3 9 12l5.7 5.7 1.4-1.4-4.3-4.3 4.3-4.3z"/>',
     // Strzałka „Cofnij”, ta sama co w aplikacji (index.html), środek rysunku w punkcie 12, 12.
     cofnij: '<path d="M9.75 4.75 5.25 9.25l4.5 4.5M5.75 9.25h8a5 5 0 0 1 0 10h-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+    // Pytania na stałe (od 27.10.2026): ołówek (edytuj), ptaszek (zapisz, gotowe) i uchwyt z sześciu kropek (przesuń), środek rysunku w punkcie 12, 12.
+    olowek: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m15 5 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    ptak: '<path d="M5 12.2l4.5 4.5L19 7.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+    uchwyt: '<circle cx="9" cy="7" r="1.7"/><circle cx="15" cy="7" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="17" r="1.7"/><circle cx="15" cy="17" r="1.7"/>',
   };
   const ikona = (n, r = 20) => `<svg width="${r}" height="${r}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${IKONY[n]}</svg>`;
 
@@ -126,6 +137,10 @@
     const dotyk = matchMedia('(pointer: coarse)').matches;
     let historia = pamiec.czytaj('historia', []);
     if (!Array.isArray(historia)) historia = [];
+    // Tryb edycji pytań na stałe (pusta rozmowa): pole pytania i mikrofon zapisują pytanie zamiast je wysyłać. id to edytowane pytanie albo null dla nowego.
+    const edycja = { aktywna: false, id: null };
+    // Przewinięcie listy pytań w trybie edycji (rysuj() zawsze przerysowuje całą listę): bez tego każda zmiana ściągałaby widok na dół, a pierwsze pytania uciekałyby z ekranu.
+    let pustoST = 0;
 
     // ---------------------------------------------------------------- budowa
     const zaslona = tryb === 'arkusz' ? el('div', { class: 'czat-zaslona', hidden: true }) : null;
@@ -168,7 +183,7 @@
     }
     function przyciski() {
       wyslijB.disabled = pracuje || !pole.value.trim();
-      wyslijB.setAttribute('aria-label', pracuje ? 'Komputer jeszcze odpowiada' : 'Wyślij');
+      wyslijB.setAttribute('aria-label', edycja.aktywna ? 'Zapisz pytanie' : pracuje ? 'Komputer jeszcze odpowiada' : 'Wyślij');
       mikB.disabled = pracuje;
       nowaB.disabled = pracuje || !historia.length;
       historiaB.disabled = pracuje;
@@ -260,15 +275,155 @@
       return box;
     }
     function pusto() {
-      const rzad = el('div', { class: 'czat-podpowiedzi' });
-      for (const [t, z] of PODPOWIEDZI) {
-        const b = el('button', { type: 'button', class: 'czat-podpowiedz', 'data-z': z, text: t });
-        b.addEventListener('click', () => wyslij(t));
-        rzad.append(b);
+      const l = pytaniaMoje();
+      if (!edycja.aktywna) {
+        const rzad = el('div', { class: 'czat-podpowiedzi' });
+        for (const p of l) {
+          const b = el('button', { type: 'button', class: 'czat-podpowiedz', 'data-id': p.id, text: p.t });
+          b.addEventListener('click', () => wyslij(p.t));
+          rzad.append(b);
+        }
+        const edytuj = pigulka('olowek', 'Edytuj pytania', 'czat-pyt-edytuj');
+        edytuj.addEventListener('click', () => edytujPytania(true));
+        // Puste okno rozmowy: zdanie i pytania na stałe w jednej spokojnej barwie (za pierwszym razem cztery stałe podpowiedzi). Dużego oka HAL-a nie ma tu od wieczora
+        // 26.10.2026 (Jacek: „fajna, ale trochę przesadzona”); oko żyje w małym mikrofonie przy polu pytania i w trybie HAL (przytrzymanie logo w app.js).
+        return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), rzad, edytuj);
       }
-      // Puste okno rozmowy: zdanie i cztery podpowiedzi w jednej spokojnej barwie. Dużego oka HAL-a nie ma tu od wieczora 26.10.2026 (Jacek:
-      // „fajna, ale trochę przesadzona”); oko żyje w małym mikrofonie przy polu pytania i w trybie HAL (przytrzymanie logo w app.js).
-      return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), rzad);
+      const rzad = el('div', { class: 'czat-podpowiedzi czat-pytania-edycja' }, ...l.map(wierszPytania));
+      const dodajP = pigulka('nowa', 'Dodaj pytanie', 'czat-pyt-dodaj');
+      dodajP.addEventListener('click', () => {
+        edycja.id = null;
+        pole.value = '';
+        pole.placeholder = 'Nowe pytanie na stałe…';
+        rosnij();
+        przyciski();
+        pustoST = lista.scrollTop;
+        rysuj();
+        pole.focus({ preventScroll: true });
+      });
+      const gotowe = pigulka('ptak', 'Gotowe', 'czat-pyt-gotowe');
+      gotowe.addEventListener('click', () => edytujPytania(false));
+      return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.edycja }), rzad, el('div', { class: 'czat-pyt-akcje' }, dodajP, gotowe));
+    }
+    function ikonaWyslij() { wyslijB.innerHTML = ikona(edycja.aktywna ? 'ptak' : 'wyslij'); }
+    function edytujPytania(wl) {
+      if (pracuje) return;
+      edycja.aktywna = wl;
+      edycja.id = null;
+      pole.value = '';
+      pole.placeholder = wl ? 'Nowe pytanie na stałe…' : 'Zapytaj o auta…';
+      ikonaWyslij();
+      rosnij();
+      przyciski();
+      pustoST = 0;
+      rysuj();
+    }
+    // Wyjście z trybu edycji bez przerysowania (przejście do Rozmów, zamknięcie czatu): niezapisany tekst z pola przepada, żeby nie poszedł potem jako pytanie.
+    function wylaczEdycje() {
+      if (!edycja.aktywna) return;
+      edycja.aktywna = false;
+      edycja.id = null;
+      pole.value = '';
+      pole.placeholder = 'Zapytaj o auta…';
+      ikonaWyslij();
+      rosnij();
+      przyciski();
+    }
+    // ---------------------------------------------------------------- pytania na stałe (od 27.10.2026)
+    function pytaniaMoje() {
+      const z = pamiec.czytaj('pytania', null);
+      if (!Array.isArray(z)) return PODPOWIEDZI.map(([t], i) => ({ id: 'd' + (i + 1), t }));
+      return z.filter((x) => x && typeof x.id === 'string' && typeof x.t === 'string' && x.t.trim()).slice(0, PYTANIA_MAX);
+    }
+    const zapiszPytania = (l) => pamiec.zapisz('pytania', l);
+    // Każda zmiana listy to krok „Cofnij” (przycisk nad dołem czatu, Ctrl+Z i Ctrl+Y jak przy ruchach rozmów).
+    function zmienPytania(po, opis) {
+      const przed = pytaniaMoje();
+      zapiszPytania(po);
+      ruchy.wstecz.push({ pytania: { przed, po } });
+      if (ruchy.wstecz.length > 50) ruchy.wstecz.shift();
+      ruchy.naprzod.length = 0;
+      pustoST = lista.scrollTop;
+      rysuj();
+      pokazCofnijCzat(opis);
+    }
+    function zapiszPytanie(t) {
+      const q = String(t || '').replace(/\s+/g, ' ').trim();
+      if (!q) return false;
+      if (q.length > PYTANIE_DL) { stan(`Pytanie jest za długie: najwyżej ${PYTANIE_DL} znaków.`, 5000); return false; }
+      const l = pytaniaMoje();
+      let nowa;
+      if (edycja.id && l.some((x) => x.id === edycja.id)) nowa = l.map((x) => (x.id === edycja.id ? { id: x.id, t: q } : x));
+      else if (l.length >= PYTANIA_MAX) { stan(`Jest już ${PYTANIA_MAX} pytań. Usuń któreś.`, 5000); return false; }
+      else nowa = l.concat({ id: losowe(), t: q });
+      edycja.id = null;
+      pole.value = '';
+      pole.placeholder = 'Nowe pytanie na stałe…';
+      rosnij();
+      zmienPytania(nowa, 'Cofnij zapis pytania');
+      return true;
+    }
+    function usunPytanie(id) {
+      const l = pytaniaMoje();
+      if (!l.some((x) => x.id === id)) return;
+      if (edycja.id === id) { edycja.id = null; pole.value = ''; rosnij(); }
+      zmienPytania(l.filter((x) => x.id !== id), 'Cofnij usunięcie pytania');
+    }
+    function przestawPytanie(id, o) {
+      const l = pytaniaMoje(), i = l.findIndex((x) => x.id === id), j = i + o;
+      if (i < 0 || j < 0 || j >= l.length) return;
+      const po = l.slice();
+      [po[i], po[j]] = [po[j], po[i]];
+      zmienPytania(po, 'Cofnij przesunięcie pytania');
+      const u = lista.querySelector(`.czat-pyt-wiersz[data-id="${id}"] .czat-pyt-uchwyt`);
+      if (u) u.focus({ preventScroll: true });
+    }
+    function wierszPytania(p) {
+      const uch = el('button', { type: 'button', class: 'czat-pyt-uchwyt', 'aria-label': 'Przesuń pytanie', html: ikona('uchwyt', 20) });
+      const tekst = el('button', { type: 'button', class: 'czat-pyt-tekst', text: p.t });
+      const usun = el('button', { type: 'button', class: 'czat-pyt-usun', 'aria-label': 'Usuń pytanie', html: ikona('zamknij', 18) });
+      const w = el('div', { class: 'czat-pyt-wiersz' + (edycja.id === p.id ? ' edytowany' : ''), 'data-id': p.id }, uch, tekst, usun);
+      tekst.addEventListener('click', () => {
+        edycja.id = p.id;
+        pole.value = p.t;
+        pole.placeholder = 'Zmień pytanie…';
+        rosnij();
+        przyciski();
+        pustoST = lista.scrollTop;
+        rysuj();
+        pole.focus({ preventScroll: true });
+      });
+      usun.addEventListener('click', () => usunPytanie(p.id));
+      uch.addEventListener('pointerdown', (e) => przeciagajPytanie(w, uch, e));
+      uch.addEventListener('keydown', (e) => { if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); przestawPytanie(p.id, e.key === 'ArrowUp' ? -1 : 1); } });
+      return w;
+    }
+    // Przeciąganie uchwytem (mysz, palec, pióro): wiersz skacze na miejsce pod kursorem, a po puszczeniu kolejność się zapisuje jako jeden krok „Cofnij”.
+    function przeciagajPytanie(wiersz, uch, e) {
+      if (e.button) return;
+      e.preventDefault();
+      const kont = wiersz.parentNode, przed = pytaniaMoje(), id = e.pointerId;
+      wiersz.classList.add('przeciagany');
+      // Zdarzenia słucha okno, a nie uchwyt: przestawienie wiersza w drzewie zwalnia przechwycenie wskaźnika i uchwyt przestaje je dostawać (sprawdzone testem na dotyku).
+      const ruchP = (ev) => {
+        if (ev.pointerId !== id) return;
+        const inne = [...kont.querySelectorAll('.czat-pyt-wiersz')].filter((x) => x !== wiersz);
+        const cel = inne.find((x) => { const b = x.getBoundingClientRect(); return ev.clientY < b.top + b.height / 2; });
+        if (cel) { if (wiersz.nextElementSibling !== cel) kont.insertBefore(wiersz, cel); }
+        else if (kont.lastElementChild !== wiersz) kont.append(wiersz);
+      };
+      const koniec = (ev) => {
+        if (ev && ev.pointerId !== id) return;
+        window.removeEventListener('pointermove', ruchP, true);
+        window.removeEventListener('pointerup', koniec, true);
+        window.removeEventListener('pointercancel', koniec, true);
+        wiersz.classList.remove('przeciagany');
+        const po = [...kont.querySelectorAll('.czat-pyt-wiersz')].map((x) => przed.find((y) => y.id === x.dataset.id)).filter(Boolean);
+        if (po.length === przed.length && po.some((x, i) => x !== przed[i])) zmienPytania(po, 'Cofnij przesunięcie pytania');
+      };
+      window.addEventListener('pointermove', ruchP, true);
+      window.addEventListener('pointerup', koniec, true);
+      window.addEventListener('pointercancel', koniec, true);
     }
     function dodaj(w) {
       historia.push(w);
@@ -314,7 +469,7 @@
       if (mysli) lista.append(mysli);
       forma.hidden = false;
       przyciski();
-      naDol();
+      if (historia.length) naDol(); else lista.scrollTop = edycja.aktywna ? pustoST : 0;
     }
     const wsteczHistorii = () => (widokHistorii === 'historia' ? rysuj() : pokazHistorie('historia'));
     function czytajListe(n) {
@@ -426,6 +581,14 @@
     function cofnijRuch(ponow) {
       const k = (ponow ? ruchy.naprzod : ruchy.wstecz).pop();
       if (!k) return false;
+      // Krok listy pytań na stałe: wraca cała lista sprzed zmiany albo po niej.
+      if (k.pytania) {
+        zapiszPytania(ponow ? k.pytania.po : k.pytania.przed);
+        (ponow ? ruchy.wstecz : ruchy.naprzod).push(k);
+        pokazCofnijCzat(null);
+        if (!widokHistorii && !historia.length) { pustoST = lista.scrollTop; rysuj(); }
+        return true;
+      }
       // Krok grupowy (opróżnienie kosza) cofa się od końca, żeby każda rozmowa wróciła na swoje miejsce.
       const kroki = k.grupa ? (ponow ? k.grupa : k.grupa.slice().reverse()) : [k];
       let zrobione = false;
@@ -567,6 +730,7 @@
     // Dwa widoki listy: „historia” (przycisk Rozmowy) i „schowek” (dawne Archiwum i Kosz: sekcje Zachowane i Kosz, „Opróżnij” przy Koszu).
     function pokazHistorie(n = 'historia', zostan = false) {
       if (pracuje) return;
+      wylaczEdycje();
       if (n === 'archiwum' || n === 'kosz') n = 'schowek';
       if (glos.stan !== 'nic') glosStop(false);
       zamknijMenu(false);
@@ -715,6 +879,7 @@
       if (w.pokaz && otwarty()) pokazTeraz(w.pokaz, false);
     }
     function wyslij(t) {
+      if (edycja.aktywna) return zapiszPytanie(t);
       const q = String(t || '').replace(/\s+/g, ' ').trim().slice(0, 600);
       if (!q || pracuje) return false;
       if (hal.otwarty) { uz('hal-pytanie', q); pole.value = ''; rosnij(); przyciski(); halZadaj(q); return true; }
@@ -771,6 +936,7 @@
       if (o.naZmiane) o.naZmiane(true);
     }
     function zamknij() {
+      wylaczEdycje();
       zamknijMenu(false);
       pokazCofnijCzat(null);
       if (glos.stan !== 'nic') glosStop(false);
@@ -812,7 +978,7 @@
         if (cofnijRuch(zy === 'y' || e.shiftKey)) { e.preventDefault(); e.stopPropagation(); }
         return;
       }
-      if (e.key === 'Escape') { e.preventDefault(); if (glos.stan !== 'nic') glosStop(false); else if (widokHistorii) wsteczHistorii(); else zamknij(); return; }
+      if (e.key === 'Escape') { e.preventDefault(); if (glos.stan !== 'nic') glosStop(false); else if (edycja.aktywna) edytujPytania(false); else if (widokHistorii) wsteczHistorii(); else zamknij(); return; }
       if (e.key !== 'Tab' || tryb !== 'arkusz') return;
       const f = [...korzen.querySelectorAll('button, a[href], textarea')].filter((x) => !x.disabled && x.offsetParent !== null);
       if (!f.length) return;
@@ -855,17 +1021,31 @@
 
     // ---------------------------------------------------------------- mikrofon (Soniox)
     const natywny = o.glosNatywny || null;
-    // max_endpoint_delay_ms (od 26.10.2026): Soniox daje „<end>” najpóźniej 1 s po ostatnim słowie, a nie po 2 s (domyślnie; dozwolone
-    // 500–3000, https://soniox.com/docs/stt/rt/endpoint-detection). Pauzę między zdaniami i tak przeczekuje CHWILA_MS niżej.
-    const KONF_SONIOX = { model: 'stt-rt-v5', audio_format: 'auto', language_hints: ['pl'], enable_endpoint_detection: true, max_endpoint_delay_ms: 1000 };
+    // Koniec wypowiedzi (od 27.10.2026; Jacek, zasada 28 z „dobry-interfejs.md”: „Jak ja skończę, to ja powiem: odbiór”, „jak skończę, to będę mówił bez odbioru … wtedy
+    // niech się zamknie już”, „ja się złapię oddech i wtedy przerywa. To jest tak wkurzające”): pytanie kończy tylko słowo „odbiór” na końcu tekstu albo stuknięcie
+    // mikrofonu. Cisza nie kończy niczego: oddech, pauza między zdaniami i kilka sekund bez słowa nie wysyłają pytania ani nie wyłączają mikrofonu. „Bez odbioru”
+    // zamyka słuchanie bez wysyłania i zamyka okno rozmowy (albo HAL-a). Słowo kończące nie trafia do pola ani do pytania. Soniox daje tu tylko wskazówkę: „<end>”
+    // (pauza w mowie, najpóźniej max_endpoint_delay_ms po ostatnim słowie) znaczy, że tekst przed nim jest już ostateczny, więc dopiero na „<end>” sprawdzamy, czy
+    // tekst kończy się słowem kończącym. Bezpiecznik ciszy (CISZA_MS) wyłącza zapomniany mikrofon, niczego nie wysyła i mówi o tym pod polem.
+    // Słowa kończące są też w context.terms, żeby Soniox rozpoznawał je pewniej (https://soniox.com/docs/stt/rt/endpoint-detection).
+    const KONF_SONIOX = { model: 'stt-rt-v5', audio_format: 'auto', language_hints: ['pl'], enable_endpoint_detection: true, max_endpoint_delay_ms: 1000, context: { terms: ['odbiór', 'bez odbioru'] } };
     // W trybie HAL mikrofon słucha po angielsku i po polsku i podaje język każdego słowa (token.language), a pytanie niesie ten język do komputera.
     const konfSoniox = () => (hal.otwarty ? Object.assign({}, KONF_SONIOX, { language_hints: ['en', 'pl'], enable_language_identification: true }) : KONF_SONIOX);
-    // Soniox daje „<end>” już na pauzie krótszej niż sekunda między zdaniami (26.10.2026, rozmowa „Rozmowa z Opusem” na prawdziwym Soniox,
-    // przy każdym ustawieniu wykrywania końca), więc po „<end>” czat czeka jeszcze CHWILA_MS. Nowe słowa w tym czasie znaczą, że pytanie
-    // trwa: czekanie znika i zaczyna się od nowa przy następnym „<end>”. Pytanie idzie więc około 2 s po ostatnim słowie, a mikrofon
-    // stuknięty w trakcie wysyła od razu. To samo na iPhonie, bo słowa ze Swifta idą przez zSoniox.
-    const CHWILA_MS = 1500;
-    const glos = { stan: 'nic', ws: null, rec: null, media: null, gotowe: '', tym: '', wyslij: true, zegar: 0, chwila: 0, zegarKlucza: 0, maKlucz: false, czekaNaKlucz: false };
+    const CISZA_MS = 15000;
+    // „Bez odbioru” sprawdzamy przed „odbiorem”. Wielkość liter, kropka i inne znaki na końcu nie mają znaczenia, a „od biór” rozdzielone przez Soniox też się liczy.
+    const KONIEC_BEZ = /(^|[^\p{L}\p{N}])bez\s+od\s?bi[oó]r(?:u)?[^\p{L}\p{N}]*$/iu;
+    const KONIEC_ODBIOR = /(^|[^\p{L}\p{N}])od\s?bi[oó]r[^\p{L}\p{N}]*$/iu;
+    // Zwraca rodzaj końca ('bez', 'odbior' albo '') i tekst bez słowa kończącego. Kropka, pytajnik i wykrzyknik przed nim zostają, przecinek i myślnik znikają.
+    function koniecWypowiedzi(tekst) {
+      for (const [re, rodzaj] of [[KONIEC_BEZ, 'bez'], [KONIEC_ODBIOR, 'odbior']]) {
+        const m = re.exec(tekst);
+        if (!m) continue;
+        const poz = m.index + (/^\s?$/.test(m[1]) ? 0 : m[1].length);
+        return { rodzaj, tekst: tekst.slice(0, poz).replace(/[\s,;:\u2013\u2014-]+$/u, '') };
+      }
+      return { rodzaj: '', tekst };
+    }
+    const glos = { stan: 'nic', ws: null, rec: null, media: null, gotowe: '', tym: '', wyslij: true, konczy: false, zegar: 0, cisza: 0, zegarKlucza: 0, maKlucz: false, czekaNaKlucz: false };
     // „glos: false” (komputer nie da klucza) chowa mikrofon na 20 minut, a nie na zawsze (od 26.10.2026: na Redmi mikrofon został
     // schowany od nocy, kiedy klucza jeszcze nie było, choć komputer dostał go kilka godzin później; Jacek: „rozpoznał moje pisanie,
     // ale nie gadanie”). W pamięci stoi chwila odmowy, a dawne „false” nic już nie chowa.
@@ -884,7 +1064,7 @@
       mikB.setAttribute('aria-pressed', String(n));
       pole.placeholder = n ? 'Słucham…' : 'Zapytaj o auta…';
       if (glos.stan === 'start') stan('Włączam mikrofon…');
-      else if (glos.stan === 'nagrywa') stan(glos.czekaNaKlucz ? 'Słucham. Komputer jeszcze łączy rozpoznawanie mowy…' : 'Słucham. Gdy skończysz, pytanie pójdzie samo.');
+      else if (glos.stan === 'nagrywa') stan(glos.czekaNaKlucz ? 'Słucham. Komputer jeszcze łączy rozpoznawanie mowy…' : 'Słucham. Powiedz „odbiór”, gdy skończysz.');
       else if (!n && /^(Włączam|Słucham)/.test(stanL.textContent)) stan('');
       halStan();
     }
@@ -903,14 +1083,16 @@
     // dopiero po połączeniu, jak dawniej. Gdy klucza nie ma po 3 s, pod polem stoi, że komputer jeszcze łączy rozpoznawanie mowy.
     async function glosStart() {
       if (glos.stan !== 'nic' || pracuje) return;
-      Object.assign(glos, { stan: 'start', gotowe: '', tym: '', wyslij: true, maKlucz: false, czekaNaKlucz: false });
+      Object.assign(glos, { stan: 'start', gotowe: '', tym: '', wyslij: true, konczy: false, maKlucz: false, czekaNaKlucz: false });
+      clearTimeout(glos.cisza);
+      glos.cisza = 0;
       uz('mik', 'start');
       pokazGlos();
       const kluczTeraz = klucz();
       kluczTeraz.catch(() => { /* błąd przychodzi niżej, przez await */ });
       clearTimeout(glos.zegarKlucza);
       glos.zegarKlucza = setTimeout(() => { if (glos.stan !== 'nic' && !glos.maKlucz) { glos.czekaNaKlucz = true; pokazGlos(); } }, 3000);
-      const jest = (k) => { glos.maKlucz = true; clearTimeout(glos.zegarKlucza); if (glos.czekaNaKlucz) { glos.czekaNaKlucz = false; pokazGlos(); } return k; };
+      const jest = (k) => { glos.maKlucz = true; clearTimeout(glos.zegarKlucza); if (glos.czekaNaKlucz) { glos.czekaNaKlucz = false; pokazGlos(); } ciszaOdNowa(); return k; };
       // iPhone: Aplikacja.swift nagrywa PCM 16 kHz mono i sama łączy się z Soniox; „nagrywa” i słowa przyjdą przez Czat.zGlosu.
       if (natywny) {
         if (natywny.wczesnie && natywny.nagrywaj) natywny.nagrywaj();
@@ -974,16 +1156,19 @@
         }
       }
       glos.tym = tym;
+      // Pole pokazuje tekst bez słowa kończącego („odbiór”, „bez odbioru”): ono nie należy do pytania, więc nie widać go ani w polu, ani w wysłanym pytaniu.
+      const k = koniecWypowiedzi((glos.gotowe + glos.tym).replace(/\s+/g, ' ').trim());
       // Jeśli pole stało na dole, po dopisaniu słów przewija się do końca (ostatnie zdanie zawsze widać). Przewinięte ręcznie wyżej zostaje tam, gdzie je zostawiono.
       const bylNaDole = poleNaDole();
-      pole.value = (glos.gotowe + glos.tym).replace(/\s+/g, ' ').trim();
+      pole.value = k.tekst;
       rosnij();
       if (bylNaDole) pole.scrollTop = pole.scrollHeight;
       przyciski();
-      if (slowa) { clearTimeout(glos.chwila); glos.chwila = 0; }
+      if (slowa) ciszaOdNowa();
+      // „<end>” to tylko granica: wypowiedź kończy się dopiero wtedy, gdy tuż przed nią padło słowo kończące (pauza w środku zdania nie kończy niczego).
       if (koniec && (glos.stan === 'nagrywa' || glos.stan === 'start')) {
-        clearTimeout(glos.chwila);
-        glos.chwila = setTimeout(() => { glos.chwila = 0; if (glos.stan === 'nagrywa' || glos.stan === 'start') glosWyslijTeraz(); }, CHWILA_MS);
+        if (k.rodzaj === 'bez') { glosBezOdbioru(); return; }
+        if (k.rodzaj === 'odbior') { glosWyslijTeraz(); return; }
       }
       if (d.finished) glosKoniec();
     }
@@ -995,8 +1180,9 @@
     }
     function glosStop(wyslijPo) {
       if (glos.stan === 'nic') return;
-      clearTimeout(glos.chwila);
-      glos.chwila = 0;
+      clearTimeout(glos.cisza);
+      glos.cisza = 0;
+      glos.konczy = true;
       glos.wyslij = wyslijPo !== false;
       clearTimeout(glos.zegar);
       glos.zegar = setTimeout(() => glosKoniec(), 4000);
@@ -1005,19 +1191,20 @@
       glos.stan = 'konczy';
       glosSprzatnij(); // rec.stop → onstop wysyła pusty kawałek, Soniox kończy i zamyka połączenie
     }
-    // Koniec wypowiedzi (chwila ciszy po „<end>”, od 26.10.2026): pytanie idzie od razu, bez czekania na ostatnią odpowiedź Soniox,
-    // bo wszystko przed „<end>” jest już ostateczne. Mikrofon gaśnie, a Soniox dostaje pusty kawałek i kończy w tle; do strony już
-    // nic z niego nie wraca. Stuknięcie mikrofonu w trakcie (glosStop) dalej czeka na resztę tekstu, bo palec bywa szybszy od słów.
+    // Koniec wypowiedzi słowem „odbiór” (od 27.10.2026): pytanie idzie od razu, bez czekania na ostatnią odpowiedź Soniox, bo wszystko przed „<end>” jest już ostateczne.
+    // Mikrofon gaśnie, a Soniox dostaje pusty kawałek i kończy w tle; do strony już nic z niego nie wraca. Stuknięcie mikrofonu w trakcie (glosStop) dalej czeka
+    // na resztę tekstu, bo palec bywa szybszy od słów.
     function glosWyslijTeraz() {
       if (glos.stan === 'nic') return;
       const ws = glos.ws;
       Object.assign(glos, { stan: 'nic', ws: null });
       clearTimeout(glos.zegar);
-      clearTimeout(glos.chwila);
+      clearTimeout(glos.cisza);
       clearTimeout(glos.zegarKlucza);
-      glos.chwila = 0;
+      glos.cisza = 0;
       if (natywny) natywny.stop(false); else glosSprzatnij();
       if (ws) setTimeout(() => { try { if (ws.readyState <= 1) ws.close(); } catch { /* zamknięte */ } }, 3000);
+      uz('mik', 'odbiór');
       pokazGlos();
       if (glos.wyslij && pole.value.trim()) wyslij(pole.value);
     }
@@ -1026,15 +1213,50 @@
       const ws = glos.ws;
       Object.assign(glos, { stan: 'nic', ws: null });
       clearTimeout(glos.zegar);
-      clearTimeout(glos.chwila);
+      clearTimeout(glos.cisza);
       clearTimeout(glos.zegarKlucza);
-      glos.chwila = 0;
+      glos.cisza = 0;
       if (natywny) natywny.stop(true);
       glosSprzatnij();
       if (ws && ws.readyState <= 1) { try { ws.close(); } catch { /* zamknięte */ } }
       pokazGlos();
       if (blad) { stan(blad, 7000); uz('mik', 'błąd: ' + blad); if (hal.otwarty) halNapis(blad); return; }
+      // Połączenie zamknęło się samo, choć nikt nie kończył wypowiedzi (ani słowem „odbiór”, ani przyciskiem): nic nie idzie, a tekst zostaje w polu.
+      if (glos.wyslij && !glos.konczy) {
+        const t = ZDANIA.zerwane(Boolean(pole.value.trim()));
+        stan(t, 9000);
+        uz('mik', 'rozłączone');
+        if (hal.otwarty) halNapis(t);
+        return;
+      }
       if (glos.wyslij && pole.value.trim()) wyslij(pole.value);
+    }
+    // Bezpiecznik ciszy: gdy po połączeniu z Soniox przez CISZA_MS nie padło żadne słowo, mikrofon gaśnie, nic nie idzie, a pod polem stoi, co się stało.
+    // Każde nowe słowo liczy od nowa. window.KM_CISZA_MS skraca ten czas w testach.
+    const ciszaMs = () => Number(window.KM_CISZA_MS) || CISZA_MS;
+    function ciszaOdNowa() {
+      clearTimeout(glos.cisza);
+      glos.cisza = 0;
+      if (glos.stan === 'nagrywa' || glos.stan === 'start') glos.cisza = setTimeout(glosCisza, ciszaMs());
+    }
+    function glosCisza() {
+      glos.cisza = 0;
+      if (glos.stan !== 'nagrywa' && glos.stan !== 'start') return;
+      glos.wyslij = false;
+      glosKoniec();
+      const t = ZDANIA.cisza(Math.round(ciszaMs() / 1000));
+      stan(t, 9000);
+      uz('mik', 'cisza');
+      if (hal.otwarty) halNapis(t);
+    }
+    // „Bez odbioru”: koniec rozmowy. Mikrofon gaśnie, nic nie idzie, okno rozmowy (albo HAL) się zamyka. Tekst, który zdążył wejść do pola, zostaje w nim
+    // jak po zamknięciu okna w trakcie mówienia.
+    function glosBezOdbioru() {
+      if (glos.stan === 'nic') return;
+      glos.wyslij = false;
+      glosKoniec();
+      uz('mik', 'bez odbioru');
+      if (hal.otwarty) halZamknij(); else zamknij();
     }
     // iPhone: Aplikacja.swift podaje { stan: 'nagrywa' } po włączeniu mikrofonu, { wiadomosc } z każdą wiadomością Soniox,
     // { blad: 'mikrofon' | 'soniox' } i { koniec, bezWysylki } po zamknięciu połączenia (bezWysylki: aplikacja zeszła z ekranu).
@@ -1178,7 +1400,7 @@
     }
     zapiszCzekajace();
     const wrocDoRozmowy = () => { if (!doRozmowy || Date.now() - doRozmowy > 600000) return false; doRozmowy = 0; otworz(); return true; };
-    const wstecz = () => { if (hal.otwarty) { halZamknij(); return true; } if (zamknijMenu(true)) return true; if (widokHistorii) { wsteczHistorii(); return true; } if (!otwarty()) return false; zamknij(); return true; };
+    const wstecz = () => { if (hal.otwarty) { halZamknij(); return true; } if (zamknijMenu(true)) return true; if (edycja.aktywna) { edytujPytania(false); return true; } if (widokHistorii) { wsteczHistorii(); return true; } if (!otwarty()) return false; zamknij(); return true; };
     const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz, hal: halOtworz, halOtwarty: () => hal.otwarty };
     aktywny = api;
     return api;
