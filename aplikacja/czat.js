@@ -136,7 +136,7 @@
     // dwa przyciski z napisem, bo samej ikonki nikt nie brał za przycisk. Historia przełącza widok na listę wcześniejszych rozmów,
     // a Nowa rozmowa odkłada bieżącą do Historii i zaczyna od pustej. Wyjście to krzyżyk, Escape, Wstecz i zakładki pod rozmową.
     const pigulka = (n, napis, klasa) => { const b = el('button', { type: 'button', class: 'czat-pigulka ' + klasa, html: ikona(n, 18) }); b.append(el('span', { text: napis })); return b; };
-    const historiaB = pigulka('historia', 'Historia', 'czat-historia');
+    const historiaB = pigulka('historia', 'Rozmowy', 'czat-historia');
     historiaB.setAttribute('aria-pressed', 'false');
     const nowaB = pigulka('nowa', 'Nowa rozmowa', 'czat-nowa');
     const gora = el('div', { class: 'czat-gora' }, tryb === 'arkusz' ? el('span', { class: 'czat-uchwyt', 'aria-hidden': 'true' }) : null, zamknijB);
@@ -280,15 +280,15 @@
     const LISTY = { historia: 'archiwum', archiwum: 'w-archiwum', kosz: 'w-koszu', usun: 'usuniete' };
     const NAJWIECEJ_W = { historia: ARCHIWUM, archiwum: 50, kosz: 50, usun: 20 };
     const KOSZ_MS = 30 * 864e5;
-    const NAZWY_LIST = { archiwum: 'Archiwum', kosz: 'Kosz' };
-    const PUSTE = { historia: 'Wcześniejszych rozmów jeszcze nie ma.', archiwum: 'W archiwum nic nie ma.', kosz: 'Kosz jest pusty.' };
+    // Od 27.10.2026 Archiwum i Kosz to jeden widok „Schowek” (Jacek: „Tak, scal”): sekcje Zachowane i Kosz, a dane dalej leżą w dwóch listach.
+    const PUSTE = { historia: 'Wcześniejszych rozmów jeszcze nie ma.', schowek: 'W schowku nic nie ma.' };
     // Cel ruchu palca w prawo i w lewo w każdej liście i jego wygląd (biały napis: archiwum 5,7:1, Historia 4,7:1, kosz 5,4:1).
     const AKCJE = { historia: { prawo: 'archiwum', lewo: 'kosz' }, archiwum: { prawo: 'historia', lewo: 'kosz' }, kosz: { prawo: 'historia', lewo: 'usun' } };
     const CEL = {
-      archiwum: { napis: 'Do archiwum', ikona: 'archiwum', kolor: '#5856d6', cofnij: 'Cofnij przeniesienie do archiwum' },
+      archiwum: { napis: 'Zachowaj', ikona: 'archiwum', kolor: '#5856d6', cofnij: 'Cofnij zachowanie rozmowy' },
       kosz: { napis: 'Do kosza', ikona: 'kosz', kolor: '#d70015', cofnij: 'Cofnij przeniesienie do kosza' },
       usun: { napis: 'Usuń na stałe', ikona: 'kosz', kolor: '#a3000f', cofnij: 'Cofnij usunięcie na stałe' },
-      historia: { napis: 'Do Historii', ikona: 'historia', kolor: '#0071e3', cofnij: 'Cofnij powrót do Historii' },
+      historia: { napis: 'Do rozmów', ikona: 'historia', kolor: '#0071e3', cofnij: 'Cofnij powrót do rozmów' },
     };
     const ruchy = { wstecz: [], naprzod: [] };
     let widokHistorii = false, menuR = null, zegarCofnij = 0;
@@ -407,7 +407,7 @@
       ruchy.wstecz.push({ grupa });
       if (ruchy.wstecz.length > 50) ruchy.wstecz.shift();
       ruchy.naprzod.length = 0;
-      pokazHistorie('kosz', true);
+      pokazHistorie('schowek', true);
       pokazCofnijCzat('Cofnij opróżnienie kosza');
     }
     // Cofa albo ponawia ostatni ruch rozmowy. Oddaje false, gdy nie było czego.
@@ -549,32 +549,44 @@
       b.addEventListener('keydown', (e) => { if (e.key === 'Delete' && lewo) { e.preventDefault(); odjedz(w, b, -1, zrob(lewo)); } });
       return w;
     }
+    function sekcjaListy(nazwa, przycisk) {
+      return el('div', { class: 'czat-sekcja' }, el('h4', { class: 'czat-sekcja-nazwa', text: nazwa }), przycisk);
+    }
+    // Dwa widoki listy: „historia” (przycisk Rozmowy) i „schowek” (dawne Archiwum i Kosz: sekcje Zachowane i Kosz, „Opróżnij” przy Koszu).
     function pokazHistorie(n = 'historia', zostan = false) {
       if (pracuje) return;
+      if (n === 'archiwum' || n === 'kosz') n = 'schowek';
       if (glos.stan !== 'nic') glosStop(false);
       zamknijMenu(false);
       const bylo = lista.scrollTop;
       widokHistorii = n;
       historiaB.setAttribute('aria-pressed', 'true');
-      lista.setAttribute('aria-label', n === 'historia' ? 'Wcześniejsze rozmowy' : NAZWY_LIST[n]);
-      const a = czytajListe(n), tresc = [];
-      if (n !== 'historia') {
-        const wroc = pigulka('wstecz', 'Historia', 'czat-wroc');
+      lista.setAttribute('aria-label', n === 'historia' ? 'Wcześniejsze rozmowy' : 'Schowek');
+      const tresc = [];
+      if (n === 'schowek') {
+        const wroc = pigulka('wstecz', 'Rozmowy', 'czat-wroc');
         wroc.addEventListener('click', () => pokazHistorie('historia'));
-        const oproznij = n === 'kosz' && a.length ? pigulka('kosz', 'Opróżnij', 'czat-oproznij') : null;
-        if (oproznij) { oproznij.setAttribute('aria-label', 'Opróżnij kosz'); oproznij.addEventListener('click', oproznijKosz); }
-        tresc.push(el('div', { class: 'czat-naglowek-listy' }, wroc, el('h3', { class: 'czat-gdzie', text: NAZWY_LIST[n] }), oproznij));
-      }
-      tresc.push(a.length ? el('div', { class: 'czat-rozmowy' }, ...a.map((r) => wierszRozmowy(n, r))) : el('p', { class: 'czat-pusto', text: PUSTE[n] }));
-      if (n === 'historia') {
-        const schowki = ['archiwum', 'kosz'].map((m) => [m, czytajListe(m).length]).filter(([, ile]) => ile).map(([m, ile]) => {
-          const b = pigulka(m, NAZWY_LIST[m], 'czat-schowek');
+        tresc.push(el('div', { class: 'czat-naglowek-listy' }, wroc, el('h3', { class: 'czat-gdzie', text: 'Schowek' })));
+        const zachowane = czytajListe('archiwum'), kosz = czytajListe('kosz');
+        if (zachowane.length) tresc.push(sekcjaListy('Zachowane', null), el('div', { class: 'czat-rozmowy' }, ...zachowane.map((r) => wierszRozmowy('archiwum', r))));
+        if (kosz.length) {
+          const oproznij = pigulka('kosz', 'Opróżnij', 'czat-oproznij');
+          oproznij.setAttribute('aria-label', 'Opróżnij kosz');
+          oproznij.addEventListener('click', oproznijKosz);
+          tresc.push(sekcjaListy('Kosz', oproznij), el('div', { class: 'czat-rozmowy' }, ...kosz.map((r) => wierszRozmowy('kosz', r))));
+        }
+        if (!zachowane.length && !kosz.length) tresc.push(el('p', { class: 'czat-pusto', text: PUSTE.schowek }));
+      } else {
+        const a = czytajListe('historia');
+        tresc.push(a.length ? el('div', { class: 'czat-rozmowy' }, ...a.map((r) => wierszRozmowy('historia', r))) : el('p', { class: 'czat-pusto', text: PUSTE.historia }));
+        const ile = czytajListe('archiwum').length + czytajListe('kosz').length;
+        if (ile) {
+          const b = pigulka('archiwum', 'Schowek', 'czat-schowek');
           b.append(el('span', { class: 'czat-ile', text: String(ile) }));
-          b.setAttribute('aria-label', `${NAZWY_LIST[m]}: ${rozmow(ile)}`);
-          b.addEventListener('click', () => pokazHistorie(m));
-          return b;
-        });
-        if (schowki.length) tresc.push(el('div', { class: 'czat-schowki' }, ...schowki));
+          b.setAttribute('aria-label', `Schowek: ${rozmow(ile)}`);
+          b.addEventListener('click', () => pokazHistorie('schowek'));
+          tresc.push(el('div', { class: 'czat-schowki' }, b));
+        }
       }
       lista.replaceChildren(...tresc);
       forma.hidden = true;

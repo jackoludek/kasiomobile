@@ -238,7 +238,7 @@
 .czat-wiersz[data-kierunek="prawo"] .czat-pod-p, .czat-wiersz[data-kierunek="lewo"] .czat-pod-l { display: none; }
 .czat-pod svg { flex: none; transition: transform 160ms cubic-bezier(.3, 1.7, .5, 1); }
 .czat-wiersz.gotowe .czat-pod svg { transform: scale(1.2); }
-/* Archiwum i kosz otwierają pigułki pod Historią (każda pigułka na pół szerokości, sama na całą), a w nich strzałka do Historii i nazwa. */
+/* Schowek (dawne Archiwum i Kosz) to jedna pigułka pod listą rozmów, na całą szerokość; w jego widoku są dwie sekcje, Zachowane i Kosz. */
 .czat-schowki { display: flex; gap: 8px; margin-top: 4px; }
 .czat-schowek { flex: 1 1 0; justify-content: center; min-width: 0; }
 .czat-ile { min-width: 24px; height: 24px; margin-left: 2px; padding: 0 7px; border-radius: 12px; background: var(--cz-tlo);
@@ -341,7 +341,10 @@
 .czat-naglowek-listy { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center; }
 .czat-naglowek-listy .czat-wroc { grid-column: 1 / span 5; width: 100%; justify-content: center; padding: 0 8px; }
 .czat-naglowek-listy .czat-gdzie { grid-column: 6 / span 3; text-align: center; }
-.czat-naglowek-listy .czat-oproznij { grid-column: 9 / span 4; width: 100%; justify-content: center; padding: 0 8px; color: var(--cz-niebezp); }
+/* Sekcje Schowka (od 27.10.2026): mała nazwa po lewej, a przy Koszu „Opróżnij” w czterech ostatnich kolumnach (napis czerwony). */
+.czat-sekcja { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center; min-height: 40px; margin-top: 8px; }
+.czat-sekcja-nazwa { grid-column: 1 / span 6; margin: 0; color: var(--cz-tekst2); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.czat-sekcja .czat-oproznij { grid-column: 9 / span 4; width: 100%; justify-content: center; padding: 0 8px; color: var(--cz-niebezp); }
 .czat-oproznij > svg { display: none; }
 
 /* Odnośnik pod odpowiedzią nigdy nie wychodzi poza ekran: napis łamie się gdziekolwiek i ma najwyżej dwie linie. */

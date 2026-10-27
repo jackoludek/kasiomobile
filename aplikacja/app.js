@@ -1283,6 +1283,17 @@
       b.addEventListener('click', () => { zamknijMenuOtomoto(false); window.open(w.adres, '_blank', 'noopener'); });
       menuOtomoto.append(b);
     }
+    if (pokazWybor) {
+      menuOtomoto.append(el('p', { class: 'menu-otomoto-tytul', 'aria-hidden': 'true', text: 'Wygląd nawigacji (próba)' }));
+      for (const [k, nazwa] of WYGLADY) {
+        const b = el('button', { type: 'button', role: 'menuitemradio', 'aria-checked': String(k === wyglad), 'data-w': k }, el('span', { class: 'menu-otomoto-nazwa', text: nazwa }));
+        b.addEventListener('click', () => {
+          ustawWyglad(k, true);
+          for (const x of menuOtomoto.querySelectorAll('[role="menuitemradio"]')) x.setAttribute('aria-checked', String(x.dataset.w === k));
+        });
+        menuOtomoto.append(b);
+      }
+    }
     document.body.append(menuOtomoto);
     const r = zrodlo.getBoundingClientRect(), m = menuOtomoto.getBoundingClientRect();
     menuOtomoto.style.left = Math.round(Math.max(8, Math.min(r.left, innerWidth - m.width - 8))) + 'px';
@@ -1304,6 +1315,36 @@
     if (menuOtomoto && !menuOtomoto.contains(e.target) && !napis.contains(e.target) && !logo.contains(e.target)) zamknijMenuOtomoto(false);
   }, true);
   addEventListener('blur', () => zamknijMenuOtomoto(false));
+
+  // ---------------------------------------------------------------- próby wyglądu nawigacji (od 27.10.2026)
+  // Jacek: „te kolorki … nie jest over the top”, „zróbmy kilka wersji tej aplikacji, żebym mógł wybrać”. Na Androidzie Jacka menu pod logo ma wybór wyglądu
+  // dolnej nawigacji: Obecny i cztery próby (styl.css, „Próby wyglądu nawigacji”). Wybór leży w pamięci telefonu, a adres z ?wyglad=N ustawia go w przeglądarce
+  // (zrzuty i testy). U Kasi (strona w sieci, iPhone) wyboru nie ma i zostaje „Obecny”. Po decyzji Jacka przegrane próby i ten wybór znikną.
+  const WYGLADY = [['', 'Obecny'], ['1', '1: Kolor na wybranej'], ['2', '2: Jeden niebieski'], ['3', '3: Bez koloru'], ['4', '4: Kolorowe ikony']];
+  const wygladZAdresu = new URLSearchParams(location.search).get('wyglad');
+  let wyglad = String(wygladZAdresu !== null ? wygladZAdresu : pamiec.czytaj('wyglad', ''));
+  if (!WYGLADY.some(([k]) => k === wyglad)) wyglad = '';
+  const pokazWybor = SKAD === 'Android' || wygladZAdresu !== null;
+  // Wskaźnik: trójkąt między rzędem zakładek a rzędem pigułek, pod środkiem wybranej zakładki. Liczony z układu (offsetLeft), nie z prostokątów, żeby
+  // przesuwanie i powiększenie zakładki go nie rozedrgało.
+  function ustawWskaznik() {
+    const pk = $('.podkarty'), sel = $('.karty [aria-selected="true"]');
+    if (!pk || !sel) return;
+    const p = pk.getBoundingClientRect(), s = sel.getBoundingClientRect();
+    if (s.width) pk.style.setProperty('--wsk-x', Math.round((s.left + s.width / 2 - p.left) * 100) / 100 + 'px');
+  }
+  function ustawWyglad(w, zapisz) {
+    wyglad = w;
+    if (w) document.body.dataset.wyglad = w; else delete document.body.dataset.wyglad;
+    if (zapisz) pamiec.zapisz('wyglad', w);
+    ustawWskaznik();
+  }
+  const planujWskaznik = () => requestAnimationFrame(ustawWskaznik);
+  new MutationObserver(planujWskaznik).observe($('.karty'), { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-selected'] });
+  new ResizeObserver(planujWskaznik).observe($('.karty'));
+  addEventListener('resize', planujWskaznik);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(ustawWskaznik);
+  ustawWyglad(wyglad, false);
 
   // ---------------------------------------------------------------- Atlas wszystkich aut w Katalagu (od 25.10.2026)
   // Pigułki Marki i Modele pokazują Atlas Samochodów ze strony w sieci, w ramce (od 23 do 24.10.2026 w oknie pod logo). Z k=katalag

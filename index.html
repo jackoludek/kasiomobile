@@ -556,6 +556,41 @@ body.czat-otwarty .dol { z-index: 43; }
   .dol.przenoszony::before { box-shadow: var(--chmura-cien-gora); }
   .postep-paska { left: calc(var(--km-x0) - 8px); right: calc(var(--km-x1) - 8px); padding: 0 16px; border-radius: 16px; background: var(--chmura-tlo); box-shadow: var(--chmura-cien); }
 }
+/* ---- Próby wyglądu nawigacji (od 27.10.2026) ----
+   Jacek: „te kolorki … nie jest over the top”, „zróbmy kilka wersji tej aplikacji, żebym mógł wybrać”, „jak będzie wiadomo, że te na dole są powiązane
+   z tymi u góry? … jednoznacznie. Po jakimś czasie, jak się wraca do aplikacji”. Na Androidzie Jacka menu pod logo ma wybór: Obecny (bez zmian) i cztery próby
+   (body[data-wyglad]). Wspólne dla prób: niewybrane zakładki są neutralne, wybrana ma jasne tło (14% barwy) i obwódkę 1,5 px, a napis zostaje w kolorze tekstu.
+   Rząd pigułek jest powiązany z zakładką wskaźnikiem: małym trójkątem między rzędami pod środkiem wybranej zakładki (--wsk-x liczy app.js), który przesuwa
+   się razem z wyborem, więc związek widać także bez koloru. 1: barwa sekcji tylko na wybranej. 2: jeden niebieski (u Jacka „wybrane”). 3: bez koloru.
+   4: ikony zostają kolorowe, reszta spokojna. Kontrast policzony skryptem: napis co najmniej 11:1, znak 3,87:1, obwódka 4,66:1. Po decyzji Jacka przegrane próby znikną. */
+:root { --niebieski: #0071e3; }
+@media (prefers-color-scheme: dark) { :root { --niebieski: #0a84ff; } }
+body[data-wyglad="2"], body[data-wyglad="2"] .karty [role="tab"], body[data-wyglad="2"] .podwidoki { --barwa: var(--niebieski); }
+body[data-wyglad="3"], body[data-wyglad="3"] .karty [role="tab"], body[data-wyglad="3"] .podwidoki { --barwa: var(--tekst); }
+body[data-wyglad] .karty [role="tab"]:not([aria-selected="true"]) { background-color: var(--przycisk); }
+body[data-wyglad] .karty [aria-selected="true"], body[data-wyglad] .podwidoki [aria-checked="true"] {
+  background-color: color-mix(in srgb, var(--barwa) 14%, var(--chmura-tlo)); background-image: none; color: var(--tekst);
+  box-shadow: inset 0 0 0 1.5px var(--barwa); outline: none; animation: none;
+}
+body[data-wyglad="3"] .karty [aria-selected="true"], body[data-wyglad="3"] .podwidoki [aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--barwa); }
+body[data-wyglad] .karty [aria-selected="true"]::before { display: none; }
+body:is([data-wyglad="1"], [data-wyglad="2"], [data-wyglad="3"]) .karty .znak { transform: scale(1.14); }
+body:is([data-wyglad="1"], [data-wyglad="2"], [data-wyglad="3"]) .karty .znak use { fill: transparent; }
+body:is([data-wyglad="1"], [data-wyglad="2"], [data-wyglad="3"]) .karty .znak path { fill: var(--tekst2); }
+body:is([data-wyglad="1"], [data-wyglad="2"], [data-wyglad="3"]) .karty [aria-selected="true"] .znak path { fill: var(--barwa); }
+body[data-wyglad="4"] #seg-katalog[aria-selected="true"] .znak use { fill: url(#g-ogl); }
+body[data-wyglad="4"] #seg-modele[aria-selected="true"] .znak use { fill: url(#g-kat); }
+body[data-wyglad="4"] #seg-kredyt[aria-selected="true"] .znak use { fill: url(#g-kre); }
+body[data-wyglad="4"] #seg-poradnik[aria-selected="true"] .znak use { fill: url(#g-por); }
+body[data-wyglad="4"] .karty [aria-selected="true"] .znak path { fill: #ffffff; }
+@media (max-width: 759px) {
+  body[data-wyglad] .podkarty::before {
+    content: ""; position: absolute; z-index: 1; top: -12px; left: calc(var(--wsk-x, 50%) - 8px); width: 16px; height: 9px; background: var(--barwa);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%); pointer-events: none; transition: left 240ms cubic-bezier(.2, 0, 0, 1);
+  }
+}
+.menu-otomoto [role="menuitemradio"][aria-checked="true"] { box-shadow: 0 0 0 1.5px var(--akcent), var(--c3d); }
+.menu-otomoto [role="menuitemradio"][aria-checked="true"]::after { content: "✓"; color: var(--akcent-tekst); font-weight: 700; }
 </style>
 <style>
 /* czat.css: wygląd asystenta Kasiomobile (czat.js), ten sam na iPhonie, Androidzie, komputerze i w przeglądarce (od 19.10.2026).
@@ -798,7 +833,7 @@ body.czat-otwarty .dol { z-index: 43; }
 .czat-wiersz[data-kierunek="prawo"] .czat-pod-p, .czat-wiersz[data-kierunek="lewo"] .czat-pod-l { display: none; }
 .czat-pod svg { flex: none; transition: transform 160ms cubic-bezier(.3, 1.7, .5, 1); }
 .czat-wiersz.gotowe .czat-pod svg { transform: scale(1.2); }
-/* Archiwum i kosz otwierają pigułki pod Historią (każda pigułka na pół szerokości, sama na całą), a w nich strzałka do Historii i nazwa. */
+/* Schowek (dawne Archiwum i Kosz) to jedna pigułka pod listą rozmów, na całą szerokość; w jego widoku są dwie sekcje, Zachowane i Kosz. */
 .czat-schowki { display: flex; gap: 8px; margin-top: 4px; }
 .czat-schowek { flex: 1 1 0; justify-content: center; min-width: 0; }
 .czat-ile { min-width: 24px; height: 24px; margin-left: 2px; padding: 0 7px; border-radius: 12px; background: var(--cz-tlo);
@@ -901,7 +936,10 @@ body.czat-otwarty .dol { z-index: 43; }
 .czat-naglowek-listy { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center; }
 .czat-naglowek-listy .czat-wroc { grid-column: 1 / span 5; width: 100%; justify-content: center; padding: 0 8px; }
 .czat-naglowek-listy .czat-gdzie { grid-column: 6 / span 3; text-align: center; }
-.czat-naglowek-listy .czat-oproznij { grid-column: 9 / span 4; width: 100%; justify-content: center; padding: 0 8px; color: var(--cz-niebezp); }
+/* Sekcje Schowka (od 27.10.2026): mała nazwa po lewej, a przy Koszu „Opróżnij” w czterech ostatnich kolumnach (napis czerwony). */
+.czat-sekcja { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--km-rynna, 8px); align-items: center; min-height: 40px; margin-top: 8px; }
+.czat-sekcja-nazwa { grid-column: 1 / span 6; margin: 0; color: var(--cz-tekst2); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.czat-sekcja .czat-oproznij { grid-column: 9 / span 4; width: 100%; justify-content: center; padding: 0 8px; color: var(--cz-niebezp); }
 .czat-oproznij > svg { display: none; }
 
 /* Odnośnik pod odpowiedzią nigdy nie wychodzi poza ekran: napis łamie się gdziekolwiek i ma najwyżej dwie linie. */
@@ -988,7 +1026,7 @@ body.czat-otwarty .dol { z-index: 43; }
 <div class="dol">
   <div class="podkarty">
     <div class="podwidoki" role="radiogroup" aria-label="Oferty" data-z="katalog" style="--pastel:#d6eaff;--pastel-c:#17395d" data-odcien="211"><button type="button" role="radio" aria-checked="true" data-p="teraz"><span class="nazwa" data-nazwa="Teraz"><span>Teraz</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="historia"><span class="nazwa" data-nazwa="Historia"><span>Historia</span></span></button></div>
-    <div class="podwidoki" role="radiogroup" aria-label="Podium" data-z="modele" style="--pastel:#ffeed6;--pastel-c:#5c4118" data-odcien="35" hidden><button type="button" role="radio" aria-checked="true" data-p="podium"><span class="nazwa" data-nazwa="Podium"><span>Podium</span></span> <span class="skad nazwa" data-nazwa="Otomoto"><span>Otomoto</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="modele"><span class="nazwa" data-nazwa="Modele"><span>Modele</span></span> <span class="skad nazwa" data-nazwa="Otomoto"><span>Otomoto</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="marki"><span class="nazwa" data-nazwa="Wszystkie"><span>Wszystkie</span></span> <span class="skad nazwa" data-nazwa="Marki"><span>Marki</span></span></button></div>
+    <div class="podwidoki" role="radiogroup" aria-label="Podium" data-z="modele" style="--pastel:#ffeed6;--pastel-c:#5c4118" data-odcien="35" hidden><button type="button" role="radio" aria-checked="true" data-p="podium"><span class="nazwa" data-nazwa="Ranking"><span>Ranking</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="modele"><span class="nazwa" data-nazwa="Modele"><span>Modele</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="marki"><span class="nazwa" data-nazwa="Marki"><span>Marki</span></span></button></div>
     <div class="podwidoki" role="radiogroup" aria-label="Finanse" data-z="kredyt" style="--pastel:#dff6e4;--pastel-c:#224f2e" data-odcien="135" hidden><button type="button" role="radio" aria-checked="true" data-p="leasing"><span class="nazwa" data-nazwa="Leasing"><span>Leasing</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="kredyt"><span class="nazwa" data-nazwa="Kredyt"><span>Kredyt</span></span></button></div>
     <div class="podwidoki" role="radiogroup" aria-label="Poradnik" data-z="poradnik" style="--pastel:#f2e3fa;--pastel-c:#4a2d59" data-odcien="282" hidden><button type="button" role="radio" aria-checked="true" data-p="skrot"><span class="nazwa" data-nazwa="Skrót"><span>Skrót</span></span></button><button type="button" role="radio" aria-checked="false" tabindex="-1" data-p="calosc"><span class="nazwa" data-nazwa="Całość"><span>Całość</span></span></button></div>
   </div>
@@ -1139,7 +1177,7 @@ body.czat-otwarty .dol { z-index: 43; }
     // dwa przyciski z napisem, bo samej ikonki nikt nie brał za przycisk. Historia przełącza widok na listę wcześniejszych rozmów,
     // a Nowa rozmowa odkłada bieżącą do Historii i zaczyna od pustej. Wyjście to krzyżyk, Escape, Wstecz i zakładki pod rozmową.
     const pigulka = (n, napis, klasa) => { const b = el('button', { type: 'button', class: 'czat-pigulka ' + klasa, html: ikona(n, 18) }); b.append(el('span', { text: napis })); return b; };
-    const historiaB = pigulka('historia', 'Historia', 'czat-historia');
+    const historiaB = pigulka('historia', 'Rozmowy', 'czat-historia');
     historiaB.setAttribute('aria-pressed', 'false');
     const nowaB = pigulka('nowa', 'Nowa rozmowa', 'czat-nowa');
     const gora = el('div', { class: 'czat-gora' }, tryb === 'arkusz' ? el('span', { class: 'czat-uchwyt', 'aria-hidden': 'true' }) : null, zamknijB);
@@ -1283,15 +1321,15 @@ body.czat-otwarty .dol { z-index: 43; }
     const LISTY = { historia: 'archiwum', archiwum: 'w-archiwum', kosz: 'w-koszu', usun: 'usuniete' };
     const NAJWIECEJ_W = { historia: ARCHIWUM, archiwum: 50, kosz: 50, usun: 20 };
     const KOSZ_MS = 30 * 864e5;
-    const NAZWY_LIST = { archiwum: 'Archiwum', kosz: 'Kosz' };
-    const PUSTE = { historia: 'Wcześniejszych rozmów jeszcze nie ma.', archiwum: 'W archiwum nic nie ma.', kosz: 'Kosz jest pusty.' };
+    // Od 27.10.2026 Archiwum i Kosz to jeden widok „Schowek” (Jacek: „Tak, scal”): sekcje Zachowane i Kosz, a dane dalej leżą w dwóch listach.
+    const PUSTE = { historia: 'Wcześniejszych rozmów jeszcze nie ma.', schowek: 'W schowku nic nie ma.' };
     // Cel ruchu palca w prawo i w lewo w każdej liście i jego wygląd (biały napis: archiwum 5,7:1, Historia 4,7:1, kosz 5,4:1).
     const AKCJE = { historia: { prawo: 'archiwum', lewo: 'kosz' }, archiwum: { prawo: 'historia', lewo: 'kosz' }, kosz: { prawo: 'historia', lewo: 'usun' } };
     const CEL = {
-      archiwum: { napis: 'Do archiwum', ikona: 'archiwum', kolor: '#5856d6', cofnij: 'Cofnij przeniesienie do archiwum' },
+      archiwum: { napis: 'Zachowaj', ikona: 'archiwum', kolor: '#5856d6', cofnij: 'Cofnij zachowanie rozmowy' },
       kosz: { napis: 'Do kosza', ikona: 'kosz', kolor: '#d70015', cofnij: 'Cofnij przeniesienie do kosza' },
       usun: { napis: 'Usuń na stałe', ikona: 'kosz', kolor: '#a3000f', cofnij: 'Cofnij usunięcie na stałe' },
-      historia: { napis: 'Do Historii', ikona: 'historia', kolor: '#0071e3', cofnij: 'Cofnij powrót do Historii' },
+      historia: { napis: 'Do rozmów', ikona: 'historia', kolor: '#0071e3', cofnij: 'Cofnij powrót do rozmów' },
     };
     const ruchy = { wstecz: [], naprzod: [] };
     let widokHistorii = false, menuR = null, zegarCofnij = 0;
@@ -1410,7 +1448,7 @@ body.czat-otwarty .dol { z-index: 43; }
       ruchy.wstecz.push({ grupa });
       if (ruchy.wstecz.length > 50) ruchy.wstecz.shift();
       ruchy.naprzod.length = 0;
-      pokazHistorie('kosz', true);
+      pokazHistorie('schowek', true);
       pokazCofnijCzat('Cofnij opróżnienie kosza');
     }
     // Cofa albo ponawia ostatni ruch rozmowy. Oddaje false, gdy nie było czego.
@@ -1552,32 +1590,44 @@ body.czat-otwarty .dol { z-index: 43; }
       b.addEventListener('keydown', (e) => { if (e.key === 'Delete' && lewo) { e.preventDefault(); odjedz(w, b, -1, zrob(lewo)); } });
       return w;
     }
+    function sekcjaListy(nazwa, przycisk) {
+      return el('div', { class: 'czat-sekcja' }, el('h4', { class: 'czat-sekcja-nazwa', text: nazwa }), przycisk);
+    }
+    // Dwa widoki listy: „historia” (przycisk Rozmowy) i „schowek” (dawne Archiwum i Kosz: sekcje Zachowane i Kosz, „Opróżnij” przy Koszu).
     function pokazHistorie(n = 'historia', zostan = false) {
       if (pracuje) return;
+      if (n === 'archiwum' || n === 'kosz') n = 'schowek';
       if (glos.stan !== 'nic') glosStop(false);
       zamknijMenu(false);
       const bylo = lista.scrollTop;
       widokHistorii = n;
       historiaB.setAttribute('aria-pressed', 'true');
-      lista.setAttribute('aria-label', n === 'historia' ? 'Wcześniejsze rozmowy' : NAZWY_LIST[n]);
-      const a = czytajListe(n), tresc = [];
-      if (n !== 'historia') {
-        const wroc = pigulka('wstecz', 'Historia', 'czat-wroc');
+      lista.setAttribute('aria-label', n === 'historia' ? 'Wcześniejsze rozmowy' : 'Schowek');
+      const tresc = [];
+      if (n === 'schowek') {
+        const wroc = pigulka('wstecz', 'Rozmowy', 'czat-wroc');
         wroc.addEventListener('click', () => pokazHistorie('historia'));
-        const oproznij = n === 'kosz' && a.length ? pigulka('kosz', 'Opróżnij', 'czat-oproznij') : null;
-        if (oproznij) { oproznij.setAttribute('aria-label', 'Opróżnij kosz'); oproznij.addEventListener('click', oproznijKosz); }
-        tresc.push(el('div', { class: 'czat-naglowek-listy' }, wroc, el('h3', { class: 'czat-gdzie', text: NAZWY_LIST[n] }), oproznij));
-      }
-      tresc.push(a.length ? el('div', { class: 'czat-rozmowy' }, ...a.map((r) => wierszRozmowy(n, r))) : el('p', { class: 'czat-pusto', text: PUSTE[n] }));
-      if (n === 'historia') {
-        const schowki = ['archiwum', 'kosz'].map((m) => [m, czytajListe(m).length]).filter(([, ile]) => ile).map(([m, ile]) => {
-          const b = pigulka(m, NAZWY_LIST[m], 'czat-schowek');
+        tresc.push(el('div', { class: 'czat-naglowek-listy' }, wroc, el('h3', { class: 'czat-gdzie', text: 'Schowek' })));
+        const zachowane = czytajListe('archiwum'), kosz = czytajListe('kosz');
+        if (zachowane.length) tresc.push(sekcjaListy('Zachowane', null), el('div', { class: 'czat-rozmowy' }, ...zachowane.map((r) => wierszRozmowy('archiwum', r))));
+        if (kosz.length) {
+          const oproznij = pigulka('kosz', 'Opróżnij', 'czat-oproznij');
+          oproznij.setAttribute('aria-label', 'Opróżnij kosz');
+          oproznij.addEventListener('click', oproznijKosz);
+          tresc.push(sekcjaListy('Kosz', oproznij), el('div', { class: 'czat-rozmowy' }, ...kosz.map((r) => wierszRozmowy('kosz', r))));
+        }
+        if (!zachowane.length && !kosz.length) tresc.push(el('p', { class: 'czat-pusto', text: PUSTE.schowek }));
+      } else {
+        const a = czytajListe('historia');
+        tresc.push(a.length ? el('div', { class: 'czat-rozmowy' }, ...a.map((r) => wierszRozmowy('historia', r))) : el('p', { class: 'czat-pusto', text: PUSTE.historia }));
+        const ile = czytajListe('archiwum').length + czytajListe('kosz').length;
+        if (ile) {
+          const b = pigulka('archiwum', 'Schowek', 'czat-schowek');
           b.append(el('span', { class: 'czat-ile', text: String(ile) }));
-          b.setAttribute('aria-label', `${NAZWY_LIST[m]}: ${rozmow(ile)}`);
-          b.addEventListener('click', () => pokazHistorie(m));
-          return b;
-        });
-        if (schowki.length) tresc.push(el('div', { class: 'czat-schowki' }, ...schowki));
+          b.setAttribute('aria-label', `Schowek: ${rozmow(ile)}`);
+          b.addEventListener('click', () => pokazHistorie('schowek'));
+          tresc.push(el('div', { class: 'czat-schowki' }, b));
+        }
       }
       lista.replaceChildren(...tresc);
       forma.hidden = true;
@@ -3448,6 +3498,17 @@ body.czat-otwarty .dol { z-index: 43; }
       b.addEventListener('click', () => { zamknijMenuOtomoto(false); window.open(w.adres, '_blank', 'noopener'); });
       menuOtomoto.append(b);
     }
+    if (pokazWybor) {
+      menuOtomoto.append(el('p', { class: 'menu-otomoto-tytul', 'aria-hidden': 'true', text: 'Wygląd nawigacji (próba)' }));
+      for (const [k, nazwa] of WYGLADY) {
+        const b = el('button', { type: 'button', role: 'menuitemradio', 'aria-checked': String(k === wyglad), 'data-w': k }, el('span', { class: 'menu-otomoto-nazwa', text: nazwa }));
+        b.addEventListener('click', () => {
+          ustawWyglad(k, true);
+          for (const x of menuOtomoto.querySelectorAll('[role="menuitemradio"]')) x.setAttribute('aria-checked', String(x.dataset.w === k));
+        });
+        menuOtomoto.append(b);
+      }
+    }
     document.body.append(menuOtomoto);
     const r = zrodlo.getBoundingClientRect(), m = menuOtomoto.getBoundingClientRect();
     menuOtomoto.style.left = Math.round(Math.max(8, Math.min(r.left, innerWidth - m.width - 8))) + 'px';
@@ -3469,6 +3530,36 @@ body.czat-otwarty .dol { z-index: 43; }
     if (menuOtomoto && !menuOtomoto.contains(e.target) && !napis.contains(e.target) && !logo.contains(e.target)) zamknijMenuOtomoto(false);
   }, true);
   addEventListener('blur', () => zamknijMenuOtomoto(false));
+
+  // ---------------------------------------------------------------- próby wyglądu nawigacji (od 27.10.2026)
+  // Jacek: „te kolorki … nie jest over the top”, „zróbmy kilka wersji tej aplikacji, żebym mógł wybrać”. Na Androidzie Jacka menu pod logo ma wybór wyglądu
+  // dolnej nawigacji: Obecny i cztery próby (styl.css, „Próby wyglądu nawigacji”). Wybór leży w pamięci telefonu, a adres z ?wyglad=N ustawia go w przeglądarce
+  // (zrzuty i testy). U Kasi (strona w sieci, iPhone) wyboru nie ma i zostaje „Obecny”. Po decyzji Jacka przegrane próby i ten wybór znikną.
+  const WYGLADY = [['', 'Obecny'], ['1', '1: Kolor na wybranej'], ['2', '2: Jeden niebieski'], ['3', '3: Bez koloru'], ['4', '4: Kolorowe ikony']];
+  const wygladZAdresu = new URLSearchParams(location.search).get('wyglad');
+  let wyglad = String(wygladZAdresu !== null ? wygladZAdresu : pamiec.czytaj('wyglad', ''));
+  if (!WYGLADY.some(([k]) => k === wyglad)) wyglad = '';
+  const pokazWybor = SKAD === 'Android' || wygladZAdresu !== null;
+  // Wskaźnik: trójkąt między rzędem zakładek a rzędem pigułek, pod środkiem wybranej zakładki. Liczony z układu (offsetLeft), nie z prostokątów, żeby
+  // przesuwanie i powiększenie zakładki go nie rozedrgało.
+  function ustawWskaznik() {
+    const pk = $('.podkarty'), sel = $('.karty [aria-selected="true"]');
+    if (!pk || !sel) return;
+    const p = pk.getBoundingClientRect(), s = sel.getBoundingClientRect();
+    if (s.width) pk.style.setProperty('--wsk-x', Math.round((s.left + s.width / 2 - p.left) * 100) / 100 + 'px');
+  }
+  function ustawWyglad(w, zapisz) {
+    wyglad = w;
+    if (w) document.body.dataset.wyglad = w; else delete document.body.dataset.wyglad;
+    if (zapisz) pamiec.zapisz('wyglad', w);
+    ustawWskaznik();
+  }
+  const planujWskaznik = () => requestAnimationFrame(ustawWskaznik);
+  new MutationObserver(planujWskaznik).observe($('.karty'), { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-selected'] });
+  new ResizeObserver(planujWskaznik).observe($('.karty'));
+  addEventListener('resize', planujWskaznik);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(ustawWskaznik);
+  ustawWyglad(wyglad, false);
 
   // ---------------------------------------------------------------- Atlas wszystkich aut w Katalagu (od 25.10.2026)
   // Pigułki Marki i Modele pokazują Atlas Samochodów ze strony w sieci, w ramce (od 23 do 24.10.2026 w oknie pod logo). Z k=katalag

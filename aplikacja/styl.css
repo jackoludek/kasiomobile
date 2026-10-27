@@ -539,3 +539,38 @@ body.czat-otwarty .dol { z-index: 43; }
   .dol.przenoszony::before { box-shadow: var(--chmura-cien-gora); }
   .postep-paska { left: calc(var(--km-x0) - 8px); right: calc(var(--km-x1) - 8px); padding: 0 16px; border-radius: 16px; background: var(--chmura-tlo); box-shadow: var(--chmura-cien); }
 }
+/* ---- Próby wyglądu nawigacji (od 27.10.2026) ----
+   Jacek: „te kolorki … nie jest over the top”, „zróbmy kilka wersji tej aplikacji, żebym mógł wybrać”, „jak będzie wiadomo, że te na dole są powiązane
+   z tymi u góry? … jednoznacznie. Po jakimś czasie, jak się wraca do aplikacji”. Na Androidzie Jacka menu pod logo ma wybór: Obecny (bez zmian) i cztery próby
+   (body[data-wyglad]). Wspólne dla prób: niewybrane zakładki są neutralne, wybrana ma jasne tło (14% barwy) i obwódkę 1,5 px, a napis zostaje w kolorze tekstu.
+   Rząd pigułek jest powiązany z zakładką wskaźnikiem: małym trójkątem między rzędami pod środkiem wybranej zakładki (--wsk-x liczy app.js), który przesuwa
+   się razem z wyborem, więc związek widać także bez koloru. 1: barwa sekcji tylko na wybranej. 2: jeden niebieski (u Jacka „wybrane”). 3: bez koloru.
+   4: ikony zostają kolorowe, reszta spokojna. Kontrast policzony skryptem: napis co najmniej 11:1, znak 3,87:1, obwódka 4,66:1. Po decyzji Jacka przegrane próby znikną. */
+:root { --niebieski: #0071e3; }
+@media (prefers-color-scheme: dark) { :root { --niebieski: #0a84ff; } }
+body[data-wyglad="2"], body[data-wyglad="2"] .karty [role="tab"], body[data-wyglad="2"] .podwidoki { --barwa: var(--niebieski); }
+body[data-wyglad="3"], body[data-wyglad="3"] .karty [role="tab"], body[data-wyglad="3"] .podwidoki { --barwa: var(--tekst); }
+body[data-wyglad] .karty [role="tab"]:not([aria-selected="true"]) { background-color: var(--przycisk); }
+body[data-wyglad] .karty [aria-selected="true"], body[data-wyglad] .podwidoki [aria-checked="true"] {
+  background-color: color-mix(in srgb, var(--barwa) 14%, var(--chmura-tlo)); background-image: none; color: var(--tekst);
+  box-shadow: inset 0 0 0 1.5px var(--barwa); outline: none; animation: none;
+}
+body[data-wyglad="3"] .karty [aria-selected="true"], body[data-wyglad="3"] .podwidoki [aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--barwa); }
+body[data-wyglad] .karty [aria-selected="true"]::before { display: none; }
+body:is([data-wyglad="1"], [data-wyglad="2"], [data-wyglad="3"]) .karty .znak { transform: scale(1.14); }
+body:is([data-wyglad="1"], [data-wyglad="2"], [data-wyglad="3"]) .karty .znak use { fill: transparent; }
+body:is([data-wyglad="1"], [data-wyglad="2"], [data-wyglad="3"]) .karty .znak path { fill: var(--tekst2); }
+body:is([data-wyglad="1"], [data-wyglad="2"], [data-wyglad="3"]) .karty [aria-selected="true"] .znak path { fill: var(--barwa); }
+body[data-wyglad="4"] #seg-katalog[aria-selected="true"] .znak use { fill: url(#g-ogl); }
+body[data-wyglad="4"] #seg-modele[aria-selected="true"] .znak use { fill: url(#g-kat); }
+body[data-wyglad="4"] #seg-kredyt[aria-selected="true"] .znak use { fill: url(#g-kre); }
+body[data-wyglad="4"] #seg-poradnik[aria-selected="true"] .znak use { fill: url(#g-por); }
+body[data-wyglad="4"] .karty [aria-selected="true"] .znak path { fill: #ffffff; }
+@media (max-width: 759px) {
+  body[data-wyglad] .podkarty::before {
+    content: ""; position: absolute; z-index: 1; top: -12px; left: calc(var(--wsk-x, 50%) - 8px); width: 16px; height: 9px; background: var(--barwa);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%); pointer-events: none; transition: left 240ms cubic-bezier(.2, 0, 0, 1);
+  }
+}
+.menu-otomoto [role="menuitemradio"][aria-checked="true"] { box-shadow: 0 0 0 1.5px var(--akcent), var(--c3d); }
+.menu-otomoto [role="menuitemradio"][aria-checked="true"]::after { content: "✓"; color: var(--akcent-tekst); font-weight: 700; }
