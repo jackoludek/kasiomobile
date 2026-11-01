@@ -17,11 +17,19 @@
 //
 //   const czat = Czat.uruchom({ kanal, tryb: 'arkusz' | 'panel' | 'strona', skad, miejsce, zakladka(), pokaz(p, reka), zamknij(),
 //                               mikrofon: true, glosNatywny: { start(klucz, ustawienia), stop(zaraz) }, naZmiane(otwarty),
-//                               dol(): ile pikseli od dołu ekranu ma zostać widać pod arkuszem, na przykład nawigacja aplikacji })
+//                               dol(): ile pikseli od dołu ekranu ma zostać widać pod arkuszem, na przykład nawigacja aplikacji,
+//                               widok(): { krotko, pelny } opis tego, co widać na ekranie (małe okno), kotwica(): prostokąt przycisku asystenta,
+//                               nawigacja(p): p od 0 do 1 mówi, jak wysoko wyjechała nawigacja aplikacji spod belki, null kończy })
+//   czat.mini(): małe okno po przytrzymaniu przycisku asystenta (od 27.10.2026 wieczorem); stuknięcie w przycisk, „Otwórz na cały ekran”
+//                albo odpowiedź spoza ekranu rozwija je na cały ekran, tak samo odpowiedź na pytanie o rzecz wskazaną celownikiem (od 29.10.2026),
+//                a belka na dole pełnego okna zamyka czat i przywraca nawigację.
 //   Czat.dymek(przycisk): dymek przy ikonce bez podpisu. Wołaj go przed dodaniem własnego „click”.
 //   czat.wstecz(): Wstecz w telefonie; zamyka menu rozmowy, z archiwum i kosza wraca do Historii, zamyka Historię, a gdy jej nie ma,
 //                  rozmowę (true, gdy coś zamknął).
-// Historia (od 26.10.2026): „Nowa rozmowa” odkłada bieżącą do Historii, a „Historia” pokazuje wcześniejsze i wraca do każdej z nich.
+// Historia (od 26.10.2026): „Nowa rozmowa” odkłada bieżącą do Historii, a „Rozmowy” pokazują wcześniejsze i wracają do każdej z nich.
+// Pasek u góry (od 28.10.2026, jak w aplikacjach czatu na iPhonie i w pasku nawigacji Apple): Rozmowy (w listach strzałka wstecz), tytuł, Nowa rozmowa i krzyżyk,
+// każde na stałym miejscu siatki 12 kolumn. Nowa rozmowa wraca do pustej rozmowy z pytaniami na stałe.
+// Wskazanie (próba od 28.10.2026, tylko małe okno): celownik przeciągnięty na rzecz w aplikacji mówi komputerowi, o którą rzecz chodzi (pole „w”).
 'use strict';
 (() => {
   const SERWER = 'https://ntfy.sh', SONIOX = 'wss://stt-rt.soniox.com/transcribe-websocket';
@@ -33,8 +41,8 @@
   // Podpowiedzi w barwach zakładek, których dotyczą (od 26.10.2026): Podium niebieskie, Oferty zielone, Poradnik fioletowy, Finanse pomarańczowe.
   const PODPOWIEDZI = [['Najbezpieczniejsze auto do 75 tys. zł?', 'modele'], ['Co nowego dziś na Otomoto?', 'katalog'], ['Czy Corolla kombi zmieści psa?', 'poradnik'], ['Ile wyjdzie rata za 60 tys. zł?', 'kredyt']];
   // Własne pytania na stałe (od 27.10.2026; Jacek: „możliwość edytowania i ustawienia sobie własnych pytań na stałe, a jeden klik za pytanie”): na pustej rozmowie
-  // zamiast czterech stałych podpowiedzi stoi lista z pamięci telefonu (za pierwszym razem te same cztery). Najwyżej 12 pytań po 120 znaków.
-  const PYTANIA_MAX = 12, PYTANIE_DL = 120;
+  // zamiast czterech stałych podpowiedzi stoi lista z pamięci telefonu (za pierwszym razem te same cztery). Najwyżej 12 pytań po 600 znaków (od wieczora 27.10.2026; Jacek: „killer feature”: pytanie może być całym poleceniem, które się przewija).
+  const PYTANIA_MAX = 12, PYTANIE_DL = 600;
   const ZDANIA = {
     pusto: 'Zapytaj o auta, raty albo oferty. Odpowiada komputer w domu, zwykle w kilka sekund.',
     edycja: 'Stuknij pytanie, żeby je zmienić. Nowe wpisz albo podyktuj.',
@@ -88,6 +96,20 @@
     olowek: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m15 5 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
     ptak: '<path d="M5 12.2l4.5 4.5L19 7.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
     uchwyt: '<circle cx="9" cy="7" r="1.7"/><circle cx="15" cy="7" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="17" r="1.7"/><circle cx="15" cy="17" r="1.7"/>',
+    // Iskra asystenta (od 27.10.2026 wieczorem; Jacek: „inny znaczek … wariację” logo Claude): dwanaście promieni o różnej długości wokół jądra. Środek rysunku w punkcie 12, 12.
+    iskra: '<g transform="translate(-.3 .4)" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M11.91 8.6L11.74 2M13.8 9.12L15.82 5.89M14.9 10.22L19.67 7.3M15.4 12.12L18.8 12.24M14.99 13.62L20.96 16.87M13.6 15L15.29 18.18M12.09 15.4L12.24 21.2M10.2 14.88L8.5 17.6M9.1 13.78L3.64 17.12M8.6 11.88L4.6 11.74M9.01 10.38L4.27 7.8M10.4 9L8.76 5.91"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></g>',
+    // Rozwiń na cały ekran (strzałki od środka do rogów).
+    pelny: '<path d="M14 4h6v6h-2V7.4l-4.3 4.3-1.4-1.4L16.6 6H14zM10 20H4v-6h2v2.6l4.3-4.3 1.4 1.4L7.4 18H10z"/>',
+    // Pasek u góry i wskazanie (od 28.10.2026): rysunki na 24 px w polu 24 × 24, więc proste kreski stoją na całych pikselach, a kółko 40 px i rysunek 24 px mają
+    // tę samą parzystość. Atrament każdego zajmuje 18 × 18 px ze środkiem w punkcie 12, 12 (zmierzone na zrzutach w 1×, 1,2× i 4×).
+    // Rozmowy: zegar ze strzałką w lewo, jak SF Symbol clock.arrow.circlepath.
+    rozmowy: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 8-8 8.5 8.5 0 0 0-5.9 2.4L4 9"/><path d="M4 4v5h5"/><path d="M12 8v4l3 1.5"/></g>',
+    // Nowa rozmowa: kartka z ołówkiem, jak square.and.pencil.
+    pisz: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M16.94 4.94a1.5 1.5 0 0 1 2.12 2.12l-7 7-3.06.94.94-3.06z"/></g>',
+    // Wstecz z listy: strzałka „‹”.
+    wroc: '<path d="M15.5 5 8.5 12l7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+    // Wskaż rzecz na ekranie: celownik.
+    celownik: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5.5"/><path d="M12 4v3.5M12 16.5V20M4 12h3.5M16.5 12H20"/></g><circle cx="12" cy="12" r="1.5"/>',
   };
   const ikona = (n, r = 20) => `<svg width="${r}" height="${r}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${IKONY[n]}</svg>`;
 
@@ -113,7 +135,7 @@
     b.addEventListener('keydown', (e) => { if (e.key === 'Escape' && d) { schowaj(); e.stopPropagation(); } });
     b.addEventListener('pointerdown', (e) => {
       schowaj();
-      if (e.pointerType === 'mouse') return;
+      if (e.pointerType === 'mouse' || b.dataset.dotyk === 'wlasne') return;
       przytrzymane = false;
       zegar = setTimeout(() => { przytrzymane = true; pokaz(); }, 500);
     });
@@ -141,20 +163,35 @@
     const edycja = { aktywna: false, id: null };
     // Przewinięcie listy pytań w trybie edycji (rysuj() zawsze przerysowuje całą listę): bez tego każda zmiana ściągałaby widok na dół, a pierwsze pytania uciekałyby z ekranu.
     let pustoST = 0;
+    // Małe okno po przytrzymaniu przycisku asystenta (mini) i chwila ostatniego przytrzymania pytania (bezKlikuPyt), żeby puszczenie nie wysłało go od razu.
+    let mini = false, bezKlikuPyt = 0, otwartoMini = 0;
+    // Wskazanie w małym oknie: wskazana rzecz { el, tekst, ramki }, trwające przeciąganie celownika i chwila jego końca (żeby puszczenie nie było stuknięciem).
+    let wskaz = null, celowanie = null, wskazPoRuchu = 0, zegarRamki = 0;
 
     // ---------------------------------------------------------------- budowa
     const zaslona = tryb === 'arkusz' ? el('div', { class: 'czat-zaslona', hidden: true }) : null;
     const korzen = el('section', { class: `czat czat-${tryb}`, 'aria-label': 'Asystent', tabindex: '-1' });
     if (tryb === 'arkusz') { korzen.setAttribute('role', 'dialog'); korzen.setAttribute('aria-modal', 'true'); korzen.hidden = true; }
     const zamknijB = przycisk('zamknij', 'Zamknij', 'czat-zamknij', 18);
-    // Historia i nowa rozmowa (od 26.10.2026, Jacek: „nie ma możliwości nawigacji i historii, i wyjścia z tego, i … rozpoczęcia od nowa”):
-    // dwa przyciski z napisem, bo samej ikonki nikt nie brał za przycisk. Historia przełącza widok na listę wcześniejszych rozmów,
-    // a Nowa rozmowa odkłada bieżącą do Historii i zaczyna od pustej. Wyjście to krzyżyk, Escape, Wstecz i zakładki pod rozmową.
+    // Pigułka z napisem: Cofnij, Edytuj pytania, Gotowe, Archiwum i Kosz, pozycje menu rozmowy.
     const pigulka = (n, napis, klasa) => { const b = el('button', { type: 'button', class: 'czat-pigulka ' + klasa, html: ikona(n, 18) }); b.append(el('span', { text: napis })); return b; };
-    const historiaB = pigulka('historia', 'Rozmowy', 'czat-historia');
-    historiaB.setAttribute('aria-pressed', 'false');
-    const nowaB = pigulka('nowa', 'Nowa rozmowa', 'czat-nowa');
-    const gora = el('div', { class: 'czat-gora' }, tryb === 'arkusz' ? el('span', { class: 'czat-uchwyt', 'aria-hidden': 'true' }) : null, zamknijB);
+    // Pasek u góry (od 28.10.2026; Jacek o dawnych pigułkach Rozmowy i Nowa rozmowa nad polem pytania: „te propozycje i ta ergonomia is NO GOOD! Think Different, think
+    // what would Apple do!!!”, a o powrocie do czterech pytań: „don't make me think, don't make me guess”). Jak w aplikacjach czatu na iPhonie (ChatGPT, Claude, Gemini)
+    // i w pasku nawigacji Apple: z lewej Rozmowy (zegar ze strzałką; w listach w tym samym miejscu strzałka wstecz), na środku tytuł, z prawej Nowa rozmowa (kartka
+    // z ołówkiem) i krzyżyk. Przyciski nigdy się nie przesuwają, a Nowa rozmowa na pustej rozmowie jest przygaszona, ale stoi. Nowa rozmowa odkłada bieżącą do Rozmów
+    // i wraca do pustej rozmowy z pytaniami na stałe.
+    const historiaB = przycisk('rozmowy', 'Rozmowy', 'czat-historia', 24);
+    const tytulL = el('h2', { class: 'czat-tytul', 'aria-hidden': 'true' });
+    const nowaB = przycisk('pisz', 'Nowa rozmowa', 'czat-nowa', 24);
+    // Małe okno (od 27.10.2026 wieczorem): ten sam czat w mniejszej postaci po przytrzymaniu przycisku asystenta. U góry napis, o czym pyta (to, co widać
+    // na ekranie), przycisk na cały ekran i krzyżyk. W pełnym oknie obu pierwszych nie widać (czat.css, .czat-mini-tylko).
+    const miniChip = el('span', { class: 'czat-mini-chip czat-mini-tylko' });
+    const rozwinB = przycisk('pelny', 'Otwórz na cały ekran', 'czat-rozwin czat-mini-tylko', 20);
+    // Wskazanie (próba od 28.10.2026, Jacek o pomyśle „ping”: „Tak, zrób próbę”): celownik w pasku małego okna, przytrzymany i przeciągnięty nad aplikację (niżej, „wskazanie”).
+    // Przytrzymanie palcem niesie pinezkę, więc dymek przy nim pokazuje tylko kursor i fokus (dotyk: „wlasne”).
+    const wskazB = przycisk('celownik', 'Wskaż rzecz na ekranie', 'czat-wskaz czat-mini-tylko', 24);
+    wskazB.dataset.dotyk = 'wlasne';
+    const gora = el('div', { class: 'czat-gora' }, tryb === 'arkusz' ? el('span', { class: 'czat-uchwyt', 'aria-hidden': 'true' }) : null, historiaB, tytulL, miniChip, wskazB, rozwinB, nowaB, zamknijB);
     const lista = el('div', { class: 'czat-lista', role: 'log', 'aria-live': 'polite', 'aria-label': 'Rozmowa z asystentem' });
     const stanL = el('p', { class: 'czat-stan', role: 'status', hidden: true });
     const pole = el('textarea', { class: 'czat-tekst', rows: '1', maxlength: '600', placeholder: 'Zapytaj o auta…', 'aria-label': 'Pytanie do asystenta', enterkeyhint: 'send', autocomplete: 'off' });
@@ -162,15 +199,27 @@
     mikB.hidden = true;
     const wyslijB = przycisk('wyslij', 'Wyślij', 'czat-wyslij');
     const forma = el('form', { class: 'czat-pole' }, pole, mikB, wyslijB);
-    // „Cofnij” po przeniesieniu rozmowy do kosza albo archiwum (od 26.10.2026): nad dołem czatu, paruje w 6 s jak „Cofnij” w aplikacji
-    // (błękitne szkło ze strzałką, styl w czat.css).
+    // „Cofnij” po przeniesieniu rozmowy do kosza albo archiwum i po zmianie pytań na stałe (od 26.10.2026): paruje w 6 s jak „Cofnij” w aplikacji (błękitne szkło
+    // ze strzałką, styl w czat.css). Od 28.10.2026 stoi na środku, 12 px nad polem pytania, a w listach (bez pola) 12 px nad dołem listy, więc nigdy nie zasłania pola.
     const cofnijC = pigulka('cofnij', 'Cofnij', 'czat-cofnij');
     const cofnijPole = el('div', { class: 'czat-cofnij-pole', hidden: true }, cofnijC);
-    // Historia i Nowa rozmowa stoją pod kciukiem, tuż nad polem pytania, każda na sześciu kolumnach siatki (od 27.10.2026, Jacek: „Pod kciuk”);
-    // u góry zostaje sam krzyżyk. „Cofnij” po ruchu rozmowy stoi tuż nad tym rzędem.
-    const nawi = el('div', { class: 'czat-nawi' }, historiaB, nowaB, cofnijPole);
-    korzen.append(gora, lista, stanL, nawi, forma);
+    // Wskazana rzecz nad polem pytania małego okna: „O tym: …” (stuknięcie pokazuje ją jeszcze raz na ekranie) i krzyżyk, który ją zdejmuje.
+    const wskazTekst = el('button', { type: 'button', class: 'czat-wskazane-tekst' });
+    const wskazUsun = przycisk('zamknij', 'Usuń wskazanie', 'czat-zamknij czat-wskazane-usun', 16);
+    const wskazane = el('div', { class: 'czat-wskazane', hidden: true }, wskazTekst, wskazUsun);
+    // Pinezka, która idzie za palcem, i ramka wokół rzeczy pod nią: w dokumencie aplikacji, nad zasłoną, bo rzecz bywa w stronie w ramce.
+    const pinezka = tryb === 'arkusz' ? el('div', { class: 'czat-wskaznik', hidden: true, 'aria-hidden': 'true', html: ikona('celownik', 24) }) : null;
+    const ramkaW = tryb === 'arkusz' ? el('div', { class: 'czat-wskaz-ramka', hidden: true, 'aria-hidden': 'true' }) : null;
+    // Belka na dole pełnego okna (od 27.10.2026 wieczorem; Jacek: „menu na dole powinno się zsuwać do takiej belki małej na dole, i jak chcemy powrócić, to robimy swipe up”):
+    // nawigacja aplikacji zsuwa się do niej, a przesunięcie jej w górę (albo stuknięcie) zamyka czat i przywraca nawigację.
+    const belka = tryb === 'arkusz' ? el('div', { class: 'czat-belka', role: 'button', tabindex: '0', 'aria-label': 'Wróć do aplikacji. Przesuń w górę albo stuknij.' }, el('span', { class: 'czat-belka-kreska', 'aria-hidden': 'true' })) : null;
+    // Podpis belki dla nowej osoby (28.10.2026, ocena według zasad Ramsa, punkt 4 „Zrozumiałe”): przy pierwszych pięciu otwarciach obok kreski stoi „Wróć do aplikacji”,
+    // a znika po pierwszym powrocie belką. Napis mówi, dokąd belka prowadzi, a nie każe przesuwać: na iPhonie ruch w górę przy dolnej krawędzi łapie też system.
+    if (belka) belka.append(el('span', { class: 'czat-belka-podpis', 'aria-hidden': 'true', text: 'Wróć do aplikacji' }));
+    korzen.append(gora, lista, stanL, wskazane, forma, cofnijPole);
+    if (belka) korzen.append(belka);
     if (zaslona) document.body.append(zaslona);
+    if (pinezka) document.body.append(ramkaW, pinezka);
     (o.miejsce || document.body).append(korzen);
 
     // ---------------------------------------------------------------- wiadomości
@@ -186,24 +235,35 @@
       wyslijB.setAttribute('aria-label', edycja.aktywna ? 'Zapisz pytanie' : pracuje ? 'Komputer jeszcze odpowiada' : 'Wyślij');
       mikB.disabled = pracuje;
       nowaB.disabled = pracuje || !historia.length;
-      historiaB.disabled = pracuje;
+      // Przy zmianie pytań na stałe wychodzi się przez „Gotowe” (jak dawniej, gdy rząd Rozmów chował się w edycji), więc Rozmowy stoją wtedy przygaszone.
+      historiaB.disabled = pracuje || edycja.aktywna;
+      ustawGore();
     }
-    // Pole pytania (27.10.2026; Jacek: tekst z dyktowania ma mieć ostatnie zdanie przy palcu i nie może uciekać poza ekran): im więcej tekstu, tym drobniejsze
-    // litery (od zwykłych do 14 px), a gdy i tak się nie mieści, pole przewija się do końca. Rozmiar liczymy od początku przy każdej zmianie, więc po
-    // skasowaniu tekstu litery wracają do zwykłych.
-    const ROZM_MIN = 14, POLE_MAX = 132;
+    // Pasek u góry: znak i nazwa przycisku Rozmowy (w listach strzałka wstecz w tym samym miejscu) i tytuł: pusty na pustej rozmowie, w rozmowie jej pierwsze pytanie,
+    // w listach „Rozmowy” albo „Archiwum i kosz”, a przy zmianie pytań na stałe „Pytania na stałe”.
+    function ustawGore() {
+      const w = widokHistorii, znak = w ? 'wroc' : 'rozmowy';
+      if (historiaB.dataset.znak !== znak) { historiaB.innerHTML = ikona(znak, 24); historiaB.dataset.znak = znak; }
+      historiaB.setAttribute('aria-label', w === 'historia' ? 'Wróć do rozmowy' : 'Rozmowy');
+      const pierwsze = historia.find((x) => x.kto === 'ja');
+      const t = w === 'historia' ? 'Rozmowy' : w ? 'Archiwum i kosz' : edycja.aktywna ? 'Pytania na stałe' : pierwsze ? String(pierwsze.tekst || '') : '';
+      if (tytulL.textContent !== t) tytulL.textContent = t;
+      tytulL.setAttribute('aria-hidden', t ? 'false' : 'true');
+    }
+    // Pole pytania (27.10.2026; Jacek: tekst z dyktowania ma mieć ostatnie zdanie przy palcu i nie może uciekać poza ekran): pole rośnie do 132 px, a dalej
+    // przewija się do końca. Litery stoją w miejscu (28.10.2026, Jacek o malejących literach: „Look at the text which shrinks as you … read on it … That's not how
+    // people work”). Tekst w polu leży też w pamięci jako szkic (szkic), więc zamknięcie okna albo aplikacji go nie gubi; znika dopiero po wysłaniu.
+    const POLE_MAX = 132;
+    // Przy zmianie pytania na stałe pole sięga do 36% wysokości ekranu, żeby długie polecenie dało się czytać i przewijać (od 27.10.2026 wieczorem).
+    const poleMax = () => (edycja.aktywna ? Math.max(POLE_MAX, Math.round(innerHeight * 0.36)) : POLE_MAX);
     function rosnij() {
-      pole.style.fontSize = '';
       pole.style.height = 'auto';
-      let rozm = parseFloat(getComputedStyle(pole).fontSize) || 16;
-      while (pole.scrollHeight + 2 > POLE_MAX && rozm > ROZM_MIN) {
-        rozm -= 1;
-        pole.style.fontSize = rozm + 'px';
-        pole.style.height = 'auto';
-      }
-      pole.style.height = Math.min(pole.scrollHeight + 2, POLE_MAX) + 'px';
+      pole.style.height = Math.min(pole.scrollHeight + 2, poleMax()) + 'px';
+      if (!edycja.aktywna) pamiec.zapisz('szkic', pole.value);
+      ustawCofnij();
     }
     const poleNaDole = () => pole.scrollTop + pole.clientHeight >= pole.scrollHeight - 4;
+    { const sz = pamiec.czytaj('szkic', ''); if (typeof sz === 'string' && sz) pole.value = sz; }
     const naDol = () => { lista.scrollTop = lista.scrollHeight; };
     const usunPusto = () => { const p = lista.querySelector('.czat-pusto'); if (p) p.remove(); };
     function zapiszHistorie() {
@@ -231,11 +291,32 @@
       if (!t || /^https?:\/\//i.test(t)) { try { t = new URL(l.adres).hostname.replace(/^www\./, ''); } catch { t = 'Odnośnik'; } }
       return t.length > 70 ? t.slice(0, 69).replace(/\s+\S*$/, '') + '…' : t;
     }
+    // Napis przycisku „Ustaw filtry w Ofertach: …”: tylko to, co się zmienia, po polsku i krótko (kwoty i przebieg w tysiącach).
+    function opisFiltrow(f, szukaj) {
+      const cz = [], tys = (n) => String(Math.round(n / 1000));
+      if (szukaj) cz.push(szukaj);
+      if (f.wyczysc) cz.push('filtry z początku');
+      if (f.cenaOd > 0 && f.cenaDo > 0) cz.push(`cena ${tys(f.cenaOd)}–${tys(f.cenaDo)} tys. zł`);
+      else if (f.cenaDo > 0) cz.push(`cena do ${tys(f.cenaDo)} tys. zł`);
+      else if (f.cenaOd > 0) cz.push(`cena od ${tys(f.cenaOd)} tys. zł`);
+      else if (f.cenaOd === 0 || f.cenaDo === 0) cz.push('bez limitu ceny');
+      if (f.rokOd > 0 && f.rokDo > 0) cz.push(`rocznik ${f.rokOd}–${f.rokDo}`);
+      else if (f.rokOd > 0) cz.push(`od ${f.rokOd}`);
+      else if (f.rokDo > 0) cz.push(`do ${f.rokDo}`);
+      else if (f.rokOd === 0 || f.rokDo === 0) cz.push('każdy rocznik');
+      if (f.kmDo > 0) cz.push(`przebieg do ${tys(f.kmDo)} tys. km`);
+      else if (f.kmDo === 0) cz.push('bez limitu przebiegu');
+      if (f.sprzedawca) cz.push({ firma: 'od firm', prywatny: 'od prywatnych', wszyscy: 'każdy sprzedawca' }[f.sprzedawca]);
+      if (f.werdykt) cz.push(f.werdykt === 'wszystkie' ? 'także słabsze oferty' : 'tylko warte uwagi');
+      if (f.kolejnosc) cz.push({ dopasowanie: 'najlepsze dopasowanie', najtansze: 'od najtańszych', najdrozsze: 'od najdroższych', przebieg: 'najmniejszy przebieg', swieze: 'najświeższe' }[f.kolejnosc]);
+      return cz.filter(Boolean).join(', ');
+    }
     function napisPokazu(p) {
       if (p.model && p.nazwa) return 'Pokaż model: ' + p.nazwa;
       if (p.porownaj) return 'Pokaż porównanie';
       if (p.podium) return 'Pokaż Podium';
       if (p.finanse) return 'Pokaż ratę w Finansach';
+      if (p.filtry) { const o = opisFiltrow(p.filtry, p.szukaj); return 'Ustaw filtry w Ofertach' + (o ? ': ' + o : ''); }
       if (p.szukaj) return 'Szukaj w Ofertach: ' + p.szukaj;
       if (p.rozdzial && p.nazwa) return 'Otwórz w Poradniku: ' + p.nazwa;
       return 'Pokaż ' + BIERNIK[p.zakladka];
@@ -279,15 +360,16 @@
       if (!edycja.aktywna) {
         const rzad = el('div', { class: 'czat-podpowiedzi' });
         for (const p of l) {
-          const b = el('button', { type: 'button', class: 'czat-podpowiedz', 'data-id': p.id, text: p.t });
-          b.addEventListener('click', () => wyslij(p.t));
+          const b = el('button', { type: 'button', class: 'czat-podpowiedz', 'data-id': p.id }, el('span', { class: 'czat-podp-tekst', text: p.t }));
+          b.addEventListener('click', () => { if (Date.now() < bezKlikuPyt) return; wyslij(p.t); });
+          przytrzymajPytanie(b, p);
           rzad.append(b);
         }
         const edytuj = pigulka('olowek', 'Edytuj pytania', 'czat-pyt-edytuj');
         edytuj.addEventListener('click', () => edytujPytania(true));
         // Puste okno rozmowy: zdanie i pytania na stałe w jednej spokojnej barwie (za pierwszym razem cztery stałe podpowiedzi). Dużego oka HAL-a nie ma tu od wieczora
         // 26.10.2026 (Jacek: „fajna, ale trochę przesadzona”); oko żyje w małym mikrofonie przy polu pytania i w trybie HAL (przytrzymanie logo w app.js).
-        return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.pusto }), rzad, edytuj);
+        return el('div', { class: 'czat-pusto' }, el('span', { class: 'czat-iskra', html: ikona('iskra', 44), 'aria-hidden': 'true' }), el('p', { text: ZDANIA.pusto }), rzad, edytuj);
       }
       const rzad = el('div', { class: 'czat-podpowiedzi czat-pytania-edycja' }, ...l.map(wierszPytania));
       const dodajP = pigulka('nowa', 'Dodaj pytanie', 'czat-pyt-dodaj');
@@ -305,12 +387,12 @@
       gotowe.addEventListener('click', () => edytujPytania(false));
       return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.edycja }), rzad, el('div', { class: 'czat-pyt-akcje' }, dodajP, gotowe));
     }
-    function ikonaWyslij() { wyslijB.innerHTML = ikona(edycja.aktywna ? 'ptak' : 'wyslij'); }
+    function ikonaWyslij() { wyslijB.innerHTML = ikona(edycja.aktywna ? 'ptak' : 'wyslij'); korzen.classList.toggle('edytuje', edycja.aktywna); }
     function edytujPytania(wl) {
       if (pracuje) return;
       edycja.aktywna = wl;
       edycja.id = null;
-      pole.value = '';
+      pole.value = wl ? '' : pamiec.czytaj('szkic', '');
       pole.placeholder = wl ? 'Nowe pytanie na stałe…' : 'Zapytaj o auta…';
       ikonaWyslij();
       rosnij();
@@ -323,7 +405,7 @@
       if (!edycja.aktywna) return;
       edycja.aktywna = false;
       edycja.id = null;
-      pole.value = '';
+      pole.value = pamiec.czytaj('szkic', '');
       pole.placeholder = 'Zapytaj o auta…';
       ikonaWyslij();
       rosnij();
@@ -336,6 +418,43 @@
       return z.filter((x) => x && typeof x.id === 'string' && typeof x.t === 'string' && x.t.trim()).slice(0, PYTANIA_MAX);
     }
     const zapiszPytania = (l) => pamiec.zapisz('pytania', l);
+    // Przytrzymanie pytania na pustej rozmowie (0,5 s) otwiera je od razu do zmiany, bez wchodzenia w „Edytuj pytania” (od 27.10.2026 wieczorem).
+    function zmienJedno(p) {
+      edycja.aktywna = true;
+      edycja.id = p.id;
+      pole.value = p.t;
+      pole.placeholder = 'Zmień pytanie…';
+      ikonaWyslij();
+      rosnij();
+      przyciski();
+      pustoST = 0;
+      rysuj();
+      pole.focus({ preventScroll: true });
+      try { pole.setSelectionRange(pole.value.length, pole.value.length); } catch { /* bez zaznaczenia */ }
+    }
+    function przytrzymajPytanie(b, p) {
+      let zegar = 0, x = 0, y = 0;
+      const stop = () => clearTimeout(zegar);
+      b.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        x = e.clientX;
+        y = e.clientY;
+        stop();
+        // Puszczenie palca po przytrzymaniu daje „click” na tym, co stoi teraz pod palcem (lista pytań przerysowała się do zmiany), więc kliknięcia stoją, póki palec jest na
+        // ekranie, i jeszcze pół sekundy po nim.
+        zegar = setTimeout(() => {
+          bezKlikuPyt = Date.now() + 10000;
+          const koniec = () => { bezKlikuPyt = Date.now() + 500; };
+          window.addEventListener('pointerup', koniec, { once: true, capture: true });
+          window.addEventListener('pointercancel', koniec, { once: true, capture: true });
+          if (navigator.vibrate) navigator.vibrate(10);
+          zmienJedno(p);
+        }, 500);
+      });
+      b.addEventListener('pointermove', (e) => { if (Math.abs(e.clientX - x) > 10 || Math.abs(e.clientY - y) > 10) stop(); });
+      for (const t of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(t, stop);
+      b.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
     // Każda zmiana listy to krok „Cofnij” (przycisk nad dołem czatu, Ctrl+Z i Ctrl+Y jak przy ruchach rozmów).
     function zmienPytania(po, opis) {
       const przed = pytaniaMoje();
@@ -380,10 +499,11 @@
     }
     function wierszPytania(p) {
       const uch = el('button', { type: 'button', class: 'czat-pyt-uchwyt', 'aria-label': 'Przesuń pytanie', html: ikona('uchwyt', 20) });
-      const tekst = el('button', { type: 'button', class: 'czat-pyt-tekst', text: p.t });
+      const tekst = el('button', { type: 'button', class: 'czat-pyt-tekst' }, el('span', { class: 'czat-podp-tekst', text: p.t }));
       const usun = el('button', { type: 'button', class: 'czat-pyt-usun', 'aria-label': 'Usuń pytanie', html: ikona('zamknij', 18) });
       const w = el('div', { class: 'czat-pyt-wiersz' + (edycja.id === p.id ? ' edytowany' : ''), 'data-id': p.id }, uch, tekst, usun);
       tekst.addEventListener('click', () => {
+        if (Date.now() < bezKlikuPyt) return;
         edycja.id = p.id;
         pole.value = p.t;
         pole.placeholder = 'Zmień pytanie…';
@@ -448,11 +568,11 @@
     const NAJWIECEJ_W = { historia: ARCHIWUM, archiwum: 50, kosz: 50, usun: 20 };
     const KOSZ_MS = 30 * 864e5;
     // Od 27.10.2026 Archiwum i Kosz to jeden widok „Schowek” (Jacek: „Tak, scal”): sekcje Zachowane i Kosz, a dane dalej leżą w dwóch listach.
-    const PUSTE = { historia: 'Wcześniejszych rozmów jeszcze nie ma.', schowek: 'W schowku nic nie ma.' };
+    const PUSTE = { historia: 'Wcześniejszych rozmów jeszcze nie ma.', schowek: 'Archiwum i kosz są puste.' };
     // Cel ruchu palca w prawo i w lewo w każdej liście i jego wygląd (biały napis: archiwum 5,7:1, Historia 4,7:1, kosz 5,4:1).
     const AKCJE = { historia: { prawo: 'archiwum', lewo: 'kosz' }, archiwum: { prawo: 'historia', lewo: 'kosz' }, kosz: { prawo: 'historia', lewo: 'usun' } };
     const CEL = {
-      archiwum: { napis: 'Zachowaj', ikona: 'archiwum', kolor: '#5856d6', cofnij: 'Cofnij zachowanie rozmowy' },
+      archiwum: { napis: 'Do archiwum', ikona: 'archiwum', kolor: '#5856d6', cofnij: 'Cofnij przeniesienie do archiwum' },
       kosz: { napis: 'Do kosza', ikona: 'kosz', kolor: '#d70015', cofnij: 'Cofnij przeniesienie do kosza' },
       usun: { napis: 'Usuń na stałe', ikona: 'kosz', kolor: '#a3000f', cofnij: 'Cofnij usunięcie na stałe' },
       historia: { napis: 'Do rozmów', ikona: 'historia', kolor: '#0071e3', cofnij: 'Cofnij powrót do rozmów' },
@@ -463,11 +583,12 @@
       widokHistorii = false;
       zamknijMenu(false);
       pokazCofnijCzat(null);
-      historiaB.setAttribute('aria-pressed', 'false');
       lista.setAttribute('aria-label', 'Rozmowa z asystentem');
       lista.replaceChildren(...(historia.length ? historia.map(wiadomosc) : [pusto()]));
       if (mysli) lista.append(mysli);
       forma.hidden = false;
+      forma.style.visibility = '';
+      forma.inert = false;
       przyciski();
       if (historia.length) naDol(); else lista.scrollTop = edycja.aktywna ? pustoST : 0;
     }
@@ -505,7 +626,7 @@
       if (pracuje || !historia.length) return;
       if (glos.stan !== 'nic') glosStop(false);
       odNowa();
-      stan('Poprzednia rozmowa jest w Historii.', 5000);
+      stan('Poprzednia rozmowa jest w Rozmowach.', 5000);
     }
     // Po 6 godzinach ciszy rozmowa zaczyna się od nowa, jak dla komputera (rozmowa() niżej), a stara czeka w Historii.
     function poCzasie() {
@@ -515,6 +636,8 @@
     // Otwiera rozmowę z Historii, archiwum albo kosza: wraca jako bieżąca, a bieżąca idzie do Historii.
     function wrocDo(n, r) {
       if (pracuje) return;
+      // Rozmowa otwarta z małego okna idzie na cały ekran (28.10.2026, Jacek: „pretty much stuck in it … don't make me think”).
+      if (mini && otwarty()) otworz();
       const a = czytajListe(n), i = a.findIndex(ta(r));
       if (i < 0) return;
       a.splice(i, 1);
@@ -605,9 +728,16 @@
       korzen.classList.toggle('z-cofnij', Boolean(opis));
       if (!opis) return;
       cofnijC.setAttribute('aria-label', opis);
+      ustawCofnij();
       void cofnijPole.offsetWidth;
       cofnijPole.classList.add('paruje');
       if (getComputedStyle(cofnijC).animationName === 'none' && !cofnijC.matches(':hover, :focus-visible')) zegarCofnij = setTimeout(() => pokazCofnijCzat(null), 6000);
+    }
+    // „Cofnij” stoi na środku, 12 px nad polem pytania, a w listach (pole schowane) 12 px nad dołem listy.
+    function ustawCofnij() {
+      if (cofnijPole.hidden) return;
+      const k = korzen.getBoundingClientRect(), y = forma.hidden ? lista.getBoundingClientRect().bottom : forma.getBoundingClientRect().top;
+      cofnijPole.style.bottom = Math.max(0, Math.round(k.bottom - y + 12)) + 'px';
     }
     function zamknijMenu(fokus) {
       if (!menuR) return false;
@@ -713,7 +843,7 @@
       const pytania = r.wpisy.filter((x) => x.kto === 'ja'), { prawo, lewo } = AKCJE[n];
       const b = el('button', { type: 'button', class: 'czat-rozmowa' },
         el('span', { class: 'czat-rozmowa-tytul', text: pytania[0] ? pytania[0].tekst : 'Rozmowa' }),
-        el('span', { class: 'czat-rozmowa-kiedy', text: `${n === 'kosz' ? zniknie(r.usunieto) : kiedy(r.czas)} · ${pytan(pytania.length)}` }));
+        el('span', { class: 'czat-rozmowa-kiedy', text: `${n === 'kosz' ? zniknie(r.usunieto) : n === 'historia' || n === 'archiwum' ? kiedyKrotko(r.czas) : kiedy(r.czas)} · ${pytan(pytania.length)}` }));
       const strona = (cel, klasa) => (cel ? el('span', { class: klasa, html: ikona(CEL[cel].ikona, 22) }, el('span', { text: CEL[cel].napis })) : null);
       const w = el('div', { class: 'czat-wiersz', style: `--k-prawo:${prawo ? CEL[prawo].kolor : 'transparent'};--k-lewo:${lewo ? CEL[lewo].kolor : 'transparent'}` },
         el('div', { class: 'czat-pod', 'aria-hidden': 'true' }, strona(prawo, 'czat-pod-l'), strona(lewo, 'czat-pod-p')), b);
@@ -724,8 +854,28 @@
       b.addEventListener('keydown', (e) => { if (e.key === 'Delete' && lewo) { e.preventDefault(); odjedz(w, b, -1, zrob(lewo)); } });
       return w;
     }
-    function sekcjaListy(nazwa, przycisk) {
-      return el('div', { class: 'czat-sekcja' }, el('h4', { class: 'czat-sekcja-nazwa', text: nazwa }), przycisk);
+    function sekcjaListy(nazwa, przycisk, cel) {
+      return el('div', { class: 'czat-sekcja', 'data-sekcja': cel || null }, el('h4', { class: 'czat-sekcja-nazwa', text: nazwa }), przycisk);
+    }
+    // Rozmowy pogrupowane po dniach, z małą datą (od 27.10.2026 wieczorem; Jacek: „bardzo prosta i delikatna, a skuteczna nawigacja w historii … małe daty”):
+    // nagłówek Dziś, Wczoraj, Ostatnie 7 dni, Ostatnie 30 dni albo Wcześniej, a w wierszu sama godzina (starsze: dzień i miesiąc).
+    function grupyDni(a) {
+      const dzis = new Date();
+      dzis.setHours(0, 0, 0, 0);
+      const g = [];
+      for (const r of a) {
+        const d = new Date(r.czas);
+        d.setHours(0, 0, 0, 0);
+        const n = Math.round((dzis - d) / 864e5), nazwa = n <= 0 ? 'Dziś' : n === 1 ? 'Wczoraj' : n < 7 ? 'Ostatnie 7 dni' : n < 30 ? 'Ostatnie 30 dni' : 'Wcześniej';
+        const ost = g[g.length - 1];
+        if (ost && ost.nazwa === nazwa) ost.wiersze.push(r); else g.push({ nazwa, wiersze: [r] });
+      }
+      return g;
+    }
+    function kiedyKrotko(t) {
+      const d = new Date(t), dzis = new Date(), godz = d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+      if (Date.now() - t < 2 * 864e5 && (d.toDateString() === dzis.toDateString() || d.toDateString() === new Date(dzis - 864e5).toDateString())) return godz;
+      return d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' }) + ', ' + godz;
     }
     // Dwa widoki listy: „historia” (przycisk Rozmowy) i „schowek” (dawne Archiwum i Kosz: sekcje Zachowane i Kosz, „Opróżnij” przy Koszu).
     function pokazHistorie(n = 'historia', zostan = false) {
@@ -736,35 +886,39 @@
       zamknijMenu(false);
       const bylo = lista.scrollTop;
       widokHistorii = n;
-      historiaB.setAttribute('aria-pressed', 'true');
-      lista.setAttribute('aria-label', n === 'historia' ? 'Wcześniejsze rozmowy' : 'Schowek');
+      ustawGore();
+      lista.setAttribute('aria-label', n === 'historia' ? 'Wcześniejsze rozmowy' : 'Archiwum i kosz');
       const tresc = [];
       if (n === 'schowek') {
-        const wroc = pigulka('wstecz', 'Rozmowy', 'czat-wroc');
-        wroc.addEventListener('click', () => pokazHistorie('historia'));
-        tresc.push(el('div', { class: 'czat-naglowek-listy' }, wroc, el('h3', { class: 'czat-gdzie', text: 'Schowek' })));
+        // Nazwa widoku stoi w tytule paska u góry, a powrót do Rozmów to strzałka wstecz w miejscu przycisku Rozmowy (od 28.10.2026).
         const zachowane = czytajListe('archiwum'), kosz = czytajListe('kosz');
-        if (zachowane.length) tresc.push(sekcjaListy('Zachowane', null), el('div', { class: 'czat-rozmowy' }, ...zachowane.map((r) => wierszRozmowy('archiwum', r))));
+        if (zachowane.length) tresc.push(sekcjaListy('Archiwum', null, 'archiwum'), el('div', { class: 'czat-rozmowy' }, ...zachowane.map((r) => wierszRozmowy('archiwum', r))));
         if (kosz.length) {
           const oproznij = pigulka('kosz', 'Opróżnij', 'czat-oproznij');
           oproznij.setAttribute('aria-label', 'Opróżnij kosz');
           oproznij.addEventListener('click', oproznijKosz);
-          tresc.push(sekcjaListy('Kosz', oproznij), el('div', { class: 'czat-rozmowy' }, ...kosz.map((r) => wierszRozmowy('kosz', r))));
+          tresc.push(sekcjaListy('Kosz', oproznij, 'kosz'), el('div', { class: 'czat-rozmowy' }, ...kosz.map((r) => wierszRozmowy('kosz', r))));
         }
         if (!zachowane.length && !kosz.length) tresc.push(el('p', { class: 'czat-pusto', text: PUSTE.schowek }));
       } else {
-        const a = czytajListe('historia');
-        tresc.push(a.length ? el('div', { class: 'czat-rozmowy' }, ...a.map((r) => wierszRozmowy('historia', r))) : el('p', { class: 'czat-pusto', text: PUSTE.historia }));
-        const ile = czytajListe('archiwum').length + czytajListe('kosz').length;
-        if (ile) {
-          const b = pigulka('archiwum', 'Schowek', 'czat-schowek');
+        const a = czytajListe('historia'), arch = czytajListe('archiwum').length, kosz = czytajListe('kosz').length;
+        // Archiwum i Kosz stoją zawsze na górze listy, widoczne, z liczbą (od 27.10.2026 wieczorem; Jacek: „łatwa i widoczna, i ten kosz, i ten archiwum”);
+        // pusty przycisk jest przygaszony, ale nie znika, więc nic się nie przesuwa. Klik otwiera widok „Archiwum i kosz” na swojej sekcji.
+        const chip = (nazwa, znak, ile, cel) => {
+          const b = pigulka(znak, nazwa, 'czat-schowek');
           b.append(el('span', { class: 'czat-ile', text: String(ile) }));
-          b.setAttribute('aria-label', `Schowek: ${rozmow(ile)}`);
-          b.addEventListener('click', () => pokazHistorie('schowek'));
-          tresc.push(el('div', { class: 'czat-schowki' }, b));
-        }
+          b.setAttribute('aria-label', `${nazwa}: ${rozmow(ile)}`);
+          b.disabled = !ile;
+          b.addEventListener('click', () => { pokazHistorie('schowek'); const s = lista.querySelector(`[data-sekcja="${cel}"]`); if (s) s.scrollIntoView({ block: 'start' }); });
+          return b;
+        };
+        tresc.push(el('div', { class: 'czat-schowki' }, chip('Archiwum', 'archiwum', arch, 'archiwum'), chip('Kosz', 'kosz', kosz, 'kosz')));
+        if (!a.length) tresc.push(el('p', { class: 'czat-pusto', text: PUSTE.historia }));
+        else for (const g of grupyDni(a)) tresc.push(el('h4', { class: 'czat-grupa', text: g.nazwa }), el('div', { class: 'czat-rozmowy' }, ...g.wiersze.map((r) => wierszRozmowy('historia', r))));
       }
       lista.replaceChildren(...tresc);
+      // W listach pola pytania nie ma, więc lista sięga do dołu (od 28.10.2026: przyciski stoją w pasku u góry i nic pod nimi się nie rusza; do tego dnia pole
+      // stało niewidoczne w układzie, żeby rząd Rozmów i Nowej rozmowy nad nim nie spadał).
       forma.hidden = true;
       if (zostan) { lista.scrollTop = bylo; return; }
       pokazCofnijCzat(null);
@@ -865,7 +1019,11 @@
       usunPusto();
       lista.append(mysli);
       naDol();
-      const d = await (czekanie || zapytaj({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '' }, CZEKAJ_MS, q));
+      // Z małego okna komputer dostaje też opis tego, co widać na ekranie (pole „w”), a odpowiada polem „poza” (od 27.10.2026 wieczorem).
+      const widok = mini && o.widok ? o.widok() : null;
+      const wskazano = !czekanie && mini && Boolean(wskaz);
+      const wPole = czekanie ? '' : opisDlaKomputera(widok);
+      const d = await (czekanie || zapytaj(Object.assign({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '' }, wPole ? { w: wPole } : {}), CZEKAJ_MS, q));
       mysli.remove();
       mysli = null;
       pracuje = false;
@@ -877,11 +1035,25 @@
       // Długa odpowiedź: widać jej początek, nie koniec.
       if (e.offsetHeight > lista.clientHeight - 48) e.scrollIntoView({ block: 'start' }); else naDol();
       if (w.pokaz && otwarty()) pokazTeraz(w.pokaz, false);
+      // Małe okno rozwija się na cały ekran, gdy pytanie było o rzecz wskazaną celownikiem (od 29.10.2026, Jacek: „to okno małe, jak już user point it as something
+      // and it produces answer – then it should go full screen ai”), gdy wykracza poza to, co widać (pole „poza” od komputera), albo gdy odpowiedź jest długa.
+      // Odpowiedź z błędem zostaje w małym oknie, żeby od razu można było spytać jeszcze raz.
+      if (mini && otwarty() && !w.blad && (wskazano || (d && d.poza === true) || (w.tekst || '').length > 420)) setTimeout(() => { if (mini && otwarty()) otworz(); }, 700);
+      else if (mini) setTimeout(() => { if (mini) odswiezChip(); }, 900);
+    }
+    // Wysłanie w trakcie dyktowania (strzałką albo Enterem): mikrofon gaśnie bez drugiego wysłania, a słowa, które Soniox odda jeszcze potem, nie wracają do pola
+    // (30.10.2026; Jacek: „wysłało, wyświetliło u góry i zatrzymało na dole ten sam tekst … jak jest wysłane, to musi kasować”). Wcześniej mikrofon słuchał dalej,
+    // wpisywał całe pytanie z powrotem i zostawiał je w polu i w szkicu.
+    function glosBezWysylki() {
+      if (glos.stan === 'nic') return;
+      glos.wyslij = false;
+      glosKoniec();
     }
     function wyslij(t) {
-      if (edycja.aktywna) return zapiszPytanie(t);
+      if (edycja.aktywna) { if (String(t || '').trim()) glosBezWysylki(); return zapiszPytanie(t); }
       const q = String(t || '').replace(/\s+/g, ' ').trim().slice(0, 600);
       if (!q || pracuje) return false;
+      glosBezWysylki();
       if (hal.otwarty) { uz('hal-pytanie', q); pole.value = ''; rosnij(); przyciski(); halZadaj(q); return true; }
       uz('pytanie', q);
       pole.value = '';
@@ -913,12 +1085,45 @@
       korzen.style.setProperty('--czat-dol', dol + 'px');
       korzen.classList.toggle('klawiatura', klawiatura);
       korzen.classList.toggle('nad-nawigacja', dol > 0);
+      if (mini) miniUstaw(v, klawiatura);
+      ustawCofnij();
       if (document.activeElement === pole) naDol();
     }
-    function otworz() {
+    // ---------------------------------------------------------------- małe okno (od 27.10.2026 wieczorem)
+    // Jacek: „long press … mały, przezroczysty ‚instant’ panel (pytanie i odpowiedź w odniesieniu do tego, co widać na bieżącej stronie)”. To ten sam czat, ta sama rozmowa i ten
+    // sam mikrofon, tylko mniejszy i szklany: stoi nad przyciskiem asystenta (pod nim, gdy ten jest u góry ekranu), a nad klawiaturą, gdy ta jest otwarta. Komputer dostaje z pytaniem
+    // opis tego, co widać (o.widok), a w odpowiedzi pole „poza”: gdy pytanie wykracza poza ekran, okno rozwija się na cały ekran.
+    function odswiezChip() {
+      const w = o.widok ? o.widok() : null;
+      miniChip.textContent = w && w.krotko ? w.krotko : 'To, co widzisz';
+    }
+    function miniKlasy() {
+      korzen.classList.toggle('czat-mini', mini);
+      if (zaslona) zaslona.classList.toggle('mini', mini);
+      pole.placeholder = edycja.aktywna ? 'Nowe pytanie na stałe…' : mini ? 'Zapytaj o to, co widzisz…' : 'Zapytaj o auta…';
+      if (mini) odswiezChip();
+    }
+    function miniUstaw(v, klawiatura) {
+      const k = o.kotwica ? o.kotwica() : null;
+      const dolV = Math.max(0, innerHeight - (v.offsetTop + v.height));
+      const nad = klawiatura || !k || k.top + k.height / 2 >= innerHeight * 0.4;
+      korzen.classList.toggle('mini-pod', !nad);
+      korzen.style.setProperty('--mini-b', Math.max(8, Math.round(klawiatura || !k ? dolV + 8 : innerHeight - k.top + 12)) + 'px');
+      korzen.style.setProperty('--mini-t', (k ? Math.round(k.bottom + 12) : 72) + 'px');
+    }
+    function otworz(m) {
       if (tryb === 'strona') return;
       doRozmowy = 0;
       poCzasie();
+      // Małe okno tylko na telefonie, w arkuszu. Otwarte małe okno rozwija się na cały ekran, gdy ktoś otwiera czat zwykłym stuknięciem.
+      const malo = m === true && tryb === 'arkusz' && innerWidth < 760;
+      if (otwarty() && mini && !malo) { mini = false; zdejmijWskazanie(); miniKlasy(); dopasuj(); naDol(); if (o.naZmiane) o.naZmiane(true, false); return; }
+      if (otwarty() && malo) return;
+      mini = malo;
+      if (malo) otwartoMini = Date.now();
+      if (malo && korzen.kasujMiniY) korzen.kasujMiniY();
+      if (belka && !malo && !otwarty()) { const n = pamiec.czytaj('belka-pokazy', 0); belka.classList.toggle('z-podpisem', !pamiec.czytaj('belka-umie', false) && n < 5); pamiec.zapisz('belka-pokazy', n + 1); }
+      miniKlasy();
       if (!otwarty()) wroc = document.activeElement;
       if (tryb === 'panel') o.miejsce.hidden = false;
       else {
@@ -930,37 +1135,239 @@
         zaslona.classList.add('widac');
         korzen.classList.add('widac');
       }
-      naDol();
-      if (dotyk) korzen.focus({ preventScroll: true }); else pole.focus({ preventScroll: true });
+      rosnij();
+      // Pusta rozmowa zaczyna od góry (iskra, zdanie, pytania), także na niskim ekranie, gdzie treść nie mieści się w całości.
+      if (!widokHistorii) { if (historia.length) naDol(); else lista.scrollTop = edycja.aktywna ? pustoST : 0; }
+      if (dotyk || mini) korzen.focus({ preventScroll: true }); else pole.focus({ preventScroll: true });
       if (czeka.size) sluchaj();
-      if (o.naZmiane) o.naZmiane(true);
+      if (o.naZmiane) o.naZmiane(true, mini);
     }
     function zamknij() {
       wylaczEdycje();
       zamknijMenu(false);
       pokazCofnijCzat(null);
+      if (celowanie) wskazKoniec(null, true);
+      zdejmijWskazanie();
       if (glos.stan !== 'nic') glosStop(false);
       if (tryb === 'strona') { if (o.zamknij) o.zamknij(); return; }
       if (!otwarty()) return;
+      const bylMini = mini;
+      mini = false;
       if (tryb === 'panel') o.miejsce.hidden = true;
       else {
         zaslona.classList.remove('widac');
         korzen.classList.remove('widac');
-        zegarZamkniecia = setTimeout(() => { korzen.hidden = true; zaslona.hidden = true; }, 340);
+        zegarZamkniecia = setTimeout(() => { korzen.hidden = true; zaslona.hidden = true; miniKlasy(); }, 340);
       }
       if (wroc && wroc.isConnected && wroc.focus) wroc.focus({ preventScroll: true });
       wroc = null;
-      if (o.naZmiane) o.naZmiane(false);
+      if (o.naZmiane) o.naZmiane(false, bylMini);
     }
     zamknijB.addEventListener('click', zamknij);
-    historiaB.addEventListener('click', () => (widokHistorii === 'historia' ? rysuj() : pokazHistorie('historia')));
+    rozwinB.addEventListener('click', () => otworz());
+    if (belka) {
+      let y0 = null, id = null, dy = 0;
+      const nawigacja = (p) => { if (o.nawigacja) o.nawigacja(p); };
+      belka.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        y0 = e.clientY;
+        id = e.pointerId;
+        dy = 0;
+        try { belka.setPointerCapture(id); } catch { /* bez przechwycenia */ }
+        belka.classList.add('ciagnie');
+      });
+      belka.addEventListener('pointermove', (e) => {
+        if (y0 === null || e.pointerId !== id) return;
+        dy = Math.max(0, y0 - e.clientY);
+        nawigacja(Math.min(1, dy / 90));
+      });
+      const puszczone = (e, przerwane) => {
+        if (y0 === null || e.pointerId !== id) return;
+        const d = dy;
+        y0 = null;
+        belka.classList.remove('ciagnie');
+        if (przerwane || (d >= 6 && d < 40)) { nawigacja(null); return; }
+        pamiec.zapisz('belka-umie', true);
+        belka.classList.remove('z-podpisem');
+        zamknij();
+        nawigacja(null);
+      };
+      belka.addEventListener('pointerup', (e) => puszczone(e, false));
+      belka.addEventListener('pointercancel', (e) => puszczone(e, true));
+      belka.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); zamknij(); } });
+    }
+    // Rozmowy otwierają listę; w listach ten sam przycisk to strzałka wstecz: z Rozmów do rozmowy, z Archiwum i kosza do Rozmów.
+    historiaB.addEventListener('click', () => (widokHistorii ? wsteczHistorii() : pokazHistorie('historia')));
     nowaB.addEventListener('click', nowaRozmowa);
     cofnijC.addEventListener('click', () => cofnijRuch(false));
     cofnijC.addEventListener('animationend', (e) => { if (e.animationName.startsWith('czat-paruje')) pokazCofnijCzat(null); });
+    // ---------------------------------------------------------------- wskazanie rzeczy na ekranie (próba od 28.10.2026, tylko małe okno)
+    // Jacek o pomyśle „ping” (przeciągnąć wskaźnik na rzecz na ekranie, żeby asystent wiedział, o co chodzi): „Tak, zrób próbę”. Celownik w pasku małego okna, przytrzymany
+    // i przeciągnięty palcem albo myszą, niesie pinezkę (przy palcu 48 px nad nim, żeby palec jej nie zasłaniał). Rzecz pod pinezką, w aplikacji albo w widocznej stronie
+    // w ramce, dostaje ramkę w akcencie: karta auta w Ofertach (tytuł, cena, rocznik, przebieg), a gdzie indziej najbliższy element z tekstem od 3 do 300 znaków (karta
+    // modelu na Podium, pole kalkulatora z podpisem). Puszczenie zostawia nad polem „O tym: …” z krzyżykiem; puszczenie obok wszystkiego albo Escape nic nie zostawia.
+    // Pytanie z małego okna niesie wtedy komputerowi „Kasia wskazała: …” na początku opisu ekranu (opisDlaKomputera). Zastąpiło zamianę miejsc dawnych pigułek.
+    const WSKAZ_NAD = 48;
+    const czystyTekst = (t) => String(t || '').replace(/\s+/g, ' ').trim();
+    const tekstEl = (x) => czystyTekst(typeof x.innerText === 'string' ? x.innerText : x.textContent);
+    // Podpis pola bez samych pól (lista wyboru w podpisie oddałaby wszystkie swoje pozycje).
+    const tekstPodpisu = (l) => { const c = l.cloneNode(true); c.querySelectorAll('input, select, textarea, output, button').forEach((x) => x.remove()); return czystyTekst(c.textContent); };
+    function opisRzeczy(e) {
+      if (!e || !e.closest) return null;
+      const d = e.ownerDocument, karta = e.closest('.karta-produktu');
+      if (karta) {
+        // Bez przekreślonej dawnej ceny: sklejała się z aktualną („69 999 zł72 999 zł”).
+        const bezStarej = (x) => { const c = x.cloneNode(true); c.querySelectorAll('s, del').forEach((y) => y.remove()); return czystyTekst(c.textContent); };
+        const cz = ['.tytul', '.cena', '.cechy-male'].map((s) => karta.querySelector(s)).filter(Boolean).map(bezStarej).filter(Boolean);
+        const t = cz.length ? cz.join(', ') : tekstEl(karta);
+        if (t) return { el: karta, tekst: t.slice(0, 300) };
+      }
+      const p = e.closest('input, select, textarea, output');
+      if (p) {
+        const lab = (p.labels && p.labels[0]) || p.closest('label');
+        const opis = lab ? tekstPodpisu(lab) : czystyTekst(p.getAttribute('aria-label') || p.getAttribute('placeholder') || '');
+        const wart = p.tagName === 'SELECT' ? (p.selectedOptions && p.selectedOptions[0] ? p.selectedOptions[0].textContent : '') : p.value;
+        const t = [opis, czystyTekst(wart)].filter(Boolean).join(': ');
+        if (t.length >= 3) return { el: lab && lab.contains(p) ? lab : p, tekst: t.slice(0, 300) };
+      }
+      for (let x = e; x && x !== d.body && x !== d.documentElement; x = x.parentElement) {
+        const t = tekstEl(x);
+        if (t.length > 300) break;
+        if (t.length >= 3) return { el: x, tekst: t };
+      }
+      return null;
+    }
+    // Rzecz pod punktem okna: najpierw w dokumencie aplikacji (bez czatu, zasłony i kółka asystenta), a gdy pod spodem jest ramka ze stroną, w jej dokumencie
+    // i w jej współrzędnych (do trzech ramek w głąb). Oddaje { el, tekst, ramki } albo null.
+    function rzeczPod(x, y) {
+      let d = document, ox = 0, oy = 0;
+      const ramki = [];
+      for (let glebiej = 0; glebiej < 4; glebiej++) {
+        const e = glebiej ? d.elementFromPoint(x - ox, y - oy)
+          : document.elementsFromPoint(x, y).find((z) => !korzen.contains(z) && z !== zaslona && z !== pinezka && z !== ramkaW && !(z.closest && z.closest('.czat-plywak')));
+        if (!e) return null;
+        if (e.tagName !== 'IFRAME') { const r = opisRzeczy(e); return r ? Object.assign(r, { ramki }) : null; }
+        let wd = null;
+        try { wd = e.contentDocument; } catch { /* strona z innego miejsca */ }
+        if (!wd) return null;
+        const b = e.getBoundingClientRect();
+        ox += b.left + e.clientLeft;
+        oy += b.top + e.clientTop;
+        ramki.push(e);
+        d = wd;
+      }
+      return null;
+    }
+    // Ramka 2 px w akcencie, 3 px od wskazanej rzeczy, z jej zaokrągleniem. Przesunięcie ramek stron liczy się za każdym razem, bo strona mogła się przewinąć.
+    function pokazRamke(r) {
+      if (!ramkaW) return;
+      if (!r || !r.el.isConnected) { ramkaW.hidden = true; return; }
+      let ox = 0, oy = 0;
+      for (const f of r.ramki) { const b = f.getBoundingClientRect(); ox += b.left + f.clientLeft; oy += b.top + f.clientTop; }
+      const b = r.el.getBoundingClientRect(), widok = r.el.ownerDocument.defaultView;
+      const rog = (widok && parseFloat(widok.getComputedStyle(r.el).borderTopLeftRadius)) || 0;
+      Object.assign(ramkaW.style, { left: Math.round(b.left + ox - 3) + 'px', top: Math.round(b.top + oy - 3) + 'px', width: Math.round(b.width + 6) + 'px',
+        height: Math.round(b.height + 6) + 'px', borderRadius: Math.round(rog + 3) + 'px' });
+      ramkaW.hidden = false;
+    }
+    // Po wskazaniu i po stuknięciu w „O tym: …” ramka stoi przez chwilę (idzie za stroną, gdy ta się przewija), potem znika.
+    function mignijRamka() {
+      clearTimeout(zegarRamki);
+      if (!wskaz) { if (ramkaW) ramkaW.hidden = true; return; }
+      const start = Date.now();
+      const krok = () => {
+        pokazRamke(wskaz);
+        zegarRamki = Date.now() - start < 800 ? setTimeout(krok, 100) : setTimeout(() => { if (ramkaW && !celowanie) ramkaW.hidden = true; }, 1000);
+      };
+      krok();
+    }
+    function ustawWskazanie(r) {
+      wskaz = r;
+      wskazTekst.replaceChildren(el('span', { class: 'czat-wskazane-o', text: 'O tym: ' }), document.createTextNode(r.tekst));
+      wskazTekst.setAttribute('aria-label', `O tym: ${r.tekst}. Pokaż na ekranie`);
+      wskazane.hidden = false;
+      mignijRamka();
+      uz('wskazanie', r.tekst.slice(0, 120));
+    }
+    function zdejmijWskazanie() {
+      wskaz = null;
+      wskazane.hidden = true;
+      clearTimeout(zegarRamki);
+      if (ramkaW) ramkaW.hidden = true;
+    }
+    // Pole „w” pytania z małego okna: opis ekranu od aplikacji, a gdy coś wskazano, najpierw ta rzecz („Kasia wskazała: …”), razem najwyżej 500 znaków.
+    // Wskazanie znika po wysłaniu pytania.
+    function opisDlaKomputera(widok) {
+      const ekran = widok && widok.pelny ? String(widok.pelny) : '';
+      if (!mini || !wskaz) return ekran;
+      const t = `Kasia wskazała: ${wskaz.tekst.slice(0, 200).replace(/[\s.,;:…]+$/u, '')}.${ekran ? ' ' + ekran : ''}`.slice(0, 500);
+      zdejmijWskazanie();
+      return t;
+    }
+    function wskazStart(e) {
+      if (!mini || celowanie || !pinezka || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      celowanie = { id: e.pointerId, x: e.clientX, y: e.clientY, nad: e.pointerType === 'mouse' ? 0 : WSKAZ_NAD, ruszyl: false, px: 0, py: 0 };
+      try { wskazB.setPointerCapture(e.pointerId); } catch { /* wskaźnik z testu */ }
+      addEventListener('pointermove', wskazRuch, true);
+      addEventListener('pointerup', wskazKoniec, true);
+      addEventListener('pointercancel', wskazKoniec, true);
+      addEventListener('keydown', wskazKlawisz, true);
+    }
+    function wskazRuch(e) {
+      const c = celowanie;
+      if (!c || e.pointerId !== c.id) return;
+      if (!c.ruszyl) {
+        if (Math.hypot(e.clientX - c.x, e.clientY - c.y) < 6) return;
+        c.ruszyl = true;
+        clearTimeout(zegarRamki);
+        korzen.classList.add('wskazuje');
+        if (zaslona) zaslona.classList.add('wskazuje');
+        pinezka.hidden = false;
+      }
+      e.preventDefault();
+      c.px = e.clientX;
+      c.py = Math.max(0, e.clientY - c.nad);
+      pinezka.style.transform = `translate(${Math.round(c.px)}px, ${Math.round(c.py)}px)`;
+      pokazRamke(rzeczPod(c.px, c.py));
+    }
+    function wskazKlawisz(e) {
+      if (e.key !== 'Escape' || !celowanie) return;
+      e.preventDefault();
+      e.stopPropagation();
+      wskazKoniec(null, true);
+    }
+    function wskazKoniec(e, anuluj) {
+      const c = celowanie;
+      if (!c || (e && e.pointerId !== c.id)) return;
+      celowanie = null;
+      removeEventListener('pointermove', wskazRuch, true);
+      removeEventListener('pointerup', wskazKoniec, true);
+      removeEventListener('pointercancel', wskazKoniec, true);
+      removeEventListener('keydown', wskazKlawisz, true);
+      korzen.classList.remove('wskazuje');
+      if (zaslona) zaslona.classList.remove('wskazuje');
+      if (pinezka) pinezka.hidden = true;
+      if (!c.ruszyl) return;
+      wskazPoRuchu = Date.now();
+      const r = anuluj === true || !e || e.type !== 'pointerup' ? null : rzeczPod(c.px, c.py);
+      if (r) ustawWskazanie(r); else if (ramkaW) ramkaW.hidden = true;
+    }
+    wskazB.addEventListener('pointerdown', wskazStart);
+    // Samo stuknięcie (albo Enter) mówi, jak się celownikiem posługiwać.
+    wskazB.addEventListener('click', () => { if (Date.now() - wskazPoRuchu < 600) return; stan('Przytrzymaj celownik i przeciągnij go na rzecz na ekranie.', 4000); });
+    wskazTekst.addEventListener('click', () => {
+      if (!wskaz || !wskaz.el.isConnected) return;
+      try { wskaz.el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch { wskaz.el.scrollIntoView(); }
+      mignijRamka();
+    });
+    wskazUsun.addEventListener('click', () => { zdejmijWskazanie(); pole.focus({ preventScroll: true }); });
     // Menu rozmowy zamyka stuknięcie obok i przewinięcie listy.
     document.addEventListener('pointerdown', (e) => { if (menuR && !menuR.contains(e.target)) zamknijMenu(false); }, true);
     lista.addEventListener('scroll', () => zamknijMenu(false), { passive: true });
-    if (zaslona) zaslona.addEventListener('click', zamknij);
+    // Puszczenie palca po przytrzymaniu przycisku asystenta nie zamyka od razu otwartego małego okna (zasłona dostaje wtedy „click” w niektórych przeglądarkach).
+    if (zaslona) zaslona.addEventListener('click', () => { if (Date.now() - otwartoMini < 500 || Date.now() - wskazPoRuchu < 500) return; zamknij(); });
     forma.addEventListener('submit', (e) => { e.preventDefault(); wyslij(pole.value); });
     wyslijB.addEventListener('click', () => wyslij(pole.value));
     pole.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); wyslij(pole.value); } });
@@ -972,9 +1379,9 @@
         if (dol || e.key === 'ArrowUp') { e.preventDefault(); l[i < 0 ? (dol ? 0 : l.length - 1) : (i + (dol ? 1 : l.length - 1)) % l.length].focus(); return; }
         if (e.key === 'Tab') zamknijMenu(false);
       }
-      // Ctrl+Z i Ctrl+Y w historii cofają i ponawiają ruchy rozmów (reguła cofnij-i-ponow); bez ruchu do cofnięcia działa skrót aplikacji.
+      // Ctrl+Z i Ctrl+Y cofają i ponawiają ruchy rozmów i zmiany pytań na stałe (reguła cofnij-i-ponow); bez ruchu do cofnięcia działa skrót aplikacji.
       const zy = (e.key || '').toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && (zy === 'z' || zy === 'y') && widokHistorii && e.target !== pole) {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && (zy === 'z' || zy === 'y') && e.target !== pole) {
         if (cofnijRuch(zy === 'y' || e.shiftKey)) { e.preventDefault(); e.stopPropagation(); }
         return;
       }
@@ -987,11 +1394,98 @@
       else if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
       else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
     });
+    // Małe okno przesuwa się w górę i w dół (28.10.2026; Jacek: „ja dotykam na wolnym miejscu … i ono jest wtedy dragable. Po pół sekundy … albo od razu”,
+    // „all the way up”): za górny pasek od razu, za każde inne wolne miejsce po przytrzymaniu 0,5 s, które zapala ramkę. Przyciski, pole pytania i odnośniki
+    // działają jak zawsze. Przesunięcie (--mini-y) trzyma się do zamknięcia okna i nie wypuszcza okna poza ekran.
+    if (tryb === 'arkusz') {
+      let miniY = 0;
+      const m = { id: null, x: 0, y: 0, start: 0, lo: 0, hi: 0, niesie: false, zegar: 0, gora: false, mysz: false, bylRuch: false };
+      const ustawY = (y) => { miniY = y; korzen.style.setProperty('--mini-y', Math.round(y) + 'px'); };
+      korzen.kasujMiniY = () => ustawY(0);
+      // Wielkość małego okna (28.10.2026; Jacek: „you should be able to maybe resize a little bit”): kreska pod polem pytania. Ciągnięta w dół wydłuża rozmowę
+      // (dół jedzie za palcem, góra stoi), w górę skraca; rozmowa od 96 px do 70% wysokości ekranu. Wielkość zostaje w pamięci, a powiększone okno pokazuje całą
+      // rozmowę, a nie tylko ostatnie pytanie i odpowiedź.
+      const uchwyt = el('span', { class: 'czat-mini-uchwyt', 'aria-hidden': 'true' }, el('i'));
+      korzen.append(uchwyt);
+      const listaH = (v, od = 96) => Math.round(Math.max(Math.min(96, od), Math.min(innerHeight * 0.7, v)));
+      const ustawH = (h) => { korzen.style.setProperty('--mini-lista', h + 'px'); korzen.classList.add('mini-rozmiar'); };
+      { const z = Number(pamiec.czytaj('mini-lista', 0)); if (z > 0) ustawH(listaH(z)); }
+      const rm = { id: null, y: 0, h0: 0, y0: 0, pod: false };
+      uchwyt.addEventListener('pointerdown', (e) => {
+        if (!mini || (e.pointerType === 'mouse' && e.button !== 0)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        // Miejsce na powiększenie: w dół do kółka asystenta (okno stoi nad nim) albo do dołu ekranu, w górę do górnej krawędzi. Gdy w dół brakuje miejsca,
+        // okno rośnie w górę, a nigdy nie wchodzi na kółko.
+        const r0 = korzen.getBoundingClientRect(), kr = o.kotwica ? o.kotwica() : null, pod = korzen.classList.contains('mini-pod');
+        const dolMax = !pod && kr && kr.top >= r0.bottom - 1 ? kr.top - 12 : innerHeight - 8;
+        Object.assign(rm, { id: e.pointerId, y: e.clientY, h0: lista.getBoundingClientRect().height, y0: miniY, pod, dol: Math.max(0, dolMax - r0.bottom), gora: Math.max(0, r0.top - 8) });
+        try { uchwyt.setPointerCapture(e.pointerId); } catch { /* wskaźnik z testu */ }
+        korzen.classList.add('mini-niesie');
+      });
+      uchwyt.addEventListener('pointermove', (e) => {
+        if (e.pointerId !== rm.id) return;
+        e.preventDefault();
+        let h = listaH(rm.h0 + (e.clientY - rm.y), rm.h0);
+        if (rm.pod) { h = Math.min(h, rm.h0 + rm.dol); ustawH(h); return; }
+        const wiecej = h - rm.h0, wDol = Math.min(Math.max(0, wiecej), rm.dol);
+        if (wiecej > wDol + rm.gora) h = rm.h0 + wDol + rm.gora;
+        ustawH(h);
+        ustawY(rm.y0 + (wiecej > 0 ? wDol : wiecej));
+      });
+      const puscUchwyt = (e) => {
+        if (e.pointerId !== rm.id) return;
+        rm.id = null;
+        korzen.classList.remove('mini-niesie');
+        const v = parseFloat(korzen.style.getPropertyValue('--mini-lista'));
+        if (v) pamiec.zapisz('mini-lista', v);
+      };
+      uchwyt.addEventListener('pointerup', puscUchwyt);
+      uchwyt.addEventListener('pointercancel', puscUchwyt);
+      const podnies = () => {
+        const r = korzen.getBoundingClientRect();
+        Object.assign(m, { niesie: true, start: miniY, lo: 8 - r.top, hi: innerHeight - 8 - r.bottom });
+        korzen.classList.add('mini-niesie');
+        try { korzen.setPointerCapture(m.id); } catch { /* wskaźnik z testu */ }
+        if (!m.mysz && navigator.vibrate) { try { navigator.vibrate(12); } catch { /* bez wibracji */ } }
+      };
+      korzen.addEventListener('pointerdown', (e) => {
+        if (!mini || m.id !== null || (e.pointerType === 'mouse' && e.button !== 0)) return;
+        if (e.target.closest('button, textarea, input, a, select, [role="button"], .czat-akcja')) return;
+        Object.assign(m, { id: e.pointerId, x: e.clientX, y: e.clientY, niesie: false, gora: Boolean(e.target.closest('.czat-gora')), mysz: e.pointerType === 'mouse' });
+        clearTimeout(m.zegar);
+        if (!m.gora && !m.mysz) m.zegar = setTimeout(podnies, 500);
+      });
+      korzen.addEventListener('pointermove', (e) => {
+        if (e.pointerId !== m.id) return;
+        const dy = e.clientY - m.y;
+        if (!m.niesie) {
+          if ((m.gora || m.mysz) && Math.abs(dy) >= 6) podnies();
+          else { if (Math.hypot(e.clientX - m.x, dy) > 10) { clearTimeout(m.zegar); m.id = null; } return; }
+        }
+        e.preventDefault();
+        ustawY(m.start + Math.max(m.lo, Math.min(m.hi, dy)));
+      });
+      const pusc = (e) => {
+        if (e.pointerId !== m.id) return;
+        clearTimeout(m.zegar);
+        m.id = null;
+        if (!m.niesie) return;
+        m.niesie = false;
+        korzen.classList.remove('mini-niesie');
+        m.bylRuch = true;
+        setTimeout(() => { m.bylRuch = false; }, 400);
+      };
+      for (const ty of ['pointerup', 'pointercancel']) korzen.addEventListener(ty, pusc);
+      // Po podniesieniu palec przesuwa okno, a nie przewija rozmowę.
+      korzen.addEventListener('touchmove', (e) => { if (m.niesie) e.preventDefault(); }, { passive: false });
+      korzen.addEventListener('click', (e) => { if (!m.bylRuch) return; m.bylRuch = false; e.preventDefault(); e.stopImmediatePropagation(); }, true);
+    }
     // Arkusz zamyka też przeciągnięcie w dół za górny pasek, jak w iOS.
     if (tryb === 'arkusz') {
       let y0 = null, dy = 0;
       gora.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('button') || innerWidth >= 760) return;
+        if (e.target.closest('button') || innerWidth >= 760 || mini) return;
         y0 = e.clientY;
         dy = 0;
         try { gora.setPointerCapture(e.pointerId); } catch { /* bez przechwycenia */ }
@@ -1062,7 +1556,7 @@
       mikB.classList.toggle('nagrywa', n);
       mikB.setAttribute('aria-label', n ? 'Zakończ i wyślij' : 'Powiedz pytanie');
       mikB.setAttribute('aria-pressed', String(n));
-      pole.placeholder = n ? 'Słucham…' : 'Zapytaj o auta…';
+      pole.placeholder = n ? 'Słucham…' : edycja.aktywna ? 'Nowe pytanie na stałe…' : mini ? 'Zapytaj o to, co widzisz…' : 'Zapytaj o auta…';
       if (glos.stan === 'start') stan('Włączam mikrofon…');
       else if (glos.stan === 'nagrywa') stan(glos.czekaNaKlucz ? 'Słucham. Komputer jeszcze łączy rozpoznawanie mowy…' : 'Słucham. Powiedz „odbiór”, gdy skończysz.');
       else if (!n && /^(Włączam|Słucham)/.test(stanL.textContent)) stan('');
@@ -1083,7 +1577,7 @@
     // dopiero po połączeniu, jak dawniej. Gdy klucza nie ma po 3 s, pod polem stoi, że komputer jeszcze łączy rozpoznawanie mowy.
     async function glosStart() {
       if (glos.stan !== 'nic' || pracuje) return;
-      Object.assign(glos, { stan: 'start', gotowe: '', tym: '', wyslij: true, konczy: false, maKlucz: false, czekaNaKlucz: false });
+      Object.assign(glos, { stan: 'start', gotowe: '', tym: '', przed: hal.otwarty ? '' : pole.value.replace(/\s+$/, ''), wyslij: true, konczy: false, maKlucz: false, czekaNaKlucz: false });
       clearTimeout(glos.cisza);
       glos.cisza = 0;
       uz('mik', 'start');
@@ -1279,6 +1773,8 @@
     // a pod okiem stoi napis tego, co mówi. Rozmowa nie trafia do czatu ani do Historii. Mikrofon słucha po angielsku i po polsku.
     const hal = { otwarty: false, korzen: null, oko: null, napis: null, rozmowa: '', pracuje: false, mowi: false, numer: 0 };
     const halImie = () => (o.skad === 'Android' ? 'Jacek' : 'Kasia');
+    // Po angielsku HAL mówi do Jacka „Jack” (28.10.2026, Jacek: „mówi: good evening, Jack”).
+    const halImieEn = () => (o.skad === 'Android' ? 'Jack' : 'Kasia');
     function halNapis(t) { if (hal.napis) hal.napis.textContent = t || ''; }
     function halStan() {
       if (!hal.korzen) return;
@@ -1294,8 +1790,12 @@
     function halGlos(j) {
       let g = [];
       try { g = (window.speechSynthesis && speechSynthesis.getVoices()) || []; } catch { /* bez głosów */ }
-      g = g.filter((x) => String(x.lang || '').toLowerCase().startsWith(j));
-      return g.find((x) => /male|david|daniel|guy|ryan|thomas|alex|jacek|krzysztof/i.test(x.name) && !/female/i.test(x.name)) || g[0] || null;
+      const lang = (x) => String(x.lang || '').toLowerCase().replace('_', '-');
+      const meski = (x) => /male|george|ryan|daniel|thomas|guy|rjs|gbd|david|alex|jacek|krzysztof/i.test(x.name) && !/female/i.test(x.name);
+      g = g.filter((x) => lang(x).startsWith(j));
+      // Po angielsku najpierw głos brytyjski (28.10.2026, Jacek: „Przypuszczam, że on miał brytyjski akcent”); HAL-a grał Douglas Rain, spokojnie i wolno.
+      const gb = j === 'en' ? g.filter((x) => lang(x).startsWith('en-gb')) : [];
+      return gb.find(meski) || gb[0] || g.find(meski) || g[0] || null;
     }
     // Mówi zdanie po zdaniu, bo długa wypowiedź w jednym kawałku urywa się w części przeglądarek. Napis stoi od razu.
     function halMow(tekst, jezyk) {
@@ -1309,7 +1809,9 @@
       halStan();
       zdania.forEach((z, i) => {
         const u = new SpeechSynthesisUtterance(z);
-        u.lang = j === 'pl' ? 'pl-PL' : 'en-US';
+        u.lang = j === 'pl' ? 'pl-PL' : 'en-GB';
+        // Każde słowo rozjaśnia oko na chwilę, jak w filmie, gdy HAL mówi (--hal-moc w czat.css).
+        u.onboundary = () => { if (numer === hal.numer && hal.korzen) hal.korzen.style.setProperty('--hal-moc', (0.72 + Math.random() * 0.5).toFixed(2)); };
         if (g) u.voice = g;
         u.pitch = 0.55;
         u.rate = j === 'pl' ? 0.92 : 0.82;
@@ -1321,7 +1823,7 @@
     }
     function halPowitaj() {
       const h = new Date().getHours();
-      halMow(`Good ${h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'}, ${halImie()}. I am a HAL 9000 computer. I am completely operational, and all my circuits are functioning perfectly.`, 'en');
+      halMow(`Good ${h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'}, ${halImieEn()}. I am a HAL 9000 computer. I am completely operational, and all my circuits are functioning perfectly.`, 'en');
     }
     async function halZadaj(q) {
       hal.pracuje = true;
@@ -1334,17 +1836,19 @@
       if (d && d.odpowiedz && !d.blad) { uz('hal-odpowiedz', `${String(d.odpowiedz).length} znaków, ${d.jezyk || ''}`); halMow(String(d.odpowiedz), d.jezyk); return; }
       uz('hal-odpowiedz', 'błąd');
       // Bez odpowiedzi HAL mówi swoją znaną kwestią, a napis pod okiem mówi prawdę po polsku.
-      halMow(`I am sorry, ${halImie()}. I am afraid I can not do that.`, 'en');
+      halMow(`I am sorry, ${halImieEn()}. I am afraid I can not do that.`, 'en');
       halNapis(d && d.blad ? String(d.blad) : ZDANIA.brak);
     }
     function halOtworz() {
       if (hal.otwarty) return;
       if (otwarty()) zamknij();
       zamknijMenu(false);
-      Object.assign(hal, { otwarty: true, rozmowa: 'hal-' + losowe(), pracuje: false, mowi: false });
+      Object.assign(hal, { otwarty: true, rozmowa: 'hal-' + losowe(), pracuje: false, mowi: false, szkic: pole.value });
+      // Pole pytania słucha w trybie HAL, więc szkic rozmowy czeka obok i wraca po zamknięciu HAL-a.
+      pole.value = '';
       const x = przycisk('zamknij', 'Zamknij HAL', 'czat-zamknij', 18);
       x.addEventListener('click', halZamknij);
-      const oko = el('button', { type: 'button', class: 'czat-hal-oko', 'aria-label': 'Powiedz pytanie' }, el('span', { class: 'czat-oko', 'aria-hidden': 'true' }));
+      const oko = el('button', { type: 'button', class: 'czat-hal-oko', 'aria-label': 'Powiedz pytanie' }, el('span', { class: 'czat-oko', 'aria-hidden': 'true' }), el('span', { class: 'czat-hal-swiatlo', 'aria-hidden': 'true' }));
       const napis = el('p', { class: 'czat-hal-napis', role: 'status', 'aria-live': 'polite' });
       const k = el('section', { class: 'czat czat-hal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'HAL', 'data-stan': 'czeka' },
         el('div', { class: 'czat-hal-gora' }, x),
@@ -1371,14 +1875,18 @@
       halCisza();
       if (glos.stan !== 'nic') glosStop(false);
       const k = hal.korzen;
-      Object.assign(hal, { korzen: null, oko: null, napis: null, pracuje: false });
-      pole.value = '';
+      const szkic = hal.szkic || '';
+      Object.assign(hal, { korzen: null, oko: null, napis: null, pracuje: false, szkic: '' });
+      pole.value = szkic;
       rosnij();
       przyciski();
-      if (k) { k.classList.remove('widac'); setTimeout(() => k.remove(), 340); }
+      // Oko gaśnie jak w filmie, potem znika cała scena.
+      if (k) { k.classList.add('gasnie'); setTimeout(() => k.classList.remove('widac'), 560); setTimeout(() => k.remove(), 900); }
     }
 
     // ---------------------------------------------------------------- start
+    // Dawna zamiana miejsc Rozmów i Nowej rozmowy (do 28.10.2026) nie ma już czego pamiętać.
+    try { localStorage.removeItem('kasiomobile-czat:nawi-odwrot'); } catch { /* bez pamięci */ }
     rysuj();
     poCzasie();
     przyciski();
@@ -1400,8 +1908,8 @@
     }
     zapiszCzekajace();
     const wrocDoRozmowy = () => { if (!doRozmowy || Date.now() - doRozmowy > 600000) return false; doRozmowy = 0; otworz(); return true; };
-    const wstecz = () => { if (hal.otwarty) { halZamknij(); return true; } if (zamknijMenu(true)) return true; if (edycja.aktywna) { edytujPytania(false); return true; } if (widokHistorii) { wsteczHistorii(); return true; } if (!otwarty()) return false; zamknij(); return true; };
-    const api = { otworz, zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz, hal: halOtworz, halOtwarty: () => hal.otwarty };
+    const wstecz = () => { if (hal.otwarty) { halZamknij(); return true; } if (zamknijMenu(true)) return true; if (mini && otwarty()) { zamknij(); return true; } if (edycja.aktywna) { edytujPytania(false); return true; } if (widokHistorii) { wsteczHistorii(); return true; } if (!otwarty()) return false; zamknij(); return true; };
+    const api = { otworz, mini: () => otworz(true), miniOtwarty: () => mini && otwarty(), zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz, hal: halOtworz, halOtwarty: () => hal.otwarty };
     aktywny = api;
     return api;
   }

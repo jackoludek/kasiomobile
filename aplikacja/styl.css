@@ -119,13 +119,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
    wieczorem: „nie potrzebujemy wiedzieć, kiedy został update'owany”, „tak prosto, że nie będzie potrzeba ściągi”). Rząd stoi na
    środku szarego pola razem z pasem przy wycięciu ekranu (Jacek: „On jest niżej trochę. Ja bym wolał, żeby na środku”): połowa
    wcięcia nad nim. Pod nim od 26.10.2026 tylko 8 px (Jacek: nagłówek „niepotrzebnie jest takie długie … Amatorsko to wygląda”): razem
-   z odstępem strony logo stoi na środku między górą ekranu a pierwszą rzeczą w treści, a całe to pole ma jeden odcień. */
+   z odstępem strony logo stoi na środku między górą ekranu a pierwszą rzeczą w treści, a całe to pole ma jeden odcień. Od 28.10.2026 logo stoi pod całym pasem
+   aparatu (Jacek: logo za blisko kamerki), na środku między pasem a polem szukania: 12 px nad nim i 12 px pod nim. */
 .glowa {
   flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: calc(var(--km-gora) / 2 + 8px) calc(var(--km-x1) - 4px) 8px var(--km-x0);
+  padding: calc(var(--km-gora) + 8px) calc(var(--km-x1) - 4px) 8px var(--km-x0);
 }
 /* Miarki siatki dla app.js: szerokość cienkiego paska przewijania i marginesy w pikselach, razem z wcięciami ekranu. */
 .siatka-pasek { position: absolute; visibility: hidden; width: 100px; height: 40px; overflow: scroll; scrollbar-width: thin; }
@@ -435,7 +436,8 @@ body.okno .glowa { background-color: var(--strona); }
   box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .38), inset -1px -1px 0 rgba(0, 0, 0, .2), 1px 1px 2px rgba(0, 0, 0, .16), 3px 3px 10px color-mix(in srgb, var(--barwa) 42%, transparent), 6px 6px 18px rgba(0, 0, 0, .06);
 }
 .podwidoki [aria-checked="true"] { outline: 2px solid var(--barwa); outline-offset: 2px; }
-.karty [aria-selected="true"], .podwidoki [aria-checked="true"].blysk { animation: polyskRaz 1.2s ease-in-out 1; }
+/* Smuga przy wyborze zdjęta 28.10.2026 (Jacek przez Zmiany GUI: przebłyski to przeżytek, „Time to say goodbye to those”). Wybrane mówi pełna barwa i pierścień. */
+.karty [aria-selected="true"], .podwidoki [aria-checked="true"].blysk { animation: none; }
 @keyframes polyskRaz { from { background-position: 100% 0, 0 0; } to { background-position: 0 0, 0 0; } }
 .karty [aria-selected="true"] .znak use { fill: var(--na-barwie); }
 .karty [aria-selected="true"] .znak path { fill: var(--barwa); }
@@ -481,24 +483,7 @@ body.czat-otwarty .dol { z-index: 43; }
   .karty, .podwidoki { gap: 12px; }
   .dol.przenoszony { z-index: 30; box-shadow: inset 0 .5px 0 var(--wlos), 0 -8px 24px var(--cien-mocny); }
   .dol.przenoszony > .karty, .dol.przenoszony > .podkarty { transform: scale(1.02); transition: transform 120ms ease; }
-  /* Przenoszenie: od 0,25 s przytrzymania nad pasem stoi pasek postępu, który przez 1,75 s wypełnia się od lewej do prawej, ze strzałką
-     w górę z lewej i w dół z prawej (Jacek: strzałki „muszą być widoczne … w dół i w górę”, a zapalanie po kolei „nie jest oczywiste”).
-     Gdy się wypełni, pas unosi się i jedzie za palcem. Pasek i strzałki mają barwę wybranej zakładki, tor 20% tej barwy. */
-  .postep-paska {
-    --szewron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 8'%3E%3Cpath d='M1.5 6.6 7 1.4l5.5 5.2' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    position: absolute; z-index: -1; bottom: 100%; left: 0; right: 0; height: 28px;
-    display: flex; align-items: center; gap: 12px; padding: 0 var(--km-x1) 0 var(--km-x0);
-    background: inherit; box-shadow: inset 0 .5px 0 var(--wlos); pointer-events: none; opacity: 0; transition: opacity 150ms ease;
-  }
-  .postep-paska i { flex: none; width: 14px; height: 8px; background: var(--barwa);
-    -webkit-mask: var(--szewron) center / contain no-repeat; mask: var(--szewron) center / contain no-repeat; }
-  .postep-paska .w-dol { transform: scaleY(-1); }
-  .postep-paska span { flex: 1; height: 6px; border-radius: 3px; overflow: hidden; background: color-mix(in srgb, var(--barwa) 20%, transparent); }
-  .postep-paska span::after { content: ""; display: block; height: 100%; background: var(--barwa); transform: scaleX(0); transform-origin: left; }
-  .dol.trzyma .postep-paska { opacity: 1; }
-  .dol.trzyma .postep-paska span::after { animation: postepPaska var(--czas, 1750ms) linear forwards; }
 }
-@keyframes postepPaska { to { transform: scaleX(1); } }
 /* Szeroki ekran: pigułki stoją w jednym rzędzie pod zakładkami, nad treścią, każda tak szeroka jak zakładka (do 1240 px ćwierć kolumny
    treści, potem 176 px), z tą samą przerwą, drugie słowo w tej samej linii drugim planem. Nawigacja się nie przenosi. */
 @media (min-width: 760px) {
@@ -509,7 +494,7 @@ body.czat-otwarty .dol { z-index: 43; }
   .podwidoki .skad { font-size: 16px; }
   .podwidoki [role="radio"]::before { inset: -4px 0; }
   .karty [aria-selected="true"]::before { border-radius: 24px; }
-  .postep-paska { display: none; }
+
 }
 @media (min-width: 1240px) { .podwidoki [role="radio"] { flex: 0 0 176px; } }
 
@@ -574,3 +559,107 @@ body[data-wyglad="4"] .karty [aria-selected="true"] .znak path { fill: #ffffff; 
 }
 .menu-otomoto [role="menuitemradio"][aria-checked="true"] { box-shadow: 0 0 0 1.5px var(--akcent), var(--c3d); }
 .menu-otomoto [role="menuitemradio"][aria-checked="true"]::after { content: "✓"; color: var(--akcent-tekst); font-weight: 700; }
+/* ---- Czat na cały ekran i gesty od krawędzi (od 27.10.2026 wieczorem) ----
+   Jacek: „AI … powinno być na cały ekran, tamte menu na dole powinno się zsuwać do takiej belki małej na dole, i jak chcemy powrócić, to robimy swipe up”. Na telefonie
+   otwarta rozmowa (czat.css, .czat-arkusz) sięga od górnej do dolnej krawędzi, a nawigacja zsuwa się pod ekran; zostaje po niej belka na dole czatu (czat.js, .czat-belka),
+   której przesunięcie w górę wyciąga nawigację z powrotem i zamyka czat (app.js, wysunNawigacje). Małe okno (body.czat-mini) zostawia nawigację na miejscu. Ukryta nawigacja
+   nie jest już w drzewie dostępności ani w kolejności Tab (visibility), ale znika dopiero po zsunięciu. */
+@media (max-width: 759px) {
+  body.czat-otwarty .dol { transform: translateY(calc(100% + 32px)); opacity: 0; visibility: hidden; pointer-events: none; }
+  /* Przejście ma tylko w chwili otwierania i zamykania (klasa czat-ruch trwa 450 ms, app.js): poza nią nawigacja nie ma przejścia na transform, bo przenoszenie jej palcem
+     („przenoszony”) i dojazd na miejsce (Web Animations) liczą się co do piksela. */
+  body.czat-ruch .dol { transition: background-color 200ms ease, transform 320ms cubic-bezier(.2, 0, 0, 1), opacity 200ms ease, visibility 0s linear 0s; }
+  body.czat-ruch.czat-otwarty .dol { transition: background-color 200ms ease, transform 320ms cubic-bezier(.2, 0, 0, 1), opacity 200ms ease, visibility 0s linear 320ms; }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 759px) { body.czat-ruch .dol { transition: opacity 120ms ease, visibility 0s linear 0s; } body.czat-ruch.czat-otwarty .dol { transition: opacity 120ms ease, visibility 0s linear 120ms; } }
+/* Pasy przy bocznych krawędziach (telefon, tylko dotyk): od lewej w prawo to Wstecz, od prawej w lewo Dalej. Pas ma 16 px, tyle co margines strony; strzałka w kółku wyjeżdża spod
+   palca i robi się niebieska, gdy gest jest dość długi (biały znak na #0071e3 ma 4,7:1). */
+.krawedz { display: none; }
+@media (max-width: 759px) and (pointer: coarse) {
+  .krawedz { display: block; position: fixed; z-index: 55; top: var(--km-gora, 0px); bottom: 0; width: 16px; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+  .krawedz-l { left: 0; }
+  .krawedz-p { right: 0; }
+  .krawedz-znak { position: absolute; top: calc(var(--k-y, 50vh) - var(--km-gora, 0px)); display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+    color: var(--tekst); background: var(--chmura-tlo); box-shadow: var(--chmura-cien); opacity: 0; pointer-events: none; transition: opacity 120ms ease, background-color 120ms ease, color 120ms ease; }
+  .krawedz-l .krawedz-znak { left: 0; transform: translate(calc(var(--k-dx, 0px) * .7 - 48px), -50%); }
+  .krawedz-p .krawedz-znak { right: 0; transform: translate(calc(48px - var(--k-dx, 0px) * .7), -50%); }
+  .krawedz.ciagnie .krawedz-znak { opacity: 1; }
+  .krawedz.gotowe .krawedz-znak { color: #ffffff; background: #0071e3; }
+}
+/* Przycisk asystenta pływa nad stroną (czat.css, .czat-plywak), ale nagłówek zostaje tak wysoki, jak był, gdy kółko stało w jego rzędzie: logo 12 px od górnej krawędzi, tak jak
+   nawigacja od dolnej (Jacek, 24.10.2026: „przynajmniej tak od krawędzi ekranu, tak bufor jest u góry”). Okno w stronie (body.okno) nagłówka nie ma. */
+body:not(.okno) .glowa { min-height: calc(64px + var(--km-gora)); }
+/* Próba 5 „Szkło jak w Kiro” (28.10.2026, Jacek: „te butony … również nie powinny być w takiej formie atrakcyjnej … bezbłędnie”): wciśnięta zakładka i pigułka rosną o 9% jak tab w Kiro; przyciski w stronach w ramkach stylizuje KIRO5 w app.js. */
+body[data-szklo="5"] .karty [role="tab"]:active, body[data-szklo="5"] .podwidoki [role="radio"]:active { transform: scale(1.09); }
+/* Przenoszenie nawigacji (28.10.2026; Jacek: „Samo obramowanie i klasyczny sposób zaznaczenia … wystarczy”): przytrzymanie wolnego miejsca w pasie przez 0,5 s
+   podnosi pas z ramką w barwie wybranej zakładki. Bez kreseczki u góry i bez strzałek. */
+@media (max-width: 759px) {
+  .dol.przenoszony::before { box-shadow: 0 0 0 2px var(--barwa), var(--chmura-cien-gora); }
+}
+/* Miejsce na liście ofert przy przewijaniu (app.js, „Wskaźnik miejsca”): pigułka z ramką przy prawej krawędzi, jedzie razem z przewijaniem i gaśnie sama. Bez rozmycia
+   tła, bo stoi nad przewijaną treścią. Napis #1d1d1f na 92% bieli i biały na #1c1c1e mają ponad 14:1. */
+.miejsce-listy { position: fixed; z-index: 40; top: 0; right: calc(var(--km-prawo, 0px) + 6px); height: 28px; padding: 0 16px; display: flex; align-items: center;
+  border-radius: 14px; font-size: 14px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; color: #1d1d1f;
+  background: rgba(255, 255, 255, .92); box-shadow: 0 0 0 1px rgba(0, 0, 0, .12), 2px 3px 8px rgba(0, 0, 0, .12); pointer-events: none;
+  opacity: 0; transition: opacity 300ms ease; will-change: transform, opacity; }
+.miejsce-listy.widac { opacity: 1; transition-duration: 120ms; }
+@media (prefers-color-scheme: dark) { .miejsce-listy { color: #ffffff; background: rgba(28, 28, 30, .94); box-shadow: 0 0 0 1px rgba(255, 255, 255, .16); } }
+/* Nowa wersja na telefonie (28.10.2026): szklana karta u góry, z ramką w akcencie, materiałem jak „Cofnij”. Wchodzi z rozmycia, znika w górę. */
+.nowa-wersja { position: fixed; z-index: 70; top: calc(var(--km-gora, 0px) + 12px); left: 50%; width: min(calc(100% - 32px), 380px); box-sizing: border-box;
+  display: grid; gap: 4px; padding: 14px 20px; border-radius: 22px; text-align: center; cursor: pointer; transform: translateX(-50%);
+  color: #1d1d1f; background: rgba(227, 239, 253, .82); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .9), 0 0 0 1px rgba(0, 113, 227, .32), 0 2px 8px rgba(0, 72, 160, .14), 0 12px 32px rgba(0, 72, 160, .18);
+  animation: nowa-wersja-wchodzi 420ms cubic-bezier(.2, 0, 0, 1) both; }
+.nowa-wersja strong { font-size: 17px; font-weight: 600; }
+.nowa-wersja span { font-size: 15px; color: #3a3a3c; font-variant-numeric: tabular-nums; }
+.nowa-wersja.znika { animation: nowa-wersja-znika 360ms ease-in forwards; }
+@keyframes nowa-wersja-wchodzi { from { opacity: 0; transform: translate(-50%, -12px) scale(.96); filter: blur(4px); } to { opacity: 1; transform: translateX(-50%); filter: none; } }
+@keyframes nowa-wersja-znika { to { opacity: 0; transform: translate(-50%, -8px) scale(1.03); filter: blur(4px); } }
+@media (prefers-color-scheme: dark) {
+  .nowa-wersja { color: #ffffff; background: rgba(16, 38, 63, .86); box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .2), 0 0 0 1px rgba(64, 156, 255, .45); }
+  .nowa-wersja span { color: #c7c7cc; }
+}
+
+/* Lista jak strona (od 29.10.2026, app.js, „Lista jak strona”): na Androidzie na telefonie ramki leżą na całym ekranie od (0, 0), a nagłówek i nawigacja stoją
+   nad nimi. Wtedy Chromium przewija stronę w ramce jak stronę, a nie jak pole w stronie. Nawigacja ma tło paska jak dotąd, więc lista kończy się w tym samym
+   miejscu co wcześniej. Atlas i puste ekrany stoją dalej między nagłówkiem a nawigacją (--km-glowa-h, --km-dol-h liczy app.js). */
+@media (max-width: 759px) {
+  html.korzen, html.korzen body { overscroll-behavior: auto; }
+  html.korzen main { position: fixed; inset: 0; z-index: 0; }
+  html.korzen body.okno main { margin-bottom: 0; }
+  html.korzen .glowa { position: fixed; top: 0; left: 0; right: 0; z-index: 2; }
+  html.korzen .dol { position: fixed; left: 0; right: 0; bottom: 0; background-color: var(--tlo-pasa); }
+  html.korzen .podwidok[data-p="atlas"] { top: var(--km-glowa-h, 0px); bottom: var(--km-dol-h, 0px); }
+  html.korzen .pusto { inset: var(--km-glowa-h, 0px) 0 var(--km-dol-h, 0px); }
+}
+/* Ściąga „i” od trzeciego dnia używania (od 29.10.2026, app.js, „ściąga”). Kółko „i” i krzyżyk to szkło jak pozostałe okrągłe przyciski: kółko 40 px w polu 48 px,
+   z włoskiem, jasną krawędzią i cieniem; pod kursorem rośnie o 6%, wciśnięte o 10%. Znak #0066cc na bieli 5,6:1, w ciemnym #409cff na #2c2c2e. Okienko i każda karta mają
+   ramkę (włosek), karta jest o stopień ciemniejsza od okienka, a znaki gestów stoją w kółkach 32 px. Na szerokim ekranie (od 760 px) kółka nie ma: gesty są dotykowe. */
+:root { --sciaga-karta: #f5f5f7; --sciaga-znak: #ffffff; }
+@media (prefers-color-scheme: dark) { :root { --sciaga-karta: #1c1c1e; --sciaga-znak: #2c2c2e; } }
+.gesty, .sciaga-x { position: relative; flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin: 0; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--akcent-tekst); cursor: pointer; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.sciaga-x { color: var(--tekst2); }
+.gesty::before, .sciaga-x::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background-color: var(--przycisk); background-image: var(--g3d); box-shadow: var(--c3d);
+  transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1); }
+.gesty > svg, .sciaga-x > svg { position: relative; display: block; }
+@media (hover: hover) { .gesty:hover::before, .sciaga-x:hover::before { transform: scale(1.06); } }
+.gesty:active::before, .sciaga-x:active::before { transform: scale(1.1); transition-duration: 80ms; }
+.gesty[aria-expanded="true"]::before { box-shadow: 0 0 0 2px var(--tlo), 0 0 0 4px var(--akcent), var(--c3d); }
+.gesty:focus-visible, .sciaga-x:focus-visible { outline: none; }
+.gesty:focus-visible::before, .sciaga-x:focus-visible::before { box-shadow: 0 0 0 2px var(--tlo), 0 0 0 4px var(--akcent); }
+@media (min-width: 760px) { .gesty, .sciaga { display: none !important; } }
+.sciaga { position: fixed; z-index: 50; left: 0; top: 0; width: min(360px, calc(100vw - 24px)); display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden;
+  border: 1px solid var(--wlos); border-radius: 22px; background: var(--strona); color: var(--tekst); box-shadow: 0 2px 6px var(--cien), 0 16px 48px var(--cien-mocny); outline: none; }
+.sciaga-gora { flex: none; display: flex; justify-content: flex-end; padding: 8px 8px 0; cursor: grab; touch-action: none; }
+.sciaga-tresc { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: none; display: grid; gap: 20px; padding: 0 16px 32px; }
+.sciaga-tresc::-webkit-scrollbar { display: none; }
+.sciaga h2 { margin: 0 0 8px 4px; font-size: 13px; font-weight: 600; line-height: 16px; color: var(--tekst2); }
+.sciaga ul { list-style: none; margin: 0; padding: 0 12px; border: 1px solid var(--wlos); border-radius: 14px; background: var(--sciaga-karta); }
+.sciaga li { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 0; font-size: 16px; line-height: 20px; }
+.sciaga li + li { border-top: 1px solid var(--wlos); }
+.sciaga li b { display: block; font-weight: 600; }
+.sciaga li .skutek { display: block; font-size: 15px; line-height: 20px; color: var(--tekst2); }
+.sciaga-znak { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--sciaga-znak); box-shadow: inset 0 0 0 1px var(--wlos); color: var(--akcent); }
+.sciaga-znak > svg { display: block; }
+.sciaga-uchwyt { position: absolute; right: 2px; bottom: 2px; width: 32px; height: 32px; display: grid; place-items: center; color: var(--tekst2); cursor: nwse-resize; touch-action: none; }
