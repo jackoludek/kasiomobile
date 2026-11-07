@@ -680,6 +680,12 @@ body[data-szklo="5"] .karty [role="tab"]:active, body[data-szklo="5"] .podwidoki
 .sciaga-znak { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--sciaga-znak); box-shadow: inset 0 0 0 1px var(--wlos); color: var(--akcent); }
 .sciaga-znak > svg { display: block; }
 .sciaga-uchwyt { position: absolute; right: 2px; bottom: 2px; width: 32px; height: 32px; display: grid; place-items: center; color: var(--tekst2); cursor: nwse-resize; touch-action: none; }
+/* Przycisk Otwórz HAL-a w ściądze (od 7.11.2026): pigułka z ramką i cieniem. */
+.sciaga-akcja { flex: none; margin-left: auto; min-height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: #e8e8ed; color: inherit; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .12), 0 4px 12px rgba(0, 0, 0, .08); transition: transform 120ms ease; }
+.sciaga-akcja:hover { transform: scale(1.04); }
+.sciaga-akcja:active { transform: scale(1.08); }
+@media (prefers-color-scheme: dark) { .sciaga-akcja { background: #1c1c1e; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); } }
 </style>
 <style>
 /* czat.css: wygląd asystenta Kasiomobile (czat.js), ten sam na iPhonie, Androidzie, komputerze i w przeglądarce (od 19.10.2026).
@@ -6170,7 +6176,10 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
         for (const [z, gest, skutek] of l) {
           const znak = el('span', { class: 'sciaga-znak' });
           znak.innerHTML = SVG(20, ZNAKI[z]);
-          ul.append(el('li', null, znak, el('span', null, el('b', { text: gest }), el('span', { class: 'skutek', text: skutek }))));
+          const li = el('li', null, znak, el('span', null, el('b', { text: gest }), el('span', { class: 'skutek', text: skutek })));
+          // HAL pod widocznym przyciskiem (od 7.11.2026, Jacek w Fiszkach: „Niech jest”): poza kółkiem narysowanym palcem otwiera go też przycisk w ściądze.
+          if (z === 'kolko') { const b = el('button', { type: 'button', class: 'sciaga-akcja', text: 'Otwórz HAL-a' }); b.addEventListener('click', () => { zamknij(); if (halZKolka) halZKolka(); }); li.append(b); }
+          ul.append(li);
         }
         tresc.append(el('section', { class: 'sciaga-czesc' }, el('h2', { text: tytul }), ul));
       }
