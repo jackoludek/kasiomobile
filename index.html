@@ -1300,6 +1300,11 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
   .czat-ikonka.laskotki .czat-rumience { animation: czat-rumieni 1100ms ease both; }
 }
 
+/* Ołówek pod ostatnim pytaniem (od 7.11.2026, czat.js „poprawOstatnie”): cel 48 px, widoczne kółko 32 px, w trakcie odpowiedzi schowany. */
+.czat-w.ja > .czat-popraw { margin: -8px -8px -8px 0; color: var(--cz-tekst2); }
+.czat-w.ja > .czat-popraw::before { inset: 8px; }
+.czat-pracuje .czat-popraw { visibility: hidden; }
+
 </style>
 </head>
 <body>
@@ -1446,6 +1451,7 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
     czat: '<path d="M5.5 4h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7l-4.5 3.4v-3.4h-1.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="10.25" r="1.25"/><circle cx="12" cy="10.25" r="1.25"/><circle cx="15.5" cy="10.25" r="1.25"/>',
     zamknij: '<path d="M6.7 5.3 12 10.6l5.3-5.3 1.4 1.4-5.3 5.3 5.3 5.3-1.4 1.4-5.3-5.3-5.3 5.3-1.4-1.4 5.3-5.3-5.3-5.3z"/>',
     wyslij: '<path d="M12 4.2 18.8 11l-1.4 1.4L13 8v11.8h-2V8l-4.4 4.4L5.2 11z"/>',
+    stop: '<rect x="7" y="7" width="10" height="10" rx="2.2"/>',
     // Mikrofon jak w Kiro na Telefonie (od 7.11.2026, Jacek: „Daj taki mikrofon, jak jest tutaj, dokładnie”): ten sam rysunek kreską.
     mikrofon: '<path d="M12 3.5a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0v-5a3 3 0 0 0-3-3zM6.5 11a5.5 5.5 0 0 0 11 0M12 16.5v4M9 20.5h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
     zewnatrz: '<path d="M13.5 4H20v6.5h-2V7.4l-7.3 7.3-1.4-1.4L16.6 6h-3.1zM5 6.5h6v2H6v9.5h9.5v-5h2v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1z"/>',
@@ -1597,8 +1603,12 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
       if (t && ms) zegarStanu = setTimeout(() => stan(''), ms);
     }
     function przyciski() {
-      wyslijB.disabled = pracuje || !pole.value.trim();
-      wyslijB.setAttribute('aria-label', edycja.aktywna ? 'Zapisz pytanie' : pracuje ? 'Komputer jeszcze odpowiada' : 'Wyślij');
+      // W trakcie odpowiedzi Wyślij jest kwadratem Stop (od 7.11.2026, niżej „zatrzymaj”).
+      const stopTeraz = pracuje && !edycja.aktywna;
+      wyslijB.disabled = stopTeraz ? false : pracuje || !pole.value.trim();
+      wyslijB.setAttribute('aria-label', edycja.aktywna ? 'Zapisz pytanie' : stopTeraz ? 'Zatrzymaj odpowiedź' : 'Wyślij');
+      ikonaWyslij();
+      korzen.classList.toggle('czat-pracuje', pracuje);
       mikB.disabled = pracuje;
       nowaB.disabled = pracuje || !historia.length;
       // Przy zmianie pytań na stałe wychodzi się przez „Gotowe” (jak dawniej, gdy rząd Rozmów chował się w edycji), więc Rozmowy stoją wtedy przygaszone.
@@ -1753,7 +1763,7 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
       gotowe.addEventListener('click', () => edytujPytania(false));
       return el('div', { class: 'czat-pusto' }, el('p', { text: ZDANIA.edycja }), rzad, el('div', { class: 'czat-pyt-akcje' }, dodajP, gotowe));
     }
-    function ikonaWyslij() { wyslijB.innerHTML = ikona(edycja.aktywna ? 'ptak' : 'wyslij'); korzen.classList.toggle('edytuje', edycja.aktywna); }
+    function ikonaWyslij() { const n = edycja.aktywna ? 'ptak' : pracuje ? 'stop' : 'wyslij'; if (wyslijB.dataset.ikona !== n) { wyslijB.dataset.ikona = n; wyslijB.innerHTML = ikona(n); } korzen.classList.toggle('edytuje', edycja.aktywna); }
     function edytujPytania(wl) {
       if (pracuje) return;
       edycja.aktywna = wl;
@@ -1918,6 +1928,7 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
       usunPusto();
       const e = wiadomosc(w);
       lista.insertBefore(e, mysli && mysli.parentNode === lista ? mysli : null);
+      olowekOstatniego();
       return e;
     }
     // ---------------------------------------------------------------- historia rozmów (od 26.10.2026)
@@ -1956,6 +1967,7 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
       forma.style.visibility = '';
       forma.inert = false;
       przyciski();
+      olowekOstatniego();
       if (historia.length) naDol(); else lista.scrollTop = edycja.aktywna ? pustoST : 0;
     }
     const wsteczHistorii = () => (widokHistorii === 'historia' ? rysuj() : pokazHistorie('historia'));
@@ -2371,6 +2383,43 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
           });
       });
     }
+    // Stop (od 7.11.2026, Jacek: „musi być opcja … do przerwania toku myślenia. Jak się to źle wpisało, to po chuj ma mielić. Zatrzymujemy”):
+    // w trakcie odpowiedzi Wyślij jest kwadratem. Telefon przestaje czekać (późniejsza odpowiedź przepada, bo jej nie ma w „czeka”), a pytanie wraca
+    // do pola do poprawy. Komputer kończy swoje w tle; następne pytanie idzie z polem popraw, więc komputer zapomina w tej rozmowie poprzednie.
+    let poprawka = false;
+    function zatrzymaj() {
+      for (const [id, c] of [...czeka]) { if (!c.q) continue; czeka.delete(id); clearTimeout(c.zegar); c.ok({ zatrzymane: true }); }
+      zapiszCzekajace();
+      if (!czeka.size) zamknijStrumien();
+      uz('stop', '');
+    }
+    // Popraw ostatnie pytanie (od 7.11.2026, Jacek: „Powinna też być opcja do edytowania ostatniego zapytania”): ołówek pod ostatnim pytaniem.
+    // Stuknięcie wkłada pytanie do pola, a pytanie i odpowiedź na nie znikają z rozmowy; komputer też je zapomina (pole popraw przy następnym).
+    function poprawOstatnie() {
+      if (pracuje) return;
+      let i = historia.length - 1;
+      while (i >= 0 && historia[i].kto !== 'ja') i--;
+      if (i < 0) return;
+      const t = historia[i].tekst || '';
+      historia.splice(i);
+      zapiszHistorie();
+      poprawka = true;
+      rysuj();
+      pole.value = t;
+      rosnij();
+      przyciski();
+      pole.focus();
+      uz('popraw', String(t.length));
+    }
+    function olowekOstatniego() {
+      for (const b of lista.querySelectorAll('.czat-popraw')) b.remove();
+      if (widokHistorii) return;
+      const ja = lista.querySelectorAll('.czat-w.ja'), e = ja[ja.length - 1];
+      if (!e) return;
+      const b = przycisk('olowek', 'Popraw pytanie', 'czat-popraw', 18);
+      b.addEventListener('click', poprawOstatnie);
+      e.append(b);
+    }
     // Ta sama rozmowa dla komputera (pamięta 6 ostatnich pytań), a po 6 godzinach ciszy nowa.
     function rozmowa() {
       let r = pamiec.czytaj('rozmowa', null);
@@ -2389,11 +2438,22 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
       const widok = mini && o.widok ? o.widok() : null;
       const wskazano = !czekanie && mini && Boolean(wskaz);
       const wPole = czekanie ? '' : opisDlaKomputera(widok);
-      const d = await (czekanie || zapytaj(Object.assign({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '' }, wPole ? { w: wPole } : {}), CZEKAJ_MS, q));
+      const popraw = !czekanie && poprawka;
+      if (!czekanie) poprawka = false;
+      const d = await (czekanie || zapytaj(Object.assign({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '' }, wPole ? { w: wPole } : {}, popraw ? { popraw: true } : {}), CZEKAJ_MS, q));
       mysli.remove();
       mysli = null;
       pracuje = false;
       przyciski();
+      if (d && d.zatrzymane) {
+        const i = historia.length - 1;
+        if (historia[i] && historia[i].kto === 'ja') { historia.pop(); zapiszHistorie(); }
+        poprawka = true;
+        if (!widokHistorii) rysuj();
+        if (!pole.value.trim()) { pole.value = q; rosnij(); przyciski(); }
+        stan('Zatrzymane. Popraw pytanie i wyślij.', 5000);
+        return;
+      }
       const w = !d ? { kto: 'ai', blad: ZDANIA.brak, q } : d.blad ? { kto: 'ai', blad: String(d.blad), q }
         : { kto: 'ai', tekst: String(d.odpowiedz || ''), linki: Array.isArray(d.linki) ? d.linki.slice(0, 3) : [], pokaz: d.pokaz && BIERNIK[d.pokaz.zakladka] ? d.pokaz : null };
       uz('odpowiedz', w.blad ? 'błąd: ' + String(w.blad).slice(0, 80) : `${(w.tekst || '').length} znaków, odnośników ${(w.linki || []).length}${w.pokaz ? ', pokaż ' + w.pokaz.zakladka : ''}`);
@@ -2735,7 +2795,7 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
     // Puszczenie palca po przytrzymaniu przycisku asystenta nie zamyka od razu otwartego małego okna (zasłona dostaje wtedy „click” w niektórych przeglądarkach).
     if (zaslona) zaslona.addEventListener('click', () => { if (Date.now() - otwartoMini < 500 || Date.now() - wskazPoRuchu < 500) return; zamknij(); });
     forma.addEventListener('submit', (e) => { e.preventDefault(); wyslij(pole.value); });
-    wyslijB.addEventListener('click', () => wyslij(pole.value));
+    wyslijB.addEventListener('click', () => (pracuje && !edycja.aktywna ? zatrzymaj() : wyslij(pole.value)));
     pole.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); wyslij(pole.value); } });
     pole.addEventListener('input', () => { rosnij(); przyciski(); });
     korzen.addEventListener('keydown', (e) => {
@@ -2922,11 +2982,11 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
     function pokazGlos() {
       const n = glos.stan !== 'nic';
       mikB.classList.toggle('nagrywa', n);
-      mikB.setAttribute('aria-label', n ? 'Zakończ i wyślij' : 'Powiedz pytanie');
+      mikB.setAttribute('aria-label', n ? 'Zakończ dyktowanie' : 'Powiedz pytanie');
       mikB.setAttribute('aria-pressed', String(n));
       pole.placeholder = n ? 'Słucham…' : edycja.aktywna ? 'Nowe pytanie na stałe…' : mini ? 'Zapytaj o to, co widzisz…' : 'Zapytaj o auta…';
       if (glos.stan === 'start') stan('Włączam mikrofon…');
-      else if (glos.stan === 'nagrywa') stan(glos.czekaNaKlucz ? 'Słucham. Komputer jeszcze łączy rozpoznawanie mowy…' : 'Słucham. Powiedz „odbiór”, gdy skończysz.');
+      else if (glos.stan === 'nagrywa') stan(glos.czekaNaKlucz ? 'Słucham. Komputer jeszcze łączy rozpoznawanie mowy…' : 'Słucham. Stuknij mikrofon, gdy skończysz, albo powiedz „odbiór”.');
       else if (!n && /^(Włączam|Słucham)/.test(stanL.textContent)) stan('');
       halStan();
     }
@@ -3133,7 +3193,9 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
       if (typeof d.wiadomosc === 'string') zSoniox(d.wiadomosc);
       if (d.koniec && glos.stan !== 'nic') { if (d.bezWysylki) glos.wyslij = false; glosKoniec(); }
     }
-    mikB.addEventListener('click', () => (glos.stan === 'nic' ? glosStart() : glosStop(true)));
+    // Stuknięcie w trakcie kończy dyktowanie, a tekst zostaje w polu do poprawy i Wyślij (od 7.11.2026, Jacek: „taki sam mikrofon i tak samo … działający …
+    // Wciskam mikrofon, to jest tekst, pozostaje. A nie że od razu się wysyła”). Słowo „odbiór” dalej wysyła od razu; HAL wysyła stuknięciem jak dotąd.
+    mikB.addEventListener('click', () => (glos.stan === 'nic' ? glosStart() : glosStop(false)));
 
     // ---------------------------------------------------------------- HAL (niespodzianka, od 26.10.2026 wieczorem)
     // Jacek: „przytrzymać przez pół sekundy … samą ikonę … tylko oko tego Hala. Podpis Hal jakiś tam, delikatny … Dzień dobry, Jacku albo

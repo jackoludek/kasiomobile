@@ -615,3 +615,8 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
   .czat-ikonka.laskotki::before, .czat-ikonka.laskotki > svg, .czat-ikonka.dynia::before, .czat-ikonka.dynia .czat-dynia, .czat-dynia .twarz { animation: none; }
   .czat-ikonka.laskotki .czat-rumience { animation: czat-rumieni 1100ms ease both; }
 }
+
+/* Ołówek pod ostatnim pytaniem (od 7.11.2026, czat.js „poprawOstatnie”): cel 48 px, widoczne kółko 32 px, w trakcie odpowiedzi schowany. */
+.czat-w.ja > .czat-popraw { margin: -8px -8px -8px 0; color: var(--cz-tekst2); }
+.czat-w.ja > .czat-popraw::before { inset: 8px; }
+.czat-pracuje .czat-popraw { visibility: hidden; }
