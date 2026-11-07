@@ -558,7 +558,6 @@
       usunPusto();
       const e = wiadomosc(w);
       lista.insertBefore(e, mysli && mysli.parentNode === lista ? mysli : null);
-      olowekOstatniego();
       return e;
     }
     // ---------------------------------------------------------------- historia rozmów (od 26.10.2026)
@@ -597,7 +596,7 @@
       forma.style.visibility = '';
       forma.inert = false;
       przyciski();
-      olowekOstatniego();
+      rzadDymka = null;
       if (historia.length) naDol(); else lista.scrollTop = edycja.aktywna ? pustoST : 0;
     }
     const wsteczHistorii = () => (widokHistorii === 'historia' ? rysuj() : pokazHistorie('historia'));
@@ -712,6 +711,15 @@
     function cofnijRuch(ponow) {
       const k = (ponow ? ruchy.naprzod : ruchy.wstecz).pop();
       if (!k) return false;
+      // Usunięty dymek rozmowy (od 7.11.2026): wraca na swoje miejsce, a Ponów zdejmuje go znowu.
+      if (k.dymek) {
+        if (ponow) historia.splice(k.dymek.i, 1); else historia.splice(k.dymek.i, 0, k.dymek.w);
+        zapiszHistorie();
+        (ponow ? ruchy.wstecz : ruchy.naprzod).push(k);
+        pokazCofnijCzat(null);
+        if (!widokHistorii) rysuj();
+        return true;
+      }
       // Krok listy pytań na stałe: wraca cała lista sprzed zmiany albo po niej.
       if (k.pytania) {
         zapiszPytania(ponow ? k.pytania.po : k.pytania.przed);
@@ -1016,39 +1024,63 @@
     // Stop (od 7.11.2026, Jacek: „musi być opcja … do przerwania toku myślenia. Jak się to źle wpisało, to po chuj ma mielić. Zatrzymujemy”):
     // w trakcie odpowiedzi Wyślij jest kwadratem. Telefon przestaje czekać (późniejsza odpowiedź przepada, bo jej nie ma w „czeka”), a pytanie wraca
     // do pola do poprawy. Komputer kończy swoje w tle; następne pytanie idzie z polem popraw, więc komputer zapomina w tej rozmowie poprzednie.
-    let poprawka = false;
+    let poprawka = 0;
     function zatrzymaj() {
       for (const [id, c] of [...czeka]) { if (!c.q) continue; czeka.delete(id); clearTimeout(c.zegar); c.ok({ zatrzymane: true }); }
       zapiszCzekajace();
       if (!czeka.size) zamknijStrumien();
       uz('stop', '');
     }
-    // Popraw ostatnie pytanie (od 7.11.2026, Jacek: „Powinna też być opcja do edytowania ostatniego zapytania”): ołówek pod ostatnim pytaniem.
-    // Stuknięcie wkłada pytanie do pola, a pytanie i odpowiedź na nie znikają z rozmowy; komputer też je zapomina (pole popraw przy następnym).
-    function poprawOstatnie() {
-      if (pracuje) return;
-      let i = historia.length - 1;
-      while (i >= 0 && historia[i].kto !== 'ja') i--;
-      if (i < 0) return;
-      const t = historia[i].tekst || '';
+    // Pięć podstaw czatu (reguła czat-z-ai-podstawy, od 7.11.2026; Jacek: „opcja do edytowania ostatniego zapytania”): dymek widać w całości,
+    // a stuknięcie dymka pokazuje pod nim rząd: Kopiuj, Popraw (własne pytanie), Usuń i Kopiuj rozmowę. Popraw wkłada pytanie do pola, a ono
+    // i wszystko po nim znika z rozmowy; komputer zapomina tyle pytań (pole popraw przy następnym). Usuń zdejmuje dymek z „Cofnij” na 6 s i Ctrl+Z.
+    // Stop jest w miejscu Wyślij (wyżej). Do tego dnia pod ostatnim pytaniem stał sam ołówek.
+    let rzadDymka = null;
+    function zamknijRzad() { if (rzadDymka) { rzadDymka.remove(); rzadDymka = null; } }
+    function kopiujTekst(t, b) {
+      const gotowe = () => { if (b) b.textContent = 'Skopiowane'; setTimeout(zamknijRzad, 900); };
+      const zapas = () => { const x = el('textarea', { 'aria-hidden': 'true' }); x.value = t; x.style.cssText = 'position:fixed;opacity:0;left:0;top:0'; document.body.append(x); x.select(); try { document.execCommand('copy'); } catch { /* bez schowka */ } x.remove(); gotowe(); };
+      try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(gotowe, zapas); return; } } catch { /* niżej */ }
+      zapas();
+    }
+    const tekstWpisu = (w) => String(w.tekst || w.blad || '').trim();
+    const calaRozmowa = () => historia.map((w) => `${w.kto === 'ja' ? 'Ja' : 'Asystent'}: ${tekstWpisu(w)}`).join('\n\n');
+    function popraw(i) {
+      if (pracuje || !historia[i] || historia[i].kto !== 'ja') return;
+      const t = historia[i].tekst || '', k = historia.slice(i).filter((w) => w.kto === 'ja').length;
       historia.splice(i);
       zapiszHistorie();
-      poprawka = true;
+      poprawka = (Number(poprawka) || 0) + k;
       rysuj();
       pole.value = t;
       rosnij();
       przyciski();
       pole.focus();
-      uz('popraw', String(t.length));
+      uz('popraw', String(k));
     }
-    function olowekOstatniego() {
-      for (const b of lista.querySelectorAll('.czat-popraw')) b.remove();
-      if (widokHistorii) return;
-      const ja = lista.querySelectorAll('.czat-w.ja'), e = ja[ja.length - 1];
-      if (!e) return;
-      const b = przycisk('olowek', 'Popraw pytanie', 'czat-popraw', 18);
-      b.addEventListener('click', poprawOstatnie);
-      e.append(b);
+    function usunDymek(i) {
+      if (pracuje || !historia[i]) return;
+      const [w] = historia.splice(i, 1);
+      zapiszHistorie();
+      ruchy.wstecz.push({ dymek: { i, w } });
+      ruchy.naprzod.length = 0;
+      rysuj();
+      pokazCofnijCzat('Cofnij usunięcie dymka');
+      uz('usun-dymek', w.kto);
+    }
+    function pokazRzad(e, i) {
+      const byl = rzadDymka && rzadDymka.parentNode === e;
+      zamknijRzad();
+      if (byl) return;
+      const w = historia[i];
+      const r = el('div', { class: 'czat-dymek-akcje', role: 'group', 'aria-label': 'Ten dymek' });
+      const b = (napis, fn) => { const x = el('button', { type: 'button', class: 'czat-dymek-akcja', text: napis }); x.addEventListener('click', (ev) => { ev.stopPropagation(); fn(x); }); r.append(x); };
+      b('Kopiuj', (x) => kopiujTekst(tekstWpisu(w), x));
+      if (w.kto === 'ja') b('Popraw', () => popraw(i));
+      b('Usuń', () => usunDymek(i));
+      b('Kopiuj rozmowę', (x) => kopiujTekst(calaRozmowa(), x));
+      e.append(r);
+      rzadDymka = r;
     }
     // Ta sama rozmowa dla komputera (pamięta 6 ostatnich pytań), a po 6 godzinach ciszy nowa.
     function rozmowa() {
@@ -1068,9 +1100,9 @@
       const widok = mini && o.widok ? o.widok() : null;
       const wskazano = !czekanie && mini && Boolean(wskaz);
       const wPole = czekanie ? '' : opisDlaKomputera(widok);
-      const popraw = !czekanie && poprawka;
-      if (!czekanie) poprawka = false;
-      const d = await (czekanie || zapytaj(Object.assign({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '' }, wPole ? { w: wPole } : {}, popraw ? { popraw: true } : {}), CZEKAJ_MS, q));
+      const popraw = czekanie ? 0 : Number(poprawka) || 0;
+      if (!czekanie) poprawka = 0;
+      const d = await (czekanie || zapytaj(Object.assign({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '' }, wPole ? { w: wPole } : {}, popraw ? { popraw } : {}), CZEKAJ_MS, q));
       mysli.remove();
       mysli = null;
       pracuje = false;
@@ -1078,7 +1110,7 @@
       if (d && d.zatrzymane) {
         const i = historia.length - 1;
         if (historia[i] && historia[i].kto === 'ja') { historia.pop(); zapiszHistorie(); }
-        poprawka = true;
+        poprawka = (Number(poprawka) || 0) + 1;
         if (!widokHistorii) rysuj();
         if (!pole.value.trim()) { pole.value = q; rosnij(); przyciski(); }
         stan('Zatrzymane. Popraw pytanie i wyślij.', 5000);
@@ -1256,6 +1288,14 @@
     historiaB.addEventListener('click', () => (widokHistorii ? wsteczHistorii() : pokazHistorie('historia')));
     nowaB.addEventListener('click', nowaRozmowa);
     cofnijC.addEventListener('click', () => cofnijRuch(false));
+    // Stuknięcie dymka rozmowy (nie odnośnika ani przycisku w nim) pokazuje albo chowa jego rząd akcji; stuknięcie obok chowa rząd.
+    lista.addEventListener('click', (e) => {
+      if (widokHistorii || e.target.closest('a, button, .czat-dymek-akcje')) return;
+      const bab = e.target.closest('.czat-babelek'), w = bab && bab.closest('.czat-w');
+      if (!w || w.classList.contains('czat-mysli') || (getSelection && String(getSelection()).length)) { zamknijRzad(); return; }
+      const i = [...lista.querySelectorAll(':scope > .czat-w:not(.czat-mysli)')].indexOf(w);
+      if (i >= 0 && historia[i]) pokazRzad(w, i); else zamknijRzad();
+    });
     cofnijC.addEventListener('animationend', (e) => { if (e.animationName.startsWith('czat-paruje')) pokazCofnijCzat(null); });
     // ---------------------------------------------------------------- wskazanie rzeczy na ekranie (próba od 28.10.2026, tylko małe okno)
     // Jacek o pomyśle „ping” (przeciągnąć wskaźnik na rzecz na ekranie, żeby asystent wiedział, o co chodzi): „Tak, zrób próbę”. Celownik w pasku małego okna, przytrzymany

@@ -2538,7 +2538,7 @@
     };
     const CZESCI = [
       ['Kółko asystenta', [['stuknij', 'Stuknij', 'Rozmowa'], ['przytrzymaj', 'Przytrzymaj', 'Pytanie o to, co widać'], ['przenies', 'Przeciągnij albo rzuć', 'Inne miejsce'],
-        ['potrzasnij', 'Potrząśnij telefonem', 'Schowaj albo pokaż']]],
+        ['potrzasnij', 'Potrząśnij telefonem', 'Schowaj albo pokaż'], ['stuknij', 'Stuknij dymek w rozmowie', 'Kopiuj, popraw, usuń']]],
       ['Oferty', [['wBok', 'Przesuń auto w bok', 'Następne auto'], ['naGore', 'Stuknij zakładkę drugi raz', 'Na górę listy']]],
       ['Zakładki i pas', [['kolejnosc', 'Przytrzymaj zakładkę', 'Zmień kolejność'], ['pas', 'Przytrzymaj pas', 'W górę albo w dół'], ['krawedz', 'Przesuń od lewej krawędzi', 'Wstecz']]],
     ];

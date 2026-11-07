@@ -616,7 +616,13 @@ body:not(.czat-otwarty) .czat-ikonka.czat-plywak.schowany:not(.ciagniety):not(.t
   .czat-ikonka.laskotki .czat-rumience { animation: czat-rumieni 1100ms ease both; }
 }
 
-/* Ołówek pod ostatnim pytaniem (od 7.11.2026, czat.js „poprawOstatnie”): cel 48 px, widoczne kółko 32 px, w trakcie odpowiedzi schowany. */
-.czat-w.ja > .czat-popraw { margin: -8px -8px -8px 0; color: var(--cz-tekst2); }
-.czat-w.ja > .czat-popraw::before { inset: 8px; }
-.czat-pracuje .czat-popraw { visibility: hidden; }
+/* Rząd akcji pod stukniętym dymkiem (od 7.11.2026, czat.js „pokazRzad”): osobne pigułki ze szkła jak inne przyciski, co 8 px, napis 16 px od boków,
+   cel 44 px; w trakcie odpowiedzi schowany. */
+.czat-dymek-akcje { display: flex; flex-wrap: wrap; gap: 8px; }
+.czat-w.ja > .czat-dymek-akcje { justify-content: flex-end; }
+.czat .czat-dymek-akcja { position: relative; min-height: 44px; margin: 0; padding: 0 16px; border: 0; border-radius: 22px; background-color: var(--cz-szary);
+  background-image: var(--cz-lico); box-shadow: var(--cz-c3d); color: var(--cz-tekst); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: transform 320ms cubic-bezier(.3, 1.7, .5, 1); }
+.czat .czat-dymek-akcja:active { transform: scale(1.06); }
+.czat-pracuje .czat-dymek-akcje { visibility: hidden; }
+.czat-babelek { cursor: pointer; }
