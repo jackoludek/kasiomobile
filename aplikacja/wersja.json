@@ -1,12 +1,12 @@
 {
-  "zbudowano": "2026-11-07T17:45:22Z",
-  "skrot": "491ef676104225a9935faf3856626156f0f7ee995fdfe1f6fb75e100381d409a",
+  "zbudowano": "2026-11-07T18:07:40Z",
+  "skrot": "1ad5a77064d0caf46739c6e0399bb8f06afd1fe404100fe742216ad2a05bcc60",
   "minPowloka": 2,
   "pliki": {
     "Inter - licencja SIL OFL 1.1.txt": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
     "app.js": "a4b6292b2a842e2f6633f86bd10ea865fd8ee44c54fe8be4fce5a67e3415ea8e",
-    "czat.css": "b29bcf289ad4d5bd6fd0b8348532f66343e5b92d7d98305dff7562522d4d50e1",
-    "czat.js": "dbb8ec19b38952cea0e29a1b6e375876cc68f6dbb70b57bdd4c8ad400659e7f1",
+    "czat.css": "39d5e89325df07cf3ea5a1eb28a4d5873f2bdb1755c7850f5be7d0145647e769",
+    "czat.js": "49fd6f299ed9c22cabc7d5fa2c5004676e57ad01077351807ac3e49eb7af60e6",
     "index.html": "030a9d7a361634e359a63ab35753778d157c257528839cdb8d6b24b989a49f98",
     "inter.woff2": "985723b19f9ad12e30a5c3f2b0ddde39a557987d78f890df1ed8e264bde88f2c",
     "logo.svg": "0074766e8cdee1897bc20c7abfecacf8f827471ecabda02e54c190c7b8e05763",
