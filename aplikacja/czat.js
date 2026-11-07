@@ -33,6 +33,8 @@
 'use strict';
 (() => {
   const SERWER = 'https://ntfy.sh', SONIOX = 'wss://stt-rt.soniox.com/transcribe-websocket';
+// Autor rozmowy (od 7.11.2026, Jacek: urządzenia Apple „To będzie Kasia. Jacek jest na Androidzie i na Windowsie … na Linuxie”).
+const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== 'komputer' && /iPhone|iPad|Macintosh/.test(navigator.userAgent)) ? 'Kasia' : 'Jacek');
   const CZEKAJ_MS = 90000, KLUCZ_MS = 20000, NAJWIECEJ = 40, NOWA_ROZMOWA_MS = 6 * 3600 * 1000;
   // Nazwy zakładek w bierniku, do przycisku „Pokaż …” pod odpowiedzią. Od 19.10.2026 „katalog” to Oferty (do 25.10.2026 Ogłoszenia, razem z dawnym
   // „Nowe”, które zostaje dla starych odpowiedzi w pamięci), a „modele” to Podium (do 25.10.2026 Katalag). Od 25.10.2026 „kredyt” to Finanse, „historia”
@@ -618,7 +620,7 @@
     function odloz() {
       if (!historia.length) return;
       const a = archiwum();
-      a.unshift({ id: pamiec.czytaj('rozmowa', null) || losowe(), czas: pamiec.czytaj('ostatnio', Date.now()), wpisy: historia });
+      a.unshift({ id: pamiec.czytaj('rozmowa', null) || losowe(), autor: autorZ(o.skad), czas: pamiec.czytaj('ostatnio', Date.now()), wpisy: historia });
       zapiszListe('historia', a);
     }
     function odNowa() {
@@ -859,7 +861,7 @@
       const pytania = r.wpisy.filter((x) => x.kto === 'ja'), { prawo, lewo } = AKCJE[n];
       const b = el('button', { type: 'button', class: 'czat-rozmowa' },
         el('span', { class: 'czat-rozmowa-tytul', text: pytania[0] ? pytania[0].tekst : 'Rozmowa' }),
-        el('span', { class: 'czat-rozmowa-kiedy', text: `${n === 'kosz' ? zniknie(r.usunieto) : n === 'historia' || n === 'archiwum' ? kiedyKrotko(r.czas) : kiedy(r.czas)} · ${pytan(pytania.length)}` }));
+        el('span', { class: 'czat-rozmowa-kiedy', text: `${r.autor || autorZ(o.skad)} · ${n === 'kosz' ? zniknie(r.usunieto) : n === 'historia' || n === 'archiwum' ? kiedyKrotko(r.czas) : kiedy(r.czas)} · ${pytan(pytania.length)}` }));
       const strona = (cel, klasa) => (cel ? el('span', { class: klasa, html: ikona(CEL[cel].ikona, 22) }, el('span', { text: CEL[cel].napis })) : null);
       const w = el('div', { class: 'czat-wiersz', style: `--k-prawo:${prawo ? CEL[prawo].kolor : 'transparent'};--k-lewo:${lewo ? CEL[lewo].kolor : 'transparent'}` },
         el('div', { class: 'czat-pod', 'aria-hidden': 'true' }, strona(prawo, 'czat-pod-l'), strona(lewo, 'czat-pod-p')), b);
@@ -892,6 +894,37 @@
       const d = new Date(t), dzis = new Date(), godz = d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
       if (Date.now() - t < 2 * 864e5 && (d.toDateString() === dzis.toDateString() || d.toDateString() === new Date(dzis - 864e5).toDateString())) return godz;
       return d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' }) + ', ' + godz;
+    }
+    // Wspólne rozmowy (od 7.11.2026): plik od komputera z kanału „<kanał>-rozmowy”, najwyżej raz na minutę. W Rozmowach stoją te, których to urządzenie nie ma,
+    // pod nazwą autora; stuknięcie kopiuje rozmowę tutaj i otwiera ją, a komputer pamięta ją po identyfikatorze, więc da się dopytać dalej.
+    const wspolneR = { lista: [], czas: 0, znak: '' };
+    async function pobierzWspolne(gdy) {
+      if (Date.now() - wspolneR.czas < 60000) return;
+      wspolneR.czas = Date.now();
+      try {
+        const r = await fetch(`${SERWER}/${o.kanal}-rozmowy/json?poll=1&since=12h`, { cache: 'no-store' });
+        const linie = (await r.text()).trim().split('\n').map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter((w) => w && w.event === 'message' && w.attachment && w.attachment.url);
+        const ost = linie[linie.length - 1];
+        if (!ost) return;
+        const d = await (await fetch(ost.attachment.url, { cache: 'no-store' })).json();
+        if (!d || !Array.isArray(d.rozmowy) || String(d.czas) === wspolneR.znak) return;
+        wspolneR.lista = d.rozmowy;
+        wspolneR.znak = String(d.czas);
+        gdy();
+      } catch { /* bez sieci zostaje ostatnia lista */ }
+    }
+    function wierszWspolny(r) {
+      const pytania = r.wpisy.filter((x) => x.kto === 'ja');
+      const b = el('button', { type: 'button', class: 'czat-rozmowa' }, el('span', { class: 'czat-rozmowa-tytul', text: pytania[0] ? pytania[0].tekst : 'Rozmowa' }),
+        el('span', { class: 'czat-rozmowa-kiedy', text: `${r.autor} · ${kiedyKrotko(r.czas)} · ${pytan(pytania.length)}` }));
+      b.addEventListener('click', () => {
+        const kopia = { id: r.id, autor: r.autor, czas: r.czas, wpisy: r.wpisy.map((x) => ({ kto: x.kto === 'ja' ? 'ja' : 'ai', tekst: String(x.tekst || '') })) };
+        const l = czytajListe('historia');
+        l.unshift(kopia);
+        zapiszListe('historia', l);
+        wrocDo('historia', kopia);
+      });
+      return el('div', { class: 'czat-wiersz' }, b);
     }
     // Dwa widoki listy: „historia” (przycisk Rozmowy) i „schowek” (dawne Archiwum i Kosz: sekcje Zachowane i Kosz, „Opróżnij” przy Koszu).
     function pokazHistorie(n = 'historia', zostan = false) {
@@ -931,6 +964,13 @@
         tresc.push(el('div', { class: 'czat-schowki' }, chip('Archiwum', 'archiwum', arch, 'archiwum'), chip('Kosz', 'kosz', kosz, 'kosz')));
         if (!a.length) tresc.push(el('p', { class: 'czat-pusto', text: PUSTE.historia }));
         else for (const g of grupyDni(a)) tresc.push(el('h4', { class: 'czat-grupa', text: g.nazwa }), el('div', { class: 'czat-rozmowy' }, ...g.wiersze.map((r) => wierszRozmowy('historia', r))));
+        const znane = new Set([pamiec.czytaj('rozmowa', null), ...[...a, ...czytajListe('archiwum'), ...czytajListe('kosz')].map((r) => r.id)]);
+        const obce = wspolneR.lista.filter((r) => r && r.id && !znane.has(r.id) && Array.isArray(r.wpisy) && r.wpisy.length);
+        for (const kto of ['Jacek', 'Kasia']) {
+          const l = obce.filter((r) => r.autor === kto);
+          if (l.length) tresc.push(el('h4', { class: 'czat-grupa', text: kto === autorZ(o.skad) ? 'Twoje z innych urządzeń' : kto === 'Jacek' ? 'Rozmowy Jacka' : 'Rozmowy Kasi' }), el('div', { class: 'czat-rozmowy' }, ...l.map(wierszWspolny)));
+        }
+        pobierzWspolne(() => { if (widokHistorii === 'historia') pokazHistorie('historia', true); });
       }
       lista.replaceChildren(...tresc);
       // W listach pola pytania nie ma, więc lista sięga do dołu (od 28.10.2026: przyciski stoją w pasku u góry i nic pod nimi się nie rusza; do tego dnia pole
@@ -1008,7 +1048,7 @@
         czeka.set(id, { ok, zegar, czas, q });
         zapiszCzekajace();
         sluchaj();
-        fetch(`${SERWER}/${o.kanal}-pytanie`, { method: 'POST', body: JSON.stringify(Object.assign({ id, skad: o.skad || '' }, tresc)), cache: 'no-store' })
+        fetch(`${SERWER}/${o.kanal}-pytanie`, { method: 'POST', body: JSON.stringify(Object.assign({ id, skad: o.skad || '', autor: autorZ(o.skad) }, tresc)), cache: 'no-store' })
           .then((r) => { if (!r.ok) throw new Error('ntfy.sh ' + r.status); })
           .catch(() => {
             const c = czeka.get(id);
@@ -1876,9 +1916,9 @@
     // spośród medium, high i xhigh (asystent.js, „HAL”). HAL mówi głosem urządzenia (speechSynthesis) w języku odpowiedzi, nisko i wolno,
     // a pod okiem stoi napis tego, co mówi. Rozmowa nie trafia do czatu ani do Historii. Mikrofon słucha po angielsku i po polsku.
     const hal = { otwarty: false, korzen: null, oko: null, napis: null, rozmowa: '', pracuje: false, mowi: false, numer: 0 };
-    const halImie = () => (o.skad === 'Android' ? 'Jacek' : 'Kasia');
+    const halImie = () => autorZ(o.skad);
     // Po angielsku HAL mówi do Jacka „Jack” (28.10.2026, Jacek: „mówi: good evening, Jack”).
-    const halImieEn = () => (o.skad === 'Android' ? 'Jack' : 'Kasia');
+    const halImieEn = () => (autorZ(o.skad) === 'Jacek' ? 'Jack' : 'Kasia');
     function halNapis(t) { if (hal.napis) hal.napis.textContent = t || ''; }
     function halStan() {
       if (!hal.korzen) return;
