@@ -1929,7 +1929,7 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
     function halCisza() {
       hal.numer++;
       hal.mowi = false;
-      try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch { /* bez głosu */ }
+      try { if (window.AutaGlos) window.AutaGlos.cisza(); else if (window.speechSynthesis) speechSynthesis.cancel(); } catch { /* bez głosu */ }
     }
     function halGlos(j) {
       let g = [];
@@ -1947,8 +1947,21 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
       halNapis(t);
       halCisza();
       const zdania = (t.match(/[^.!?…]+[.!?…]*/g) || []).map((z) => z.trim()).filter(Boolean);
+      const j = jezyk === 'pl' || jezyk === 'en' ? jezyk : /[ąćęłńóśźż]/i.test(t) ? 'pl' : 'en';
+      // Android (od 7.11.2026): WebView nie ma speechSynthesis, więc mówi TextToSpeech telefonu przez most AutaGlos (Glos.java). Oko pulsuje, póki mówi.
+      let natywny = false; try { natywny = !!(window.AutaGlos && window.AutaGlos.jest()); } catch { /* bez mostu */ }
+      if (zdania.length && natywny) {
+        hal.mowi = true;
+        halStan();
+        let n = 0;
+        try { n = window.AutaGlos.mow(t, j, 0.55, j === 'pl' ? 0.92 : 0.82); } catch { n = 0; }
+        if (!n) { hal.mowi = false; halStan(); return; }
+        const puls = setInterval(() => { if (!hal.mowi || !hal.korzen) { clearInterval(puls); return; } hal.korzen.style.setProperty('--hal-moc', (0.72 + Math.random() * 0.5).toFixed(2)); }, 180);
+        window.__halKoniec = (k) => { if (k === n) { hal.mowi = false; clearInterval(puls); halStan(); } };
+        return;
+      }
       if (!zdania.length || !window.speechSynthesis || typeof SpeechSynthesisUtterance !== 'function') { halStan(); return; }
-      const j = jezyk === 'pl' || jezyk === 'en' ? jezyk : /[ąćęłńóśźż]/i.test(t) ? 'pl' : 'en', numer = hal.numer, g = halGlos(j);
+      const numer = hal.numer, g = halGlos(j);
       hal.mowi = true;
       halStan();
       zdania.forEach((z, i) => {
@@ -1996,7 +2009,9 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
       const napis = el('p', { class: 'czat-hal-napis', role: 'status', 'aria-live': 'polite' });
       const k = el('section', { class: 'czat czat-hal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'HAL', 'data-stan': 'czeka' },
         el('div', { class: 'czat-hal-gora' }, x),
-        el('div', { class: 'czat-hal-srodek' }, oko, el('p', { class: 'czat-hal-podpis', text: 'HAL 9000' }), napis));
+        el('div', { class: 'czat-hal-srodek' }, oko, el('p', { class: 'czat-hal-podpis', text: 'HAL 9000' }), napis,
+          // Jak z niego wyjść i jak pytać (od 7.11.2026, Jacek: „nie wiem, jak go wywołać … Nie wiem, jak tego odwrócić”).
+          el('p', { class: 'czat-hal-rada', text: 'Stuknij oko i mów, stuknij znowu, żeby wysłać. Krzyżyk albo Wstecz zamyka.' })));
       Object.assign(hal, { korzen: k, oko, napis });
       oko.addEventListener('click', () => {
         if (hal.pracuje) return;
