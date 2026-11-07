@@ -81,7 +81,8 @@
     czat: '<path d="M5.5 4h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7l-4.5 3.4v-3.4h-1.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="10.25" r="1.25"/><circle cx="12" cy="10.25" r="1.25"/><circle cx="15.5" cy="10.25" r="1.25"/>',
     zamknij: '<path d="M6.7 5.3 12 10.6l5.3-5.3 1.4 1.4-5.3 5.3 5.3 5.3-1.4 1.4-5.3-5.3-5.3 5.3-1.4-1.4 5.3-5.3-5.3-5.3z"/>',
     wyslij: '<path d="M12 4.2 18.8 11l-1.4 1.4L13 8v11.8h-2V8l-4.4 4.4L5.2 11z"/>',
-    mikrofon: '<path d="M12 3.5a3.4 3.4 0 0 0-3.4 3.4v5a3.4 3.4 0 0 0 6.8 0v-5A3.4 3.4 0 0 0 12 3.5zM18 11.9h-1.9a4.1 4.1 0 0 1-8.2 0H6a6 6 0 0 0 5.1 5.9v2.7h1.8v-2.7A6 6 0 0 0 18 11.9z"/>',
+    // Mikrofon jak w Kiro na Telefonie (od 7.11.2026, Jacek: „Daj taki mikrofon, jak jest tutaj, dokładnie”): ten sam rysunek kreską.
+    mikrofon: '<path d="M12 3.5a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0v-5a3 3 0 0 0-3-3zM6.5 11a5.5 5.5 0 0 0 11 0M12 16.5v4M9 20.5h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
     zewnatrz: '<path d="M13.5 4H20v6.5h-2V7.4l-7.3 7.3-1.4-1.4L16.6 6h-3.1zM5 6.5h6v2H6v9.5h9.5v-5h2v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1z"/>',
     dalej: '<path d="M9.3 6.3 15 12l-5.7 5.7-1.4-1.4 4.3-4.3-4.3-4.3z"/>',
     historia: '<path fill-rule="evenodd" d="M12 3.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17zm0 1.9a6.6 6.6 0 1 0 0 13.2 6.6 6.6 0 0 0 0-13.2zM11.05 7.5h1.9v4.45l3.3 1.95-.97 1.64-4.23-2.5z"/>',
