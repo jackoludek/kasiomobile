@@ -3718,6 +3718,29 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
       try { localStorage.removeItem('auta-' + k); } catch { /* bez pamięci */ }
     },
   };
+  // Filtry Ofert zostają na urządzeniu (od 8.11.2026, Jacek: „jak mam 83, no to niech zostanie 83, a nie że zawsze wszystko wraca do defaultowego”).
+  // Skaner trzyma je w sessionStorage („we-filtry2:<misja>”), które znika z zamknięciem aplikacji. Ramka ma to samo pochodzenie i tę samą kartę co aplikacja,
+  // więc na starcie, zanim wczytają się ramki, odtwarzamy je z localStorage („auta-filtry”), a każdą zmianę kopiujemy z powrotem: zdarzenie storage z ramki,
+  // co 3 s i przy schowaniu aplikacji. „Wyczyść” w Skanerze zapisuje filtry z początku, więc też zostaje. Każde urządzenie ma swoje.
+  (() => {
+    const KLUCZ = 'auta-filtry';
+    let ost = '';
+    const zbierz = () => {
+      const m = {};
+      try { for (let i = 0; i < sessionStorage.length; i++) { const k = String(sessionStorage.key(i)); if (k.startsWith('we-filtry2:')) m[k] = sessionStorage.getItem(k); } } catch { /* bez pamięci */ }
+      return m;
+    };
+    const zapisz = () => { const m = zbierz(); if (!Object.keys(m).length) return; const s = JSON.stringify(m); if (s === ost) return; ost = s; try { localStorage.setItem(KLUCZ, s); } catch { /* pełna pamięć */ } };
+    try {
+      const m = JSON.parse(localStorage.getItem(KLUCZ) || '{}');
+      for (const [k, v] of Object.entries(m)) if (k.startsWith('we-filtry2:') && typeof v === 'string' && sessionStorage.getItem(k) === null) sessionStorage.setItem(k, v);
+      ost = JSON.stringify(zbierz());
+    } catch { /* bez pamięci */ }
+    addEventListener('storage', (e) => { if (e.storageArea === sessionStorage && String(e.key || '').startsWith('we-filtry2:')) zapisz(); });
+    setInterval(zapisz, 3000);
+    addEventListener('pagehide', zapisz);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) zapisz(); });
+  })();
   // Skąd pyta ta strona: komputer pisze to w dzienniku skanu i asystenta. Android ładuje ją spod adresu z plików aplikacji.
   const SKAD = location.protocol === 'auta:' ? 'iPhone' : location.hostname === 'appassets.androidplatform.net' ? 'Android' : 'przeglądarka';
   const DOBRY_KANAL = /^[a-z0-9-]{16,64}$/;

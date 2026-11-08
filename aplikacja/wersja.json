@@ -1,10 +1,10 @@
 {
-  "zbudowano": "2026-11-08T20:11:34Z",
-  "skrot": "1a3b71d0b0625d3aef7abb009ea5001427d5e8044fa3c55bd9e8583f77e1095f",
+  "zbudowano": "2026-11-08T20:38:58Z",
+  "skrot": "beb59d38518d8e53c388e98e023beac14e614ddbdb0b14dda0fef4f3a3854b88",
   "minPowloka": 2,
   "pliki": {
     "Inter - licencja SIL OFL 1.1.txt": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
-    "app.js": "3466b926521e38f5db2a1a46a28e938f6281394d8ac976e977a3a8dec65b7a62",
+    "app.js": "e36a8fac468bbe06708b2440d9477def78e043f3f8937718f8c871c27e71b2e5",
     "czat.css": "e200b46b0472c1f6c780b4740f954b3243e12ecb24b8eec9c4f45a568ab97758",
     "czat.js": "b3a1a0e8abc0652ef75d08ea1a908af38b0443f45af6e33a4eae02d52e5bd351",
     "index.html": "030a9d7a361634e359a63ab35753778d157c257528839cdb8d6b24b989a49f98",
