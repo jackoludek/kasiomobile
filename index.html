@@ -5967,7 +5967,9 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
     // tym trzepiesz, to go nie rusza … szybko enough … wyrzuca z ekranu. A potem się pojawia w ten sam sposób. Skakuje na ekran i leci do góry … przykleja się”): siła to średnia
     // wychyłów potrząśnięcia. Do 17 m/s² kółko tylko podskakuje po ekranie i zostaje tam, gdzie stanie; mocniej leci w stronę wychyłu, dwa razy odbija się od brzegów i wylatuje.
     // Drugie potrząśnięcie wrzuca je spod dolnego brzegu, a magnes ciągnie je do doku u góry. Przy ograniczonym ruchu bez lotu: od razu schowane albo od razu w doku.
-    const TRZES = { prog: 13, ile: 4, okno: 1000, przerwa: 1200, wychyl: 250, wyrzut: 17 };
+    // Od 8.11.2026 czulej (Jacek: „Jest za mało czułe. Trzeba naprawdę nim trząść … Make it less painful”): 3 wychyły ponad 9 m/s² w 1,2 s zamiast 4 ponad 13 w 1 s,
+    // a każde takie potrząśnięcie od razu chowa albo przywraca kółko. Dawne samo podskakiwanie przy słabszym (do 17 m/s²) zniknęło, bo wyglądało, jakby nic nie zadziałało.
+    const TRZES = { prog: 9, ile: 3, okno: 1200, przerwa: 1200, wychyl: 250, wyrzut: 9 };
     let piki = [], poTrzes = -1e9, grawitacja = null;
     function trzesienie(sila = TRZES.wyrzut, os = 0, zn = 1) {
       const wraca = p.classList.contains('schowany');
@@ -5993,7 +5995,7 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
       const zLotu = zatrzymajLot(), q = zLotu || miejsce(stan);
       if (g) { clearTimeout(g.zegar); g = null; p.classList.remove('trzyma', 'ciagniety'); }
       // Kierunek: oś X telefonu to oś X ekranu, oś Y telefonu rośnie w górę ekranu, a oś Z (do patrzącego) rzuca w pionie. Bezwładność niesie kółko przeciwnie do wychyłu.
-      const v = Math.min(5200, Math.max(1500, sila * 150)), k = -zn, skos = 0.35 * v;
+      const v = Math.min(5200, Math.max(3600, sila * 200)), k = -zn, skos = 0.35 * v;
       const [vx, vy] = os === 0 ? [k * v, -skos] : os === 1 ? [skos, -k * v] : [skos, k * v];
       if (sila < TRZES.wyrzut) { obudz(); if (malyRuch.matches) return; rzut(q.x, q.y, vx * 0.5, vy * 0.5); return; }
       const schowaj = () => { p.classList.add('schowany'); powiedz('Asystent schowany. Potrząśnij telefonem, żeby wrócił.'); };
