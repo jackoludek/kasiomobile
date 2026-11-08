@@ -2652,7 +2652,7 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
       const wPole = czekanie ? '' : opisDlaKomputera(widok);
       const popraw = czekanie ? 0 : Number(poprawka) || 0;
       if (!czekanie) poprawka = 0;
-      const d = await (czekanie || zapytaj(Object.assign({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '', poziom }, wPole ? { w: wPole } : {}, popraw ? { popraw } : {}), poziom === 'max' ? 200000 : poziom === 'xhigh' ? 140000 : CZEKAJ_MS, q));
+      const d = await (czekanie || zapytaj(Object.assign({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '', poziom }, wPole ? { w: wPole } : {}, popraw ? { popraw } : {}), poziom === 'max' ? 305000 : poziom === 'xhigh' ? 215000 : CZEKAJ_MS, q));
       mysli.remove();
       mysli = null;
       pracuje = false;
