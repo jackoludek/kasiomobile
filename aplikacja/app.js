@@ -359,6 +359,58 @@
   // jesteśmy na pierwszym … wrócimy do głównego menu”): okno idzie za palcem, a puszczone po 72 px (albo po szybkim ruchu) otwiera sąsiednie auto w kolejności
   // z ekranu. Z pierwszego auta w prawo zamyka okno jak krzyżyk, z ostatniego w lewo odbija. Pion przewija okno jak dotąd, a pasek miniatur zdjęć przewija się
   // po swojemu. Na komputerze to samo dają strzałki ← i →. Okno przesuwa właściwość translate, więc własne położenie okna ze Skanera zostaje. Raz na dokument.
+  // Archiwum aut (od 8.11.2026, Jacek: „żeby można było dane auto … do archiwum takiego też wrzucić i potem sobie … daty i wszystkie dane porównywać”): w oknie auta,
+  // za sercem, przycisk ze skrzynką. Stuknięcie wysyła adres ogłoszenia na kanał pytań z polem co: 'archiwum', a komputer zapisuje całą kartę na stałe
+  // (wyniki\archiwum-aut.json w misji) i dokłada auto do sekcji „Archiwum” w Historii, wspólnej dla Jacka i Kasi. Drugie stuknięcie wyjmuje auto z archiwum.
+  // Stan przycisku leży w pamięci urządzenia (auta-archiwum), więc odpowiada od razu, także bez sieci.
+  const ZNAK_ARCH = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="4" rx="1"/><path d="M5 8.5v10a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-10"/><path class="km-arch-znak" d="M10 13.5h4"/></svg>';
+  const ZNAK_ARCH_JEST = ZNAK_ARCH.replace('<path class="km-arch-znak" d="M10 13.5h4"/>', '<path d="m9.2 14 2 2 3.6-3.8"/>');
+  const archiwumAut = (d) => {
+    if (!d || d.kmArchiwum || !d.body) return;
+    d.kmArchiwum = true;
+    const lista = () => { const l = pamiec.czytaj('archiwum', []); return Array.isArray(l) ? l : []; };
+    // Adres auta: odnośnik do ogłoszenia w oknie albo rekord katalogu (we-offline) dla ostatnio stukniętej karty: ten sam tytuł i cena, a przy kilku takich
+    // także miasto. Karta Skanera nie ma adresu w atrybutach, a tytuły się powtarzają („Toyota Corolla”).
+    let rekordy = null, karta = null;
+    d.addEventListener('click', (e) => { const k = e.target.closest && e.target.closest('.karta-produktu'); if (k) karta = k; }, true);
+    const cyfry = (s) => Number(String(s || '').replace(/[^\d]/g, '')) || 0;
+    const adres = (dl) => {
+      const a = dl.querySelector('a[href*="otomoto.pl/osobowe/oferta/"]');
+      if (a) return a.href.split('#')[0];
+      if (!karta) return '';
+      try { if (!rekordy) rekordy = ((JSON.parse(d.getElementById('we-offline').textContent).katalog || {}).rekordy || []); } catch { rekordy = []; }
+      const tyt = ((karta.querySelector('.tytul') || {}).textContent || '').trim(), c = karta.querySelector('.cena'), cena = c && c.firstChild ? cyfry(c.firstChild.textContent) : 0;
+      const linia = ((karta.querySelector('.linia') || {}).textContent || '');
+      let r = rekordy.filter((x) => x.tytul === tyt && Math.round(x.cena || 0) === cena && String(x.url || '').includes('otomoto.pl/osobowe/oferta/'));
+      if (r.length > 1) r = r.filter((x) => linia.includes(String((x.cechy || {}).lokalizacja || '').replace(/\s*\([^)]*\)$/, '')));
+      return r.length === 1 ? String(r[0].url).split('#')[0] : '';
+    };    const ustaw = (b, u) => { const jest = lista().includes(u); b.setAttribute('aria-pressed', String(jest)); const opis = jest ? 'Wyjmij z archiwum' : 'Zapisz w archiwum: zostanie po sprzedaży'; b.setAttribute('aria-label', opis); b.dataset.dymek = opis; b.innerHTML = jest ? ZNAK_ARCH_JEST : ZNAK_ARCH; };
+    let zegar = 0;
+    const wstaw = () => {
+      const dl = d.querySelector('dialog#okno[open]'), rz = dl && dl.querySelector('.okno-przyciski');
+      if (!rz) return;
+      const u = adres(dl);
+      let b = rz.querySelector('.km-archiwum');
+      if (!u) { if (b) b.remove(); return; }
+      if (!b) {
+        b = d.createElement('button');
+        b.type = 'button';
+        b.className = 'przycisk cichy km-archiwum';
+        b.addEventListener('click', () => {
+          const dl2 = d.querySelector('dialog#okno[open]'), u2 = dl2 && adres(dl2);
+          if (!u2) return;
+          const l = lista(), usun = l.includes(u2);
+          pamiec.zapisz('archiwum', usun ? l.filter((x) => x !== u2) : l.concat([u2]));
+          ustaw(b, u2);
+          fetch(`${SERWER}/${KANAL}-pytanie`, { method: 'POST', cache: 'no-store', body: JSON.stringify({ id: 'a-' + Math.random().toString(36).slice(2, 12), co: 'archiwum', url: u2, usun, autor: SKAD === 'iPhone' ? 'Kasia' : 'Jacek' }) }).catch(() => {});
+        });
+        const serce = rz.querySelector('.wybor-serce');
+        if (serce) serce.after(b); else rz.prepend(b);
+      }
+      if (b.dataset.url !== u) { b.dataset.url = u; ustaw(b, u); }
+    };
+    new d.defaultView.MutationObserver(() => { clearTimeout(zegar); zegar = setTimeout(wstaw, 50); }).observe(d.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+  };
   const przesuwanieAut = (d) => {
     if (!d || d.kmAuta) return;
     d.kmAuta = true;
@@ -815,7 +867,7 @@
         if (document.body.dataset.szklo) d.documentElement.dataset.kmWyglad = '5'; else delete d.documentElement.dataset.kmWyglad;
         swiatloPrzyciskow(d);
         ciszaKolka(d);
-        przesuwanieAut(d); wskaznikMiejsca(d);
+        przesuwanieAut(d); wskaznikMiejsca(d); archiwumAut(d);
         kolkoHal(d);
         d.documentElement.style.setProperty('--km-lewo', cs.paddingLeft);
         d.documentElement.style.setProperty('--km-prawo', cs.paddingRight);
