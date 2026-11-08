@@ -481,80 +481,8 @@
     };
     if (dlg && window.MutationObserver) new MutationObserver(() => setTimeout(podpisz, 0)).observe(dlg, { attributes: true, attributeFilter: ['open'], childList: true });
   };
-  // Benzyna i manual (od 29.10.2026, Jacek w Fiszkach o przełączniku „Manual i benzyna”: „Oba”, czyli liczby rynku i oferty na liście). Katalog ma od tego dnia
-  // także SUV-y z benzyną z Pomorza, na start schowane filtrami Skanera „Paliwo: Hybryda” i „Skrzynia biegów: Automatyczna” ([raport] domyslne w mission.toml).
-  // Nad listą Ofert stoi pigułka: włączona zaznacza w tych filtrach Benzynę i Manualną tak, jak człowiek (zdarzenie change), więc Skaner sam przelicza wyniki
-  // i chipy, a pod rzędem staje karta z liczbami rynku: SUV-y z Pomorza od 2016 roku, do 250 tys. km i za 30–75 tys. zł, policzone z danych katalogu. Stan trzyma
-  // sam Skaner (sessionStorage), więc pigułka czyta go z pól. Bez filtra Paliwo (katalog bez benzyny, starszy plik) pigułki nie ma. Raz na dokument ramki.
-  const przelacznikRynku = (d) => {
-    if (!d || d === document || d.kmRynek || !d.body) return;
-    d.kmRynek = true;
-    const mk = (tag, a, tekst) => { const e = d.createElement(tag); for (const [k, v] of Object.entries(a || {})) e.setAttribute(k, v); if (tekst) e.textContent = tekst; return e; };
-    const zestaw = (k) => d.querySelector(`fieldset[data-klucz="${k}"]`);
-    const pole = (k, v) => { const z = zestaw(k); return z ? [...z.querySelectorAll('input[type="checkbox"]')].find((x) => x.value === v) || null : null; };
-    let liczby = null;
-    const rynek = () => {
-      if (liczby) return liczby;
-      try {
-        const s = d.getElementById('we-offline'), r = (JSON.parse(s.textContent).katalog || {}).rekordy || [];
-        const suv = r.filter((x) => /^otomoto-pomorskie/.test(x.zrodlo || '') && x.cechy && /suv/i.test(x.cechy.nadwozie || '') && x.cechy.rok >= 2016 && x.cechy.przebieg_km <= 250000 && !((x.cechy.cena ?? x.cena) > 75000));
-        const ile = (pal, skr) => suv.filter((x) => new RegExp(pal, 'i').test(x.cechy.paliwo || 'hybr') && new RegExp(skr, 'i').test(x.cechy.skrzynia || 'autom')).length;
-        liczby = [['hybryda z automatem', ile('hybr', 'autom')], ['benzyna z automatem', ile('benz', 'autom')], ['benzyna z manualem', ile('benz', 'manual')]];
-      } catch { liczby = []; }
-      return liczby;
-    };
-    const styl = mk('style', { id: 'kasiomobile-rynek' });
-    // Włączona ma podwójną klasę, żeby wygrać ze szkłem siatki (.przycisk:not(.glowny):not(.przycisk-nowe)), które w oknie na komputerze stoi w arkuszu później.
-    styl.textContent = '.przycisk.km-rynek{position:relative;flex:none;min-height:40px;padding:0 16px;border-radius:20px;font-weight:600}'
-      + '.przycisk.km-rynek::before{content:"";position:absolute;inset:-4px 0}'
-      + '.przycisk.km-rynek.km-rynek[aria-pressed="true"]{background-color:var(--akcent)!important;color:var(--na-akcencie)!important;background-image:linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,0) 34%,rgba(0,0,0,.1))!important;box-shadow:inset 1px 1px 0 rgba(255,255,255,.38),inset -1px -1px 0 rgba(0,0,0,.2),2px 3px 10px color-mix(in srgb,var(--akcent) 42%,transparent)!important}'
-      + '.km-rynek-karta{margin:8px 0 0;padding:10px 14px;border:1px solid var(--ramka);border-radius:12px;background:var(--tlo-2);color:var(--tekst);font-size:14px;line-height:1.45}'
-      + '.km-rynek-karta b{font-weight:600;font-variant-numeric:tabular-nums}';
-    const przycisk = mk('button', { type: 'button', class: 'przycisk maly km-rynek', 'aria-pressed': 'false' }, 'Benzyna i manual');
-    const karta = mk('p', { class: 'km-rynek-karta', hidden: '' });
-    const wlaczone = () => Boolean((pole('paliwo', 'Benzyna') || {}).checked || (pole('skrzynia', 'Manualna') || {}).checked);
-    let opis = '';
-    const odswiez = () => {
-      const na = wlaczone();
-      if (przycisk.getAttribute('aria-pressed') !== String(na)) przycisk.setAttribute('aria-pressed', String(na));
-      karta.hidden = !na;
-      // Chipy Skanera „Paliwo: Hybryda, Benzyna” i „Skrzynia biegów: Automatyczna, Manualna” mówią to samo co pigułka, więc przy niej znikają.
-      for (const c of d.querySelectorAll('.aktywne button')) {
-        const t = (c.textContent || '').trim();
-        const dubel = na && ((/^Paliwo:/.test(t) && /Hybryda/.test(t) && /Benzyna/.test(t)) || (/^Skrzynia bieg/.test(t) && /Automatyczna/.test(t) && /Manualna/.test(t)));
-        if (c.hidden !== dubel) c.hidden = dubel;
-      }
-      const l = na ? rynek() : [];
-      const nowy = l.map(([n, i]) => n + i).join();
-      if (!na || nowy === opis) return;
-      opis = nowy;
-      karta.replaceChildren(d.createTextNode('SUV-y z Pomorza od 2016 roku, do 250 tys. km i 75 tys. zł: '),
-        ...l.flatMap(([n, i], j) => [d.createTextNode((j ? ' · ' : '') + n + ' '), mk('b', null, String(i))]), d.createTextNode('.'));
-    };
-    przycisk.addEventListener('click', () => {
-      const na = !wlaczone();
-      for (const [k, v] of [['paliwo', 'Benzyna'], ['skrzynia', 'Manualna']]) {
-        let c = pole(k, v);
-        // Opcja bez wyników przy innych filtrach (Manualna przy samej hybrydzie) stoi pod „Pokaż wszystkie”.
-        if (!c) { const w = zestaw(k) && zestaw(k).querySelector('.wiecej-opcji'); if (w) { w.click(); c = pole(k, v); } }
-        if (c && c.checked !== na) { c.checked = na; c.dispatchEvent(new Event('change', { bubbles: true })); }
-      }
-      odswiez();
-    });
-    let zegar = 0;
-    const wstaw = () => {
-      if (!zestaw('paliwo')) { przycisk.remove(); karta.remove(); return; }
-      const w = d.querySelector('.narzedzia > .wiersz');
-      if (!w) return;
-      if (!styl.isConnected) d.head.append(styl);
-      if (przycisk.parentNode !== w) w.insertBefore(przycisk, w.querySelector('.aktywne'));
-      if (karta.previousElementSibling !== w) w.after(karta);
-      odswiez();
-    };
-    wstaw();
-    new d.defaultView.MutationObserver(() => { clearTimeout(zegar); zegar = setTimeout(wstaw, 60); }).observe(d.body, { childList: true, subtree: true });
-    d.addEventListener('change', () => setTimeout(odswiez, 0), true);
-  };
+  // Pigułka „Benzyna i manual” nad listą Ofert (29.10–8.11.2026) usunięta: Jacek, 8.11.2026: „dajemy sobie spokój … filtrem pokazującym benzyna i manuale, bo to bez sensu jest”.
+  // Domyślne filtry Skanera (Paliwo: Hybryda, Skrzynia biegów: Automatyczna) zostają; benzynę pokazuje zwykły filtr Paliwo.
   // Wskaźnik miejsca na liście ofert (28.10.2026, Jacek: „wskaźnik miejsca na stronie jest potrzebny przy przewijaniu”): przy przewijaniu listy przy prawej krawędzi
   // stoi pigułka „5 z 18”, która jedzie razem z przewijaniem i gaśnie 0,9 s po jego końcu (styl.css, .miejsce-listy). Liczy się auto, które przecina linię
   // na 40% wysokości ramki, a na samym dole ostatnie. Lista krótsza niż 4 auta wskaźnika nie ma. Raz na dokument ramki.
@@ -864,7 +792,7 @@
         if (document.body.dataset.szklo) d.documentElement.dataset.kmWyglad = '5'; else delete d.documentElement.dataset.kmWyglad;
         swiatloPrzyciskow(d);
         ciszaKolka(d);
-        przesuwanieAut(d); wskaznikMiejsca(d); przelacznikRynku(d);
+        przesuwanieAut(d); wskaznikMiejsca(d);
         kolkoHal(d);
         d.documentElement.style.setProperty('--km-lewo', cs.paddingLeft);
         d.documentElement.style.setProperty('--km-prawo', cs.paddingRight);
