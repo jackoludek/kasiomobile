@@ -2605,7 +2605,8 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
     function lokalnie(tresc, ms) {
       let ma = false; try { ma = !!(window.AutaBrama && window.AutaBrama.jest()); } catch { ma = false; }
       const k = pamiec.czytaj('kontekst', null);
-      if (!ma || !k || !k.tekst || tresc.hal) return Promise.resolve(null);
+      // Bardzo długie pytanie (ponad 150 tys. znaków) idzie do laptopa, który dzieli je na części (od 8.11.2026).
+      if (!ma || !k || !k.tekst || tresc.hal || String(tresc.q || '').length > 150000) return Promise.resolve(null);
       const wys = ['low', 'medium', 'high', 'xhigh', 'max'].includes(tresc.poziom) ? tresc.poziom : 'high';
       const dlugosc = { low: 'Długość odpowiedzi: krótko, 1–3 zdania.', xhigh: 'Długość odpowiedzi: dłużej i dokładniej, do 12 punktów, z uzasadnieniem.', max: 'Długość odpowiedzi: pełna i wyczerpująca, tyle, ile temat wymaga, punktami, z liczbami z danych i wnioskiem na końcu.' }[wys] || '';
       const wczesniej = historia.filter((x) => x.tekst && !x.blad).slice(-13, -1).map((x) => (x.kto === 'ja' ? 'Pytanie: ' : 'Odpowiedź: ') + x.tekst).join('\n');
@@ -2756,7 +2757,7 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
     function wyslij(t) {
       if (edycja.aktywna) { if (String(t || '').trim()) glosBezWysylki(); return zapiszPytanie(t); }
       // Do 7.11.2026 pytanie było ucinane do 600 znaków, więc długie dyktowanie przepadało (Jacek: „nagrało tylko tyle, ile się nagra”). Teraz 6000.
-      const q = String(t || '').replace(/\s+/g, ' ').trim().slice(0, 40000);
+      const q = String(t || '').replace(/\s+/g, ' ').trim().slice(0, 4000000);
       if (!q || pracuje) return false;
       glosBezWysylki();
       if (hal.otwarty) { uz('hal-pytanie', q); pole.value = ''; bezCofnijPola = true; rosnij(); przyciski(); halZadaj(q); return true; }
