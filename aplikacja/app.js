@@ -385,6 +385,7 @@
       if (r.length > 1) r = r.filter((x) => linia.includes(String((x.cechy || {}).lokalizacja || '').replace(/\s*\([^)]*\)$/, '')));
       return r.length === 1 ? String(r[0].url).split('#')[0] : '';
     };    const ustaw = (b, u) => { const jest = lista().includes(u); b.setAttribute('aria-pressed', String(jest)); const opis = jest ? 'Wyjmij z archiwum' : 'Zapisz w archiwum: zostanie po sprzedaży'; b.setAttribute('aria-label', opis); b.dataset.dymek = opis; b.innerHTML = jest ? ZNAK_ARCH_JEST : ZNAK_ARCH; };
+    d.kmAdres = adres;
     let zegar = 0;
     const wstaw = () => {
       const dl = d.querySelector('dialog#okno[open]'), rz = dl && dl.querySelector('.okno-przyciski');
@@ -2711,13 +2712,13 @@
     let tytul = '', tresc = '';
     try {
       const d = s && s.el.contentDocument, okno = d && d.querySelector('dialog[open]');
-      if (okno) { const h = okno.querySelector('h1, h2, h3'); tytul = h ? h.textContent : ''; tresc = okno.innerText || okno.textContent; }
+      if (okno) { const h = okno.querySelector('h1, h2, h3'); tytul = h ? h.textContent : ''; tresc = okno.innerText || okno.textContent; const u = d.kmAdres ? d.kmAdres(okno) : ''; if (u) tresc = 'adres ' + u + '. ' + tresc; }
       else if (d) { const h = d.querySelector('h1'); tytul = h && h.getClientRects().length ? h.textContent : ''; }
     } catch { /* strona się jeszcze wczytuje */ }
     tytul = czysc(tytul).slice(0, 80);
-    tresc = czysc(tresc).slice(0, 360);
+    tresc = czysc(tresc).slice(0, 1600);
     return { krotko: [nazwa, tytul || pig].filter(Boolean).join(' · ').slice(0, 48),
-      pelny: `zakładka ${nazwa}${pig ? ', część ' + pig : ''}${tytul ? ', otwarte: ' + tytul : ''}${tresc ? '. Treść okna: ' + tresc : ''}`.slice(0, 480) };
+      pelny: `zakładka ${nazwa}${pig ? ', część ' + pig : ''}${tytul ? ', otwarte: ' + tytul : ''}${tresc ? '. Treść okna: ' + tresc : ''}`.slice(0, 1800) };
   }
   // Nawigacja wyjeżdża spod belki za palcem (czat.js, belka): p od 0 do 1, null kończy i oddaje ją stylom.
   let zegarRuchu = 0;

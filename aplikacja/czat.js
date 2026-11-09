@@ -1206,7 +1206,7 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
       const wys = ['low', 'medium', 'high', 'xhigh', 'max'].includes(tresc.poziom) ? tresc.poziom : 'high';
       const dlugosc = { low: 'Długość odpowiedzi: krótko, 1–3 zdania.', xhigh: 'Długość odpowiedzi: dłużej i dokładniej, do 12 punktów, z uzasadnieniem.', max: 'Długość odpowiedzi: pełna i wyczerpująca, tyle, ile temat wymaga, punktami, z liczbami z danych i wnioskiem na końcu.' }[wys] || '';
       const wczesniej = historia.filter((x) => x.tekst && !x.blad).slice(-13, -1).map((x) => (x.kto === 'ja' ? 'Pytanie: ' : 'Odpowiedź: ') + x.tekst).join('\n');
-      const tekst = [wczesniej ? 'Wcześniej w tej rozmowie:\n\n' + wczesniej : '', 'Pyta: ' + autorZ(o.skad) + '.', dlugosc, 'Pytanie: ' + tresc.q].filter(Boolean).join('\n\n');
+      const tekst = [wczesniej ? 'Wcześniej w tej rozmowie:\n\n' + wczesniej : '', 'Pyta: ' + autorZ(o.skad) + '.', dlugosc, tresc.ekran ? 'Na ekranie jest teraz: ' + tresc.ekran + ' Gdy pytanie mówi o „tym aucie” albo „tym”, chodzi o to, co na ekranie.' : '', 'Pytanie: ' + tresc.q].filter(Boolean).join('\n\n');
       const cialo = JSON.stringify({ model: 'opus', max_tokens: wys === 'max' ? 16000 : wys === 'xhigh' ? 8000 : 4000, output_config: { effort: wys },
         system: k.prompt + '\n\nTa odpowiedź powstaje w samym telefonie, bez komputera: pól czytaj, wSieci i zmiana nie używaj (zostaw null).\n\nTreść pliku kontekst.md:\n\n' + k.tekst,
         messages: [{ role: 'user', content: tekst }] });
@@ -1318,9 +1318,11 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
       const widok = mini && o.widok ? o.widok() : null;
       const wskazano = !czekanie && mini && Boolean(wskaz);
       const wPole = czekanie ? '' : opisDlaKomputera(widok);
+      // Asystent wie, na co patrzysz (od 9.11.2026): z dużego okna też idzie opis ekranu (pole „ekran”), bez krótkiej odpowiedzi małego okienka.
+      const ekranW = !mini && !czekanie && o.widok ? o.widok() : null, ekran = ekranW && ekranW.pelny ? String(ekranW.pelny) : '';
       const popraw = czekanie ? 0 : Number(poprawka) || 0;
       if (!czekanie) poprawka = 0;
-      const d = await (czekanie || zapytajGdzies(Object.assign({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '', poziom }, wPole ? { w: wPole } : {}, popraw ? { popraw } : {}), poziom === 'max' ? 305000 : poziom === 'xhigh' ? 215000 : CZEKAJ_MS, q));
+      const d = await (czekanie || zapytajGdzies(Object.assign({ q, rozmowa: rozmowa(), z: (o.zakladka && o.zakladka()) || '', poziom }, wPole ? { w: wPole } : {}, ekran ? { ekran } : {}, popraw ? { popraw } : {}), poziom === 'max' ? 305000 : poziom === 'xhigh' ? 215000 : CZEKAJ_MS, q));
       clearInterval(zegarMysli);
       mysli.remove();
       mysli = null;
@@ -2258,7 +2260,22 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
     zapiszCzekajace();
     const wrocDoRozmowy = () => { if (!doRozmowy || Date.now() - doRozmowy > 600000) return false; doRozmowy = 0; otworz(); return true; };
     const wstecz = () => { if (hal.otwarty) { halZamknij(); return true; } if (zamknijMenu(true)) return true; if (mini && otwarty()) { zamknij(); return true; } if (edycja.aktywna) { edytujPytania(false); return true; } if (widokHistorii) { wsteczHistorii(); return true; } if (!otwarty()) return false; zamknij(); return true; };
-    const api = { otworz, mini: () => otworz(true), miniOtwarty: () => mini && otwarty(), zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz, hal: halOtworz, halOtwarty: () => hal.otwarty };
+    // Wpis „O tym aucie …” z ikonki na karcie Ofert (od 9.11.2026): otwiera rozmowę, dopisuje tekst za tym, co już było w polu, i stawia kursor na końcu.
+    function zapytajO(t) {
+      if (hal.otwarty) return;
+      otworz();
+      if (widokHistorii) rysuj();
+      const bylo = pole.value.replace(/\s+$/, '');
+      if (bylo) zapiszPisane(bylo);
+      pole.value = bylo ? bylo + '\n' + t : t;
+      bezCofnijPola = true;
+      rosnij();
+      przyciski();
+      pole.focus({ preventScroll: true });
+      try { pole.setSelectionRange(pole.value.length, pole.value.length); } catch { /* starsze pole */ }
+      pole.scrollTop = pole.scrollHeight;
+    }
+    const api = { zapytajO, otworz, mini: () => otworz(true), miniOtwarty: () => mini && otwarty(), zamknij, przelacz: () => (otwarty() ? zamknij() : otworz()), otwarty, wyslij, zGlosu, korzen, pracuje: () => pracuje, wrocDoRozmowy, wstecz, hal: halOtworz, halOtwarty: () => hal.otwarty };
     aktywny = api;
     return api;
   }
