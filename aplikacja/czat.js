@@ -1230,6 +1230,9 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
     async function zapytajGdzies(tresc, ms, q) {
       const d = await lokalnie(tresc, ms - 10000);
       if (d) return d;
+      // Od 9.11.2026 brak kredytów w telefonie widać od razu (Brama Opusa: zamiast cichego przejścia na laptopa), a pytanie i tak idzie do komputera w domu.
+      // Telefon i laptop korzystają z tego samego konta Kiro (9.11.2026: oba „0 z 1212”), więc przy braku kredytów nie czekamy 90 s na laptopa.
+      if (bladTel) return { blad: bladTel };
       const z = await zapytaj(tresc, ms, q);
       return !z && bladTel ? { blad: bladTel } : z;
     }

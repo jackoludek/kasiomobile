@@ -2446,7 +2446,8 @@
     // Drugie potrząśnięcie wrzuca je spod dolnego brzegu, a magnes ciągnie je do doku u góry. Przy ograniczonym ruchu bez lotu: od razu schowane albo od razu w doku.
     // Od 8.11.2026 czulej (Jacek: „Jest za mało czułe. Trzeba naprawdę nim trząść … Make it less painful”): 3 wychyły ponad 9 m/s² w 1,2 s zamiast 4 ponad 13 w 1 s,
     // a każde takie potrząśnięcie od razu chowa albo przywraca kółko. Dawne samo podskakiwanie przy słabszym (do 17 m/s²) zniknęło, bo wyglądało, jakby nic nie zadziałało.
-    const TRZES = { prog: 9, ile: 3, okno: 1200, przerwa: 1200, wychyl: 250, wyrzut: 9 };
+    // 9.11.2026 jeszcze czulej (Jacek: „musiałem mocno trząść, a tak nie chcemy”): 3 wychyły ponad 6 m/s² w 1,5 s. Chodzenie zostaje poniżej (2–5 m/s²).
+    const TRZES = { prog: 6, ile: 3, okno: 1500, przerwa: 1000, wychyl: 250, wyrzut: 6 };
     let piki = [], poTrzes = -1e9, grawitacja = null;
     function trzesienie(sila = TRZES.wyrzut, os = 0, zn = 1) {
       const wraca = p.classList.contains('schowany');
