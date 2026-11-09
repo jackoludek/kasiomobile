@@ -2580,6 +2580,8 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
     // do Bramy w samym telefonie, z kontekstem, który komputer wysyła na kanał „<kanał>-kontekst” (telefon trzyma ostatni w pamięci), a z historią z tej rozmowy.
     // Gdy Bramy w telefonie nie ma albo nie odpowie, pytanie idzie jak dotąd do komputera. W telefonie nie ma internetu dla modelu ani przekazywania zmian.
     const lokalne = new Map();
+    // Powód odmowy Bramy w telefonie (od 9.11.2026): gdy laptop też nie odpowie, telefon mówi ten powód zamiast „Komputer nie odpowiedział”.
+    let bladTel = '';
     let kontekstCzas = 0;
     async function pobierzKontekst() {
       if (Date.now() - kontekstCzas < 600000) return;
@@ -2620,6 +2622,7 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
           if (kod === -1) { ok({ zatrzymane: true }); return; }
           let o2 = null; try { o2 = JSON.parse(odp); } catch { o2 = null; }
           const t = o2 && Array.isArray(o2.content) ? o2.content.filter((x) => x && x.type === 'text').map((x) => x.text).join('') : '';
+          bladTel = kod === 429 && /kredyt/i.test(odp) ? 'Skończyły się kredyty Kiro, więc asystent teraz nie odpowie. Odpowie, gdy kredyty wrócą.' : kod === 200 ? '' : bladTel;
           const w = kod === 200 ? zJsona(t) : null;
           if (!w || !String(w.odpowiedz || '').trim()) { ok(null); return; }
           const z = { katalog: 'katalog', modele: 'modele', kredyt: 'kredyt', poradnik: 'poradnik', historia: 'historia' }[w.zakladka] || null;
@@ -2632,7 +2635,9 @@ const autorZ = (skad) => (skad === 'iPhone' || (skad !== 'Android' && skad !== '
     }
     async function zapytajGdzies(tresc, ms, q) {
       const d = await lokalnie(tresc, ms - 10000);
-      return d || zapytaj(tresc, ms, q);
+      if (d) return d;
+      const z = await zapytaj(tresc, ms, q);
+      return !z && bladTel ? { blad: bladTel } : z;
     }
     // Stop (od 7.11.2026, Jacek: „musi być opcja … do przerwania toku myślenia. Jak się to źle wpisało, to po chuj ma mielić. Zatrzymujemy”):
     // w trakcie odpowiedzi Wyślij jest kwadratem. Telefon przestaje czekać (późniejsza odpowiedź przepada, bo jej nie ma w „czeka”), a pytanie wraca
